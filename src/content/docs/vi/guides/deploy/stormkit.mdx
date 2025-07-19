@@ -1,0 +1,28 @@
+---
+title: Triển khai trang Astro của bạn lên Stormkit
+description: Triển khai trang Astro của bạn lên Stormkit
+sidebar:
+  label: Stormkit
+type: deploy
+i18nReady: true
+---
+import ReadMore from '~/components/ReadMore.astro';
+import { Steps } from '@astrojs/starlight/components';
+
+Bạn có thể triển khai dự án Astro của mình lên [Stormkit](https://stormkit.io/), một nền tảng triển khai cho các trang web tĩnh, ứng dụng trang đơn (SPA) và các hàm serverless.
+
+## Cách triển khai
+
+<Steps>
+1. [Đăng nhập vào Stormkit](https://app.stormkit.io/auth).
+
+2. Sử dụng giao diện người dùng, nhập dự án Astro của bạn từ một trong ba nhà cung cấp Git được hỗ trợ (GitHub, GitLab hoặc Bitbucket).
+
+3. Điều hướng đến môi trường sản xuất của dự án trong Stormkit hoặc tạo môi trường mới nếu cần.
+
+4. Xác minh lệnh build trong [cấu hình Stormkit của bạn](https://stormkit.io/docs/deployments/configuration). Theo mặc định, Stormkit CI sẽ chạy `npm run build` nhưng bạn có thể chỉ định lệnh build tùy chỉnh trên trang này.
+
+5. Nhấn nút "Deploy Now" để triển khai trang web của bạn.
+</Steps>
+
+<ReadMore>Xem thêm trong [Tài liệu Stormkit](https://stormkit.io/docs).</ReadMore>

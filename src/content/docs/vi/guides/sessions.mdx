@@ -1,0 +1,159 @@
+---
+title: Sessions
+description: Chia sẻ dữ liệu giữa các request cho các trang được render theo yêu cầu.
+i18nReady: true
+---
+
+import Since from '~/components/Since.astro';
+import ReadMore from '~/components/ReadMore.astro';
+
+<p>
+<Since v="5.7.0" />
+</p>
+
+Sessions được sử dụng để chia sẻ dữ liệu giữa các request cho [các trang được render theo yêu cầu](/vi/guides/on-demand-rendering/). 
+
+Khác với [`cookies`](/vi/guides/on-demand-rendering/#cookies), sessions được lưu trữ trên server, vì vậy bạn có thể lưu trữ lượng dữ liệu lớn hơn mà không cần lo lắng về giới hạn kích thước hoặc vấn đề bảo mật. Chúng hữu ích để lưu trữ những thứ như dữ liệu người dùng, giỏ hàng và trạng thái form, và chúng hoạt động mà không cần JavaScript phía client:
+
+```astro title="src/components/CartButton.astro" {3}
+---
+export const prerender = false; // Không cần thiết với output 'server'
+const cart = await Astro.session?.get('cart');
+---
+
+<a href="/checkout">🛒 {cart?.length ?? 0} sản phẩm</a>
+```
+
+## Cấu hình sessions
+
+Sessions yêu cầu một storage driver để lưu trữ dữ liệu session. Các adapter [Node](/vi/guides/integrations-guide/node/#sessions), [Cloudflare](/vi/guides/integrations-guide/cloudflare/#sessions), và [Netlify](/vi/guides/integrations-guide/netlify/#sessions) tự động cấu hình driver mặc định cho bạn, nhưng các adapter khác hiện tại yêu cầu bạn [chỉ định driver thủ công](/vi/reference/configuration-reference/#sessiondriver).
+
+```js title="astro.config.mjs" ins={4}
+  {
+    adapter: vercel(),
+    session: {
+      driver: "redis",
+    },
+  }
+```
+
+<ReadMore>
+  Xem [tùy chọn cấu hình `session`](/vi/reference/configuration-reference/#session-options) để biết thêm chi tiết về cách thiết lập storage driver và các tùy chọn có thể cấu hình khác.
+</ReadMore>
+
+## Tương tác với dữ liệu session
+
+[Đối tượng `session`](/vi/reference/api-reference/#session) cho phép bạn tương tác với trạng thái người dùng được lưu trữ (ví dụ: thêm sản phẩm vào giỏ hàng) và session ID (ví dụ: xóa session ID cookie khi đăng xuất). Đối tượng này có thể truy cập thông qua `Astro.session` trong các component và page Astro của bạn và thông qua đối tượng `context.session` trong API endpoints, middleware và actions.
+
+Session được tạo tự động khi nó được sử dụng lần đầu tiên và có thể được tái tạo bất kỳ lúc nào với [`session.regenerate()`](/vi/reference/api-reference/#regenerate) hoặc hủy bỏ với [`session.destroy()`](/vi/reference/api-reference/#destroy).
+
+Đối với nhiều trường hợp sử dụng, bạn chỉ cần sử dụng [`session.get()`](/vi/reference/api-reference/#get) và [`session.set()`](/vi/reference/api-reference/#set).
+
+<ReadMore>
+Xem [tài liệu tham khảo Sessions API](/vi/reference/api-reference/#session) để biết thêm chi tiết.
+</ReadMore>
+
+### Astro components và pages
+
+Trong các component và page `.astro`, bạn có thể truy cập đối tượng session thông qua đối tượng global `Astro`. Ví dụ, để hiển thị số lượng sản phẩm trong giỏ hàng:
+
+```astro title="src/components/CartButton.astro" "Astro.session"
+---
+export const prerender = false; // Không cần thiết với output 'server'
+const cart = await Astro.session?.get('cart');
+---
+
+<a href="/checkout">🛒 {cart?.length ?? 0} sản phẩm</a>
+```
+
+### API endpoints
+
+Trong API endpoints, đối tượng session có sẵn trên đối tượng `context`. Ví dụ, để thêm một sản phẩm vào giỏ hàng:
+
+```ts title="src/pages/api/addToCart.ts" "context.session"
+export async function POST(context: APIContext) {
+  const cart = await context.session?.get('cart') || [];
+	const data = await context.request.json<{ item: string }>();
+  if(!data?.item) {
+    return new Response('Item là bắt buộc', { status: 400 });
+  }
+  cart.push(data.item);
+  await context.session?.set('cart', cart);
+  return Response.json(cart);
+}
+```
+
+### Actions
+
+Trong actions, đối tượng session có sẵn trên đối tượng `context`. Ví dụ, để thêm một sản phẩm vào giỏ hàng:
+
+```ts title="src/actions/addToCart.ts" "context.session"
+import { defineAction } from 'astro:actions';
+import { z } from 'astro:schema';
+
+export const server = {
+  addToCart: defineAction({
+    input: z.object({ productId: z.string() }),
+    handler: async (input, context) => {
+      const cart = await context.session?.get('cart');
+      cart.push(input.productId);
+      await context.session?.set('cart', cart);
+      return cart;
+    },
+  }),
+};
+```
+
+### Middleware
+
+:::note
+Sessions không được hỗ trợ trong edge middleware.
+:::
+
+Trong middleware, đối tượng session có sẵn trên đối tượng `context`. Ví dụ, để thiết lập thời gian truy cập cuối cùng trong session:
+
+```ts title="src/middleware.ts" "context.session"
+import { defineMiddleware } from 'astro:middleware';
+
+export const onRequest = defineMiddleware(async (context, next) => {
+  context.session?.set('lastVisit', new Date());
+  return next();
+});
+```
+
+## Kiểu dữ liệu session
+
+Mặc định, dữ liệu session không có kiểu, và bạn có thể lưu trữ dữ liệu tùy ý trong bất kỳ key nào. Các giá trị được serialize và deserialize bằng [devalue](https://github.com/Rich-Harris/devalue), đây là thư viện tương tự được sử dụng trong content collections và actions. Điều này có nghĩa là các kiểu được hỗ trợ giống nhau, bao gồm strings, numbers, `Date`, `Map`, `Set`, `URL`, arrays và plain objects.
+
+Bạn có thể tùy chọn định nghĩa các kiểu TypeScript cho dữ liệu session của mình bằng cách tạo file `src/env.d.ts` và thêm một khai báo cho kiểu `App.SessionData`:
+
+```ts title="src/env.d.ts"
+declare namespace App {
+  interface SessionData {
+    user: {
+      id: string;
+      name: string;
+    };
+    cart: string[];
+  }
+}
+```
+
+Điều này sẽ cho phép bạn truy cập dữ liệu session với type-checking và auto-completion trong editor:
+
+```ts title="src/components/CartButton.astro"
+---
+const cart = await Astro.session?.get('cart');
+// const cart: string[] | undefined
+
+const something = await Astro.session?.get('something');
+// const something: any
+
+Astro.session?.set('user', { id: 1, name: 'Houston' });
+// Error: Argument of type '{ id: number; name: string }' is not assignable to parameter of type '{ id: string; name: string; }'.
+---
+```
+
+:::caution
+Điều này chỉ được sử dụng cho type-checking và không ảnh hưởng đến hành vi runtime của session. Hãy đặc biệt cẩn thận nếu bạn thay đổi kiểu khi người dùng đã lưu trữ dữ liệu trong session, vì điều này có thể gây ra lỗi runtime.
+:::

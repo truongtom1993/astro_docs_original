@@ -1,0 +1,1179 @@
+---
+title: Ngữ cảnh render của Astro
+sidebar:
+  label: Ngữ cảnh render
+i18nReady: true
+tableOfContents:
+  minHeadingLevel: 2
+  maxHeadingLevel: 4
+---
+
+import Since from '~/components/Since.astro';
+import { Tabs, TabItem } from '@astrojs/starlight/components';
+import ReadMore from '~/components/ReadMore.astro';
+
+Khi render một trang, Astro cung cấp một API runtime cụ thể cho ngữ cảnh render hiện tại. Điều này bao gồm thông tin hữu ích như URL trang hiện tại cũng như các API để thực hiện các hành động như chuyển hướng đến trang khác.
+
+Trong các component `.astro`, ngữ cảnh này có sẵn từ đối tượng global `Astro`. Các hàm endpoint cũng được gọi với cùng đối tượng ngữ cảnh này làm đối số đầu tiên, có các thuộc tính phản ánh các thuộc tính global Astro.
+
+Một số thuộc tính chỉ có sẵn cho các route được render theo yêu cầu hoặc có thể có chức năng hạn chế trên các trang được prerender.
+
+Đối tượng global `Astro` có sẵn cho tất cả các file `.astro`. Sử dụng đối tượng `context` trong [các hàm endpoint](/vi/guides/endpoints/) để phục vụ các endpoint tĩnh hoặc server live và trong [middleware](/vi/guides/middleware/) để inject hành vi khi một trang hoặc endpoint sắp được render.
+
+## Đối tượng context
+
+Các thuộc tính sau có sẵn trên global `Astro` (ví dụ: `Astro.props`, `Astro.redirect()`) và cũng có sẵn trên đối tượng context (ví dụ: `context.props`, `context.redirect()`) được truyền cho các hàm endpoint và middleware.
+
+### `props`
+
+`props` là một đối tượng chứa bất kỳ giá trị nào đã được truyền như [thuộc tính component](/vi/basics/astro-components/#component-props).
+
+```astro {3}
+---
+// src/components/Heading.astro
+const { title, date } = Astro.props;
+---
+<div>
+  <h1>{title}</h1>
+  <p>{date}</p>
+</div>
+```
+
+```astro "title=" "date="
+---
+// src/pages/index.astro
+import Heading from '../components/Heading.astro';
+---
+<Heading title="My First Post" date="09 Aug 2022" />
+```
+
+<ReadMore>Tìm hiểu thêm về cách [layout Markdown và MDX](/vi/guides/markdown-content/#frontmatter-layout-property) xử lý props.</ReadMore>
+
+Đối tượng `props` cũng chứa bất kỳ `props` nào được truyền từ `getStaticPaths()` khi render các route tĩnh.
+
+<Tabs>
+  <TabItem label="Astro.props">
+    ```astro title="src/pages/posts/[id].astro" "props:" {11}
+    ---
+    export function getStaticPaths() {
+      return [
+        { params: { id: '1' }, props: { author: 'Blu' } },
+        { params: { id: '2' }, props: { author: 'Erika' } },
+        { params: { id: '3' }, props: { author: 'Matthew' } }
+      ];
+    }
+
+    const { id } = Astro.params;
+    const { author } = Astro.props;
+    ---
+    ```
+
+  </TabItem>
+  <TabItem label="context.props">
+    ```ts title="src/pages/posts/[id].json.ts" "props:" {11-15}
+    import type { APIContext } from 'astro';
+
+    export function getStaticPaths() {
+      return [
+        { params: { id: '1' }, props: { author: 'Blu' } },
+        { params: { id: '2' }, props: { author: 'Erika' } },
+        { params: { id: '3' }, props: { author: 'Matthew' } }
+      ];
+    }
+
+    export function GET({ props }: APIContext) {
+      return new Response(
+        JSON.stringify({ author: props.author }),
+      );
+    }
+    ```
+
+  </TabItem>
+
+</Tabs>
+Xem thêm: [Truyền dữ liệu với `props`](/vi/reference/routing-reference/#data-passing-with-props)
+
+### `params`
+
+`params` là một đối tượng chứa các giá trị của các segment route động được khớp cho một request. Các key của nó phải khớp với [các tham số](/vi/guides/routing/#dynamic-routes) trong đường dẫn file trang hoặc endpoint.
+
+Trong các build tĩnh, đây sẽ là `params` được trả về bởi `getStaticPaths()` được sử dụng để prerender [các route động](/vi/guides/routing/#dynamic-routes):
+
+<Tabs>
+  <TabItem label="Astro.params">
+    ```astro title="src/pages/posts/[id].astro" {9} "params:"
+    ---
+    export function getStaticPaths() {
+      return [
+        { params: { id: '1' } },
+        { params: { id: '2' } },
+        { params: { id: '3' } }
+      ];
+    }
+    const { id } = Astro.params;
+    ---
+    <h1>{id}</h1>
+    ```
+  </TabItem>
+  <TabItem label="context.params">
+    ```ts title="src/pages/posts/[id].json.ts" "params:" {11-15}
+    import type { APIContext } from 'astro';
+
+    export function getStaticPaths() {
+      return [
+        { params: { id: '1' } },
+        { params: { id: '2' } },
+        { params: { id: '3' } }
+      ];
+    }
+
+    export function GET({ params }: APIContext) {
+      return new Response(
+        JSON.stringify({ id: params.id }),
+      );
+    }
+    ```
+
+  </TabItem>
+</Tabs>
+
+Khi các route được render theo yêu cầu, `params` có thể là bất kỳ giá trị nào khớp với các segment đường dẫn trong pattern route động.
+
+```astro title="src/pages/posts/[id].astro" "Astro.params"
+---
+import { getPost } from '../api';
+
+const post = await getPost(Astro.params.id);
+
+// Không tìm thấy bài viết nào với ID này
+if (!post) {
+  return Astro.redirect("/404")
+}
+---
+<html>
+  <h1>{post.name}</h1>
+</html>
+```
+
+Xem thêm: [`params`](/vi/reference/routing-reference/#params)
+
+### `url`
+
+<p>
+
+**Type:** `URL`<br />
+
+<Since v="1.0.0" />
+</p>
+
+`url` là một đối tượng [URL](https://developer.mozilla.org/en-US/docs/Web/API/URL) được tạo từ giá trị `request.url` hiện tại. Nó hữu ích để tương tác với các thuộc tính riêng lẻ của URL request, như pathname và origin.
+
+`Astro.url` tương đương với việc thực hiện `new URL(Astro.request.url)`.
+
+`url` sẽ là một URL `localhost` trong chế độ dev. Khi build một site, các route prerender sẽ nhận một URL dựa trên các tùy chọn [`site`](/vi/reference/configuration-reference/#site) và [`base`](/vi/reference/configuration-reference/#base). Nếu `site` không được cấu hình, các trang prerender cũng sẽ nhận URL `localhost` trong quá trình build.
+
+```astro title="src/pages/index.astro" "Astro.url"
+<h1>URL hiện tại là: {Astro.url}</h1>
+<h1>Pathname của URL hiện tại là: {Astro.url.pathname}</h1>
+<h1>Origin của URL hiện tại là: {Astro.url.origin}</h1>
+```
+
+Bạn cũng có thể sử dụng `url` để tạo URL mới bằng cách truyền nó như một đối số cho [`new URL()`](https://developer.mozilla.org/en-US/docs/Web/API/URL/URL).
+
+```astro title="src/pages/index.astro" "Astro.url"
+---
+// Ví dụ: Tạo một canonical URL bằng domain production của bạn
+const canonicalURL = new URL(Astro.url.pathname, Astro.site);
+// Ví dụ: Tạo một URL cho thẻ meta SEO bằng domain hiện tại của bạn
+const socialImageURL = new URL('/images/preview.png', Astro.url);
+---
+<link rel="canonical" href={canonicalURL} />
+<meta property="og:image" content={socialImageURL} />
+```
+
+### `site`
+
+<p>
+
+**Type:** `URL | undefined`
+
+</p>
+
+`site` trả về một `URL` được tạo từ `site` trong cấu hình Astro của bạn. Nó trả về `undefined` nếu bạn chưa đặt giá trị cho [`site`](/vi/reference/configuration-reference/#site) trong cấu hình Astro của bạn.
+
+```astro title="src/pages/index.astro" "Astro.site"
+<link
+    rel="alternate"
+    type="application/rss+xml"
+    title="Tiêu đề Site của bạn"
+    href={new URL("rss.xml", Astro.site)}
+/>
+```
+
+### `clientAddress`
+
+<p>
+
+**Type:** `string`<br />
+
+<Since v="1.0.0" />
+</p>
+
+`clientAddress` chỉ định [địa chỉ IP](https://en.wikipedia.org/wiki/IP_address) của request. Thuộc tính này chỉ có sẵn cho các route được render theo yêu cầu và không thể được sử dụng trên các trang prerender.
+
+<Tabs>
+  <TabItem label="Astro.clientAddress">
+    ```astro title="src/pages/ip-address.astro" "Astro.clientAddress"
+    ---
+    export const prerender = false; // Không cần thiết trong chế độ 'server'
+    ---
+
+    <div>Địa chỉ IP của bạn là: <span class="address">{Astro.clientAddress}</span></div>
+    ```
+
+  </TabItem>
+  <TabItem label="context.clientAddress">
+    ```ts title="src/pages/ip-address.ts" "clientAddress"
+    export const prerender = false; // Không cần thiết trong chế độ 'server'
+    import type { APIContext } from 'astro';
+
+    export function GET({ clientAddress }: APIContext) {
+      return new Response(`Địa chỉ IP của bạn là: ${clientAddress}`);
+    }
+    ```
+
+  </TabItem>
+</Tabs>
+
+### `isPrerendered`
+
+<p>
+
+**Type**: `boolean`<br />
+
+<Since v="5.0.0" />
+</p>
+
+Một boolean đại diện cho việc trang hiện tại có được prerender hay không.
+
+Bạn có thể sử dụng thuộc tính này để chạy logic có điều kiện trong middleware, ví dụ, để tránh truy cập headers trong các trang prerender.
+
+### `generator`
+
+<p>
+
+**Type:** `string`<br />
+
+<Since v="1.0.0" />
+</p>
+
+`generator` cung cấp phiên bản hiện tại của Astro mà dự án của bạn đang chạy. Đây là cách thuận tiện để thêm thẻ [`<meta name="generator">`](https://html.spec.whatwg.org/multipage/semantics.html#meta-generator) với phiên bản hiện tại của Astro. Nó theo định dạng `"Astro v5.x.x"`.
+
+<Tabs>
+  <TabItem label="Astro.generator">
+    ```astro title="src/pages/site-info.astro" "Astro.generator"
+    <html>
+      <head>
+        <meta name="generator" content={Astro.generator} />
+      </head>
+      <body>
+        <footer>
+          <p>Được xây dựng với <a href="https://astro.build">{Astro.generator}</a></p>
+        </footer>
+      </body>
+    </html>
+    ```
+  </TabItem>
+  <TabItem label="context.generator">
+    ```ts title="src/pages/site-info.json.ts" "generator"
+    import type { APIContext } from 'astro';
+
+    export function GET({ generator, site }: APIContext) {
+      const body = JSON.stringify({ generator, site });
+      return new Response(body);
+    }
+    ```
+
+  </TabItem>
+</Tabs>
+
+### `request`
+
+<p>
+
+**Type:** `Request`
+
+</p>
+
+`request` là một đối tượng [Request](https://developer.mozilla.org/en-US/docs/Web/API/Request) tiêu chuẩn. Nó có thể được sử dụng để lấy `url`, `headers`, `method`, và thậm chí body của request.
+
+<Tabs>
+  <TabItem label="Astro.request">
+    ```astro wrap title="src/pages/index.astro" "Astro.request"
+    <p>Đã nhận một request {Astro.request.method} đến "{Astro.request.url}".</p>
+    <p>Headers request đã nhận:</p>
+    <p><code>{JSON.stringify(Object.fromEntries(Astro.request.headers))}</code></p>
+    ```
+  </TabItem>
+  <TabItem label="context.request">
+    ```ts "request"
+    import type { APIContext } from 'astro';
+
+    export function GET({ request }: APIContext) {
+      return new Response(`Xin chào ${request.url}`);
+    }
+    ```
+
+  </TabItem>
+</Tabs>
+
+:::note
+Trên các trang prerender, `request.url` không chứa search parameters, như `?type=new`, vì không thể xác định chúng trước thời gian trong quá trình build tĩnh. Tuy nhiên, `request.url` có chứa search parameters cho các trang được render theo yêu cầu vì chúng có thể được xác định từ server request.
+:::
+
+### `response`
+
+<p>
+
+**Type:** `ResponseInit & { readonly headers: Headers }`
+
+</p>
+
+`response` là một đối tượng `ResponseInit` tiêu chuẩn. Nó có cấu trúc sau.
+
+- `status`: Mã trạng thái số của response, ví dụ: `200`.
+- `statusText`: Thông báo trạng thái liên quan đến mã trạng thái, ví dụ: `'OK'`.
+- `headers`: Một instance [`Headers`](https://developer.mozilla.org/en-US/docs/Web/API/Headers) mà bạn có thể sử dụng để đặt HTTP headers của response.
+
+`Astro.response` được sử dụng để đặt `status`, `statusText`, và `headers` cho response của một trang.
+
+```astro "Astro.response"
+---
+if (condition) {
+  Astro.response.status = 404;
+  Astro.response.statusText = 'Không tìm thấy';
+}
+---
+```
+
+Hoặc để đặt một header:
+
+```astro "Astro.response"
+---
+Astro.response.headers.set('Set-Cookie', 'a=b; Path=/;');
+---
+```
+
+### `redirect()`
+
+<p>
+
+**Type:** `(path: string, status?: number) => Response`
+
+<Since v="1.5.0" />
+</p>
+
+`redirect()` trả về một đối tượng [Response](https://developer.mozilla.org/en-US/docs/Web/API/Response) cho phép bạn chuyển hướng đến trang khác, và tùy chọn cung cấp [mã trạng thái HTTP response](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status#redirection_messages) làm tham số thứ hai.
+
+Một trang (và không phải component con) phải `return` kết quả của `Astro.redirect()` để chuyển hướng xảy ra.
+
+Đối với các route được tạo tĩnh, điều này sẽ tạo ra một chuyển hướng client bằng thẻ [`<meta http-equiv="refresh">`](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/meta#http-equiv) và không hỗ trợ mã trạng thái.
+
+Đối với các route được render theo yêu cầu, việc đặt mã trạng thái tùy chỉnh được hỗ trợ khi chuyển hướng. Nếu không chỉ định, chuyển hướng sẽ được phục vụ với mã trạng thái `302`.
+
+Ví dụ sau chuyển hướng người dùng đến trang đăng nhập:
+
+<Tabs>
+  <TabItem label="Astro.redirect()">
+    ```astro title="src/pages/account.astro" {8} "Astro.redirect"
+    ---
+    import { isLoggedIn } from '../utils';
+
+    const cookie = Astro.request.headers.get('cookie');
+
+    // Nếu người dùng chưa đăng nhập, chuyển hướng họ đến trang đăng nhập
+    if (!isLoggedIn(cookie)) {
+      return Astro.redirect('/login');
+    }
+    ---
+
+    <p>Thông tin người dùng</p>
+    ```
+
+  </TabItem>
+  <TabItem label="context.redirect()">
+    ```ts "redirect"
+    import type { APIContext } from 'astro';
+
+    export function GET({ redirect, request }: APIContext) {
+      const cookie = request.headers.get('cookie');
+      if (!isLoggedIn(cookie)) {
+        return redirect('/login', 302);
+      } else {
+        // trả về thông tin người dùng
+      }
+    }
+    ```
+
+  </TabItem>
+</Tabs>
+
+### `rewrite()`
+
+<p>
+
+**Type:** `(rewritePayload: string | URL | Request) => Promise<Response>`<br />
+
+<Since v="4.13.0" />
+</p>
+
+`rewrite()` cho phép bạn phục vụ nội dung từ một URL hoặc đường dẫn khác mà không chuyển hướng trình duyệt đến trang mới.
+
+Phương thức chấp nhận một string, một `URL`, hoặc một `Request` cho vị trí của đường dẫn.
+
+Sử dụng string để cung cấp một đường dẫn rõ ràng:
+
+<Tabs syncKey="rewrite">
+  <TabItem label="Astro.rewrite()">
+    ```astro title="src/pages/index.astro" "Astro.rewrite"
+    ---
+    return Astro.rewrite("/login")
+    ---
+    ```
+  </TabItem>
+  <TabItem label="context.rewrite()">
+    ```ts "rewrite"
+    import type { APIContext } from 'astro';
+
+    export function GET({ rewrite }: APIContext) {
+      return rewrite('/login');
+    }
+    ```
+
+  </TabItem>
+</Tabs>
+
+Sử dụng kiểu `URL` khi bạn cần xây dựng đường dẫn URL cho rewrite. Ví dụ sau render một trang với đường dẫn cha bằng cách tạo một URL mới từ đường dẫn tương đối `"../"`:
+
+<Tabs syncKey="rewrite">
+  <TabItem label="Astro.rewrite()">
+    ```astro title="src/pages/blog/index.astro"
+    ---
+    return Astro.rewrite(new URL("../", Astro.url))
+    ---
+    ```
+  </TabItem>
+  <TabItem label="context.rewrite()">
+    ```ts
+    import type { APIContext } from 'astro';
+
+    export function GET({ rewrite }: APIContext) {
+      return rewrite(new URL("../", Astro.url));
+    }
+    ```
+
+  </TabItem>
+</Tabs>
+
+Sử dụng kiểu `Request` để có toàn quyền kiểm soát `Request` được gửi đến server cho đường dẫn mới. Ví dụ sau gửi một request để render trang cha đồng thời cung cấp headers:
+
+<Tabs syncKey="rewrite">
+  <TabItem label="Astro.rewrite()">
+    ```astro title="src/pages/blog/index.astro"
+    ---
+    return Astro.rewrite(new Request(new URL("../", Astro.url), {
+      headers: {
+        "x-custom-header": JSON.stringify(Astro.locals.someValue)
+      }
+    }))
+    ---
+    ```
+  </TabItem>
+  <TabItem label="context.rewrite()">
+    ```ts
+    import type { APIContext } from 'astro';
+
+    export function GET({ rewrite }: APIContext) {
+      return rewrite(new Request(new URL("../", Astro.url), {
+        headers: {
+          "x-custom-header": JSON.stringify(Astro.locals.someValue)
+        }
+      }));
+    }
+    ```
+
+  </TabItem>
+</Tabs>
+
+### `locals`
+
+<p>
+
+<Since v="2.4.0" />
+</p>
+
+`locals` là một đối tượng được sử dụng để lưu trữ và truy cập thông tin tùy ý trong vòng đời của một request. `Astro.locals` là một đối tượng chứa bất kỳ giá trị nào từ đối tượng `context.locals` được đặt bởi middleware. Sử dụng điều này để truy cập dữ liệu được trả về bởi middleware trong các file `.astro` của bạn.
+
+Các hàm middleware có thể đọc và ghi các giá trị của `context.locals`:
+
+```ts title="src/middleware.ts" "locals"
+import type { MiddlewareHandler } from 'astro';
+
+export const onRequest: MiddlewareHandler = ({ locals }, next) => {
+	if (!locals.title) {
+		locals.title = 'Tiêu đề mặc định';
+	}
+	return next();
+};
+```
+
+Các component Astro và API endpoint có thể đọc giá trị từ `locals` khi chúng render:
+
+<Tabs>
+  <TabItem label="Astro.locals">
+    ```astro title="src/pages/Orders.astro" "Astro.locals"
+    ---
+    const title = Astro.locals.title;
+    ---
+    <h1>{title}</h1>
+    ```
+  </TabItem>
+  <TabItem label="context.locals">
+    ```ts title="src/pages/hello.ts" "locals"
+    import type { APIContext } from 'astro';
+
+    export function GET({ locals }: APIContext) {
+      return new Response(locals.title); // "Tiêu đề mặc định"
+    }
+    ```
+
+  </TabItem>
+</Tabs>
+
+### `preferredLocale`
+
+<p>
+
+**Type:** `string | undefined`<br />
+
+<Since v="3.5.0" />
+</p>
+
+`preferredLocale` là một giá trị được tính toán để tìm sự khớp tốt nhất giữa tùy chọn ngôn ngữ trình duyệt của khách truy cập và các locale được hỗ trợ bởi site của bạn.
+
+Nó được tính toán bằng cách kiểm tra các locale được cấu hình trong mảng [`i18n.locales`](/vi/reference/configuration-reference/#i18nlocales) của bạn và các locale được hỗ trợ bởi trình duyệt của người dùng thông qua header `Accept-Language`. Giá trị này là `undefined` nếu không có sự khớp nào tồn tại.
+
+Thuộc tính này chỉ có sẵn cho các route được render theo yêu cầu và không thể được sử dụng trên các trang tĩnh, prerender.
+
+### `preferredLocaleList`
+
+<p>
+
+**Type:** `string[] | undefined`<br />
+
+<Since v="3.5.0" />
+</p>
+
+`preferredLocaleList` đại diện cho mảng của tất cả locale được cả trình duyệt yêu cầu và được hỗ trợ bởi website của bạn. Điều này tạo ra một danh sách tất cả các ngôn ngữ tương thích giữa site của bạn và khách truy cập.
+
+Nếu không có ngôn ngữ nào được yêu cầu bởi trình duyệt được tìm thấy trong mảng locales của bạn, thì giá trị là `[]`. Điều này xảy ra khi bạn không hỗ trợ bất kỳ locale ưa thích nào của khách truy cập.
+
+Nếu trình duyệt không chỉ định bất kỳ ngôn ngữ ưa thích nào, thì giá trị này sẽ là [`i18n.locales`](/vi/reference/configuration-reference/#i18nlocales): tất cả các locale được hỗ trợ của bạn sẽ được coi là ưa thích bằng nhau bởi khách truy cập không có tùy chọn.
+
+Thuộc tính này chỉ có sẵn cho các route được render theo yêu cầu và không thể được sử dụng trên các trang tĩnh, prerender.
+
+### `currentLocale`
+
+<p>
+
+**Type:** `string | undefined`<br />
+
+<Since v="3.5.6" />
+</p>
+
+Locale được tính toán từ URL hiện tại, sử dụng cú pháp được chỉ định trong cấu hình `locales` của bạn. Nếu URL không chứa tiền tố đường dẫn `/[locale]/`, thì giá trị sẽ mặc định là [`i18n.defaultLocale`](/vi/reference/configuration-reference/#i18ndefaultlocale).
+
+### `getActionResult()`
+
+<p>
+**Type:** `(action: TAction) => ActionReturnType<TAction> | undefined`<br />
+<Since v="4.15.0" />
+</p>
+
+`getActionResult()` là một hàm trả về kết quả của một submission [Action](/vi/guides/actions/). Hàm này chấp nhận một hàm action làm đối số (ví dụ: `actions.logout`) và trả về một đối tượng `data` hoặc `error` khi nhận được submission. Nếu không, nó sẽ trả về `undefined`.
+
+```astro title="src/pages/index.astro" "Astro.getActionResult"
+---
+import { actions } from 'astro:actions';
+
+const result = Astro.getActionResult(actions.logout);
+---
+
+<form action={actions.logout}>
+  <button type="submit">Đăng xuất</button>
+</form>
+{result?.error && <p>Đăng xuất thất bại. Vui lòng thử lại.</p>}
+```
+
+### `callAction()`
+
+<p>
+	<Since v='4.15.0' />
+</p>
+
+`callAction()` là một hàm được sử dụng để gọi một Action handler trực tiếp từ component Astro của bạn. Hàm này chấp nhận một hàm Action làm đối số đầu tiên (ví dụ: `actions.logout`) và bất kỳ input nào mà action đó nhận làm đối số thứ hai. Nó trả về kết quả của action dưới dạng promise.
+
+```astro title="src/pages/index.astro" "Astro.callAction"
+---
+import { actions } from 'astro:actions';
+
+const { data, error } = await Astro.callAction(actions.logout, { userId: '123' });
+---
+```
+
+### `routePattern`
+
+<p>
+
+**Type**: `string`<br />
+
+<Since v="5.0.0" />
+</p>
+
+Pattern route chịu trách nhiệm tạo ra trang hoặc route hiện tại. Trong file-based routing, điều này giống với đường dẫn file trong dự án của bạn được sử dụng để tạo route. Khi các integration tạo route cho dự án của bạn, `context.routePattern` giống với giá trị cho `injectRoute.pattern`.
+
+Giá trị sẽ bắt đầu với dấu gạch chéo đầu và trông giống như đường dẫn của một component trang tương đối so với thư mục `src/pages/` mà không có phần mở rộng file.
+
+Ví dụ, file `src/pages/vi/blog/[slug].astro` sẽ trả về `/vi/blog/[slug]` cho `routePattern`. Mọi trang trên site của bạn được tạo bởi file đó (ví dụ: `/vi/blog/post-1/`, `/vi/blog/post-2/`, v.v.) đều chia sẻ cùng một giá trị cho `routePattern`. Trong trường hợp các route `index.*`, pattern route sẽ không bao gồm từ "index." Ví dụ, `src/pages/index.astro` sẽ trả về `/`.
+
+Bạn có thể sử dụng thuộc tính này để hiểu route nào đang render component của bạn. Điều này cho phép bạn nhắm mục tiêu hoặc phân tích các URL trang được tạo tương tự cùng nhau. Ví dụ, bạn có thể sử dụng nó để hiển thị thông tin nhất định có điều kiện, hoặc thu thập số liệu về những route nào chậm hơn.
+
+### `cookies`
+
+<p>
+
+**Type:** `AstroCookies`<br />
+
+<Since v="1.4.0" />
+</p>
+
+`cookies` chứa các tiện ích để đọc và thao tác cookies cho [các route được render theo yêu cầu](/vi/guides/on-demand-rendering/).
+
+#### Tiện ích cookie
+
+##### `cookies.get()`
+
+<p>
+
+**Type:** <code>(key: string, options?: <a href="#astrocookiegetoptions">AstroCookieGetOptions</a>) => <a href="#astrocookie-type">AstroCookie</a> | undefined</code>
+
+</p>
+
+Lấy cookie dưới dạng đối tượng [`AstroCookie`](#astrocookie-type), chứa `value` và các hàm tiện ích để chuyển đổi cookie sang các kiểu không phải string.
+
+##### `cookies.has()`
+
+<p>
+
+**Type:** <code>(key: string, options?: <a href="#astrocookiegetoptions">AstroCookieGetOptions</a>) => boolean</code>
+
+</p>
+
+Liệu cookie này có tồn tại hay không. Nếu cookie đã được đặt thông qua `Astro.cookies.set()` thì sẽ trả về true, nếu không, nó sẽ kiểm tra cookies trong `Astro.request`.
+
+##### `cookies.set()`
+
+<p>
+
+**Type:** <code>(key: string, value: string | object, options?: <a href="#astrocookiesetoptions">AstroCookieSetOptions</a>) => void</code>
+
+</p>
+
+Đặt cookie `key` thành giá trị đã cho. Điều này sẽ cố gắng chuyển đổi giá trị cookie thành string. Tùy chọn cung cấp cách để đặt [các tính năng cookie](https://www.npmjs.com/package/cookie#options-1), như `maxAge` hoặc `httpOnly`.
+
+##### `cookies.delete()`
+
+<p>
+
+**Type:** `(key: string, options?: AstroCookieDeleteOptions) => void`
+
+</p>
+
+Vô hiệu hóa một cookie bằng cách đặt ngày hết hạn trong quá khứ (0 trong Unix time).
+
+Một khi cookie được "xóa" (hết hạn), `Astro.cookies.has()` sẽ trả về `false` và `Astro.cookies.get()` sẽ trả về một [`AstroCookie`](#astrocookie-type) với `value` là `undefined`. Các tùy chọn có sẵn khi xóa cookie là: `domain`, `path`, `httpOnly`, `sameSite`, và `secure`.
+
+##### `cookies.merge()`
+
+<p>
+
+**Type:** `(cookies: AstroCookies) => void`
+
+</p>
+
+Hợp nhất một instance `AstroCookies` mới vào instance hiện tại. Bất kỳ cookie mới nào sẽ được thêm vào instance hiện tại và bất kỳ cookie nào có cùng tên sẽ ghi đè các giá trị hiện có.
+
+##### `cookies.headers()`
+
+<p>
+
+**Type:** `() => Iterator<string>`
+
+</p>
+
+Lấy các giá trị header cho `Set-Cookie` sẽ được gửi đi với response.
+
+#### Kiểu `AstroCookie`
+
+Kiểu được trả về từ việc lấy cookie thông qua `Astro.cookies.get()`. Nó có các thuộc tính sau:
+
+##### `value`
+
+<p>
+
+**Type:** `string`
+
+</p>
+
+Giá trị string thô của cookie.
+
+##### `json`
+
+<p>
+
+**Type:** `() => Record<string, any>`
+
+</p>
+
+Phân tích giá trị cookie thông qua `JSON.parse()`, trả về một đối tượng. Throw nếu giá trị cookie không phải JSON hợp lệ.
+
+##### `number`
+
+<p>
+
+**Type:** `() => number`
+
+</p>
+
+Phân tích giá trị cookie thành một Number. Trả về NaN nếu không phải số hợp lệ.
+
+##### `boolean`
+
+<p>
+
+**Type:** `() => boolean`
+
+</p>
+
+Chuyển đổi giá trị cookie thành boolean.
+
+#### `AstroCookieGetOptions`
+
+<p>
+	<Since v='4.1.0' />
+</p>
+
+Interface `AstroCookieGetOption` cho phép bạn chỉ định tùy chọn khi lấy cookie.
+
+##### `decode`
+
+<p>**Type:** `(value: string) => string`</p>
+
+Cho phép tùy chỉnh cách cookie được deserialized thành một giá trị.
+
+#### `AstroCookieSetOptions`
+
+<p>
+	<Since v='4.1.0' />
+</p>
+
+`AstroCookieSetOptions` là một đối tượng có thể được truyền cho `Astro.cookies.set()` khi đặt cookie để tùy chỉnh cách cookie được serialized.
+
+##### `domain`
+
+<p>
+
+**Type:** `string`
+
+</p>
+
+Chỉ định domain. Nếu không đặt domain, hầu hết client sẽ diễn giải để áp dụng cho domain hiện tại.
+
+##### `expires`
+
+<p>
+
+**Type:** `Date`
+
+</p>
+
+Chỉ định ngày cookie sẽ hết hạn.
+
+##### `httpOnly`
+
+<p>
+
+**Type:** `boolean`
+
+</p>
+
+Nếu true, cookie sẽ không thể truy cập phía client.
+
+##### `maxAge`
+
+<p>
+
+**Type:** `number`
+
+</p>
+
+Chỉ định một số, tính bằng giây, mà cookie có hiệu lực.
+
+##### `path`
+
+<p>
+
+**Type:** `string`
+
+</p>
+
+Chỉ định subpath của domain mà cookie được áp dụng.
+
+##### `sameSite`
+
+<p>
+
+**Type:** `boolean | 'lax' | 'none' | 'strict'`
+
+</p>
+
+Chỉ định giá trị của header cookie [SameSite](https://datatracker.ietf.org/doc/html/draft-ietf-httpbis-rfc6265bis-09#section-5.4.7).
+
+##### `secure`
+
+<p>
+
+**Type:** `boolean`
+
+</p>
+
+Nếu true, cookie chỉ được đặt trên các site https.
+
+##### `encode`
+
+<p>
+
+**Type:** `(value: string) => string`
+
+</p>
+
+Cho phép tùy chỉnh cách cookie được serialized.
+
+### `session`
+
+<p>
+
+**Type:** `AstroSession`
+
+<Since v='5.7.0' />
+
+</p>
+
+`session` là một đối tượng cho phép dữ liệu được lưu trữ giữa các request cho [các route được render theo yêu cầu](/vi/guides/on-demand-rendering/). Nó được liên kết với một cookie chỉ chứa session ID: bản thân dữ liệu không được lưu trữ trong cookie.
+
+Session được tạo khi được sử dụng lần đầu, và session cookie được tự động đặt. Đối tượng `session` là `undefined` nếu không có session storage nào được cấu hình, hoặc nếu route hiện tại được prerender, và sẽ log lỗi nếu bạn cố gắng sử dụng nó.
+
+Xem [hướng dẫn session](/vi/guides/sessions/) để biết thêm thông tin về cách sử dụng session trong dự án Astro của bạn.
+
+#### `get()`
+
+<p>
+
+**Type**: `(key: string) => Promise<any>`
+
+</p>
+
+Trả về giá trị của key đã cho trong session. Nếu key không tồn tại, nó trả về `undefined`.
+
+<Tabs>
+  <TabItem label="Astro.session">
+    ```astro title="src/components/Cart.astro" "Astro.session?.get('cart')"
+    ---
+    const cart = await Astro.session?.get('cart');
+    ---
+    <button>🛒 {cart?.length}</button>
+    ```
+  </TabItem>
+  <TabItem label="context.session">
+    ```ts title="src/pages/api/cart.ts" "session.get('cart')"
+    import type { APIContext } from 'astro';
+
+    export async function GET({ session }: APIContext) {
+      const cart = await session.get('cart');
+      return Response.json({ cart });
+    }
+    ```
+
+  </TabItem>
+</Tabs>
+
+#### `set()`
+
+<p>
+
+**Type**: `(key: string, value: any, options?: { ttl: number }) => void`
+
+</p>
+
+Đặt giá trị của key đã cho trong session. Giá trị có thể là bất kỳ kiểu serializable nào. Phương thức này đồng bộ và giá trị có sẵn ngay lập tức để truy xuất, nhưng nó không được lưu vào backend cho đến cuối request.
+
+<Tabs>
+  <TabItem label="Astro.session">
+    ```astro title="src/pages/products/[slug].astro" "Astro.session?.set('lastViewedProduct', slug)"
+    ---
+    const { slug } = Astro.params;
+    Astro.session?.set('lastViewedProduct', slug);
+    ---
+    ```
+  </TabItem>
+  <TabItem label="context.session">
+    ```ts title="src/pages/api/add-to-cart.ts" "session.set('cart', cart)"
+    import type { APIContext } from 'astro';
+
+    export async function POST({ session, request }: APIContext) {
+      const cart = await session.get('cart');
+      const newItem = await request.json();
+      cart.push(newItem);
+      // Lưu cart đã cập nhật vào session
+      session.set('cart', cart);
+      return Response.json({ cart });
+    }
+    ```
+
+  </TabItem>
+</Tabs>
+
+#### `regenerate()`
+
+<p>
+
+**Type**: `() => void`
+
+</p>
+
+Tái tạo session ID. Gọi điều này khi người dùng đăng nhập hoặc nâng cấp quyền của họ, để ngăn chặn các cuộc tấn công session fixation.
+
+<Tabs>
+  <TabItem label="Astro.session">
+    ```astro title="src/pages/welcome.astro" "Astro.session?.regenerate()"
+    ---
+    Astro.session?.regenerate();
+    ---
+    ```
+  </TabItem>
+  <TabItem label="context.session">
+    ```ts title="src/pages/api/login.ts" "session.regenerate()"
+    import type { APIContext } from 'astro';
+
+    export async function POST({ session }: APIContext) {
+      // Xác thực người dùng...
+      doLogin();
+      // Tái tạo session ID để ngăn chặn các cuộc tấn công session fixation
+      session.regenerate();
+      return Response.json({ success: true });
+    }
+    ```
+
+  </TabItem>
+</Tabs>
+
+#### `destroy()`
+
+<p>
+
+**Type**: `() => void`
+
+</p>
+
+Hủy session, xóa cookie và đối tượng từ backend. Gọi điều này khi người dùng đăng xuất hoặc session của họ bị vô hiệu hóa.
+
+<Tabs>
+  <TabItem label="Astro.session">
+    ```astro title="src/pages/logout.astro" "Astro.session?.destroy()"
+    ---
+    Astro.session?.destroy();
+    return Astro.redirect('/login');
+    ---
+    ```
+  </TabItem>
+  <TabItem label="context.session">
+    ```ts title="src/pages/api/logout.ts" "session.destroy()"
+    import type { APIContext } from 'astro';
+
+    export async function POST({ session }: APIContext) {
+      session.destroy();
+      return Response.json({ success: true });
+    }
+    ```
+
+  </TabItem>
+</Tabs>
+
+#### `load()`
+
+<p>
+
+**Type**: `(id: string) => Promise<void>`
+
+</p>
+
+Tải một session theo ID. Trong sử dụng bình thường, session được tải tự động từ request cookie. Sử dụng phương thức này để tải session từ một ID khác. Điều này hữu ích nếu bạn đang xử lý session ID của riêng mình, hoặc nếu bạn muốn theo dõi session mà không sử dụng cookies.
+
+<Tabs>
+  <TabItem label="Astro.session">
+    ```astro title="src/pages/cart.astro" "Astro.session?.load('session-id')"
+    ---
+    // Tải session từ header thay vì cookies
+    const sessionId = Astro.request.headers.get('x-session-id');
+    await Astro.session?.load(sessionId);
+    const cart = await Astro.session?.get('cart');
+    ---
+    <h1>Giỏ hàng của bạn</h1>
+    <ul>
+      {cart?.map((item) => (
+        <li>{item.name}</li>
+      ))}
+    </ul>
+    ```
+  </TabItem>
+  <TabItem label="context.session">
+    ```ts title="src/pages/api/load-session.ts" "session.load('session-id')"
+    import type { APIRoute } from 'astro';
+
+    export const GET: APIRoute = async ({ session, request }) => {
+      // Tải session từ header thay vì cookies
+      const sessionId = request.headers.get('x-session-id');
+      await session.load(sessionId);
+      const cart = await session.get('cart');
+      return Response.json({ cart });
+    };
+    ```
+
+  </TabItem>
+
+</Tabs>
+
+### Thuộc tính đối tượng đã deprecated
+
+#### `Astro.glob()`
+
+:::caution[Deprecated trong v5.0]
+Sử dụng [`import.meta.glob` của Vite](https://vite.dev/guide/features.html#glob-import) để query các file dự án.
+
+`Astro.glob('../pages/post/*.md')` có thể được thay thế bằng:
+
+`Object.values(import.meta.glob('../pages/post/*.md', { eager: true }));`
+
+Xem [hướng dẫn imports](/vi/guides/imports/#importmetaglob) để biết thêm thông tin và cách sử dụng.
+:::
+
+`Astro.glob()` là một cách để tải nhiều file local vào thiết lập site tĩnh của bạn.
+
+```astro
+---
+// src/components/my-component.astro
+const posts = await Astro.glob('../pages/post/*.md'); // trả về một mảng các bài viết sống tại ./src/pages/post/*.md
+---
+
+<div>
+{posts.slice(0, 3).map((post) => (
+  <article>
+    <h2>{post.frontmatter.title}</h2>
+    <p>{post.frontmatter.description}</p>
+    <a href={post.url}>Đọc thêm</a>
+  </article>
+))}
+</div>
+```
+
+`.glob()` chỉ nhận một tham số: một URL glob tương đối của những file local bạn muốn import. Nó bất đồng bộ và trả về một mảng các exports từ các file khớp.
+
+`.glob()` không thể nhận variables hoặc strings có interpolate chúng, vì chúng không thể phân tích tĩnh. (Xem [hướng dẫn imports](/vi/guides/imports/#supported-values) để có workaround.) Điều này là vì `Astro.glob()` là một wrapper của [`import.meta.glob()`](https://vite.dev/guide/features.html#glob-import) của Vite.
+
+:::note
+Bạn cũng có thể sử dụng `import.meta.glob()` trực tiếp trong dự án Astro của mình. Bạn có thể muốn làm điều này khi:
+
+- Bạn cần tính năng này trong một file không phải `.astro`, như một API route. `Astro.glob()` chỉ có sẵn trong các file `.astro`, trong khi `import.meta.glob()` có sẵn ở bất cứ đâu trong dự án.
+- Bạn không muốn tải từng file ngay lập tức. `import.meta.glob()` có thể trả về các hàm import nội dung file, thay vì trả về chính nội dung đó. Lưu ý rằng import này bao gồm tất cả styles và scripts cho bất kỳ file được import nào. Chúng sẽ được bundle và thêm vào trang cho dù file có thực sự được sử dụng hay không, vì điều này được quyết định bởi phân tích tĩnh, không phải tại runtime.
+- Bạn muốn truy cập đường dẫn của từng file. `import.meta.glob()` trả về một map của đường dẫn file với nội dung của nó, trong khi `Astro.glob()` trả về một danh sách nội dung.
+- Bạn muốn truyền nhiều pattern; ví dụ, bạn muốn thêm một "negative pattern" để lọc ra một số file nhất định. `import.meta.glob()` có thể tùy chọn nhận một mảng glob strings, thay vì một string duy nhất.
+
+Đọc thêm trong [tài liệu Vite](https://vite.dev/guide/features.html#glob-import).
+:::
+
+##### File Markdown
+
+Các file Markdown được tải với `Astro.glob()` trả về interface `MarkdownInstance` sau:
+
+```ts
+export interface MarkdownInstance<T extends Record<string, any>> {
+	/* Bất kỳ dữ liệu nào được chỉ định trong frontmatter YAML/TOML của file này */
+	frontmatter: T;
+	/* Đường dẫn file tuyệt đối của file này */
+	file: string;
+	/* Đường dẫn render của file này */
+	url: string | undefined;
+	/* Component Astro render nội dung của file này */
+	Content: AstroComponentFactory;
+	/** (Chỉ Markdown) Nội dung file Markdown thô, không bao gồm layout HTML và frontmatter YAML/TOML */
+	rawContent(): string;
+	/** (Chỉ Markdown) File Markdown được biên dịch thành HTML, không bao gồm layout HTML */
+	compiledContent(): string;
+	/* Hàm trả về một mảng các phần tử h1...h6 trong file này */
+	getHeadings(): Promise<{ depth: number; slug: string; text: string }[]>;
+	default: AstroComponentFactory;
+}
+```
+
+Bạn có thể tùy chọn cung cấp một type cho biến `frontmatter` bằng cách sử dụng TypeScript generic.
+
+```astro
+---
+interface Frontmatter {
+  title: string;
+  description?: string;
+}
+const posts = await Astro.glob<Frontmatter>('../pages/post/*.md');
+---
+
+<ul>
+  {posts.map(post => <li>{post.frontmatter.title}</li>)}
+</ul>
+```
+
+##### File Astro
+
+Các file Astro có interface sau:
+
+```ts
+export interface AstroInstance {
+	/* Đường dẫn file của file này */
+	file: string;
+	/* URL cho file này (nếu nó ở trong thư mục pages) */
+	url: string | undefined;
+	default: AstroComponentFactory;
+}
+```
+
+##### File khác
+
+Các file khác có thể có interface khác nhau, nhưng `Astro.glob()` chấp nhận một TypeScript generic nếu bạn biết chính xác một loại file không được nhận dạng chứa gì.
+
+```ts
+---
+interface CustomDataFile {
+  default: Record<string, any>;
+}
+const data = await Astro.glob<CustomDataFile>('../data/**/*.js');
+---
+```

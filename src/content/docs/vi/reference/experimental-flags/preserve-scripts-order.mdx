@@ -1,0 +1,92 @@
+---
+title: Thử nghiệm giữ nguyên thứ tự script
+sidebar:
+  label: Giữ nguyên thứ tự script
+i18nReady: true
+---
+
+import Since from '~/components/Since.astro';
+
+<p>
+
+**Loại:** `boolean`<br />
+**Mặc định:** `false`<br />
+
+  <Since v="5.5.0" />
+</p>
+
+Kết xuất nhiều thẻ `<style>` và `<script>` theo đúng thứ tự mà chúng được khai báo trong mã nguồn.
+
+Để bật hành vi này, hãy thêm cờ tính năng `experimental.preserveScriptOrder` vào cấu hình Astro của bạn:
+
+```js title="astro.config.mjs" ins={4-6}
+import { defineConfig } from 'astro/config';
+
+export default defineConfig({
+	experimental: {
+		preserveScriptOrder: true,
+	},
+});
+```
+
+## Sử dụng
+
+Cờ thử nghiệm này không yêu cầu cách sử dụng đặc biệt nào và chỉ ảnh hưởng đến thứ tự Astro kết xuất các style và script của bạn.
+
+Khi kết xuất nhiều thẻ `<style>` và `<script>` trên cùng một trang, Astro hiện tại sẽ đảo ngược thứ tự của chúng trong HTML đầu ra. Điều này có thể dẫn đến kết quả không mong muốn, ví dụ như các style CSS bị ghi đè bởi các thẻ style được định nghĩa trước đó khi trang web của bạn được build. Cờ thử nghiệm này sẽ kết xuất các thẻ `<script>` và `<style>` theo đúng thứ tự chúng được khai báo.
+
+Ví dụ, component sau có hai thẻ `<style>` và hai thẻ `<script>`:
+
+```astro title="src/components/MyComponent.astro"
+<p>Tôi là một component</p>
+<style>
+  body {
+    background: red;
+  }
+</style>
+<style>
+  body {
+    background: yellow;
+  }
+</style>
+<script>
+    console.log("hello")
+</script>
+<script>
+    console.log("world!")
+</script>
+```
+
+Sau khi biên dịch, hành vi mặc định của Astro sẽ tạo ra style inline mà trong đó màu `yellow` xuất hiện trước, rồi đến `red`. Điều này nghĩa là nền màu `red` sẽ được áp dụng. Tương tự với hai script, từ `world!` sẽ được log trước, rồi đến `hello`:
+
+```css
+body {
+	background: #ff0;
+}
+body {
+	background: red;
+}
+```
+
+```js
+console.log('world!');
+console.log('hello');
+```
+
+Khi `experimental.preserveScriptOrder` được đặt thành `true`, thứ tự kết xuất của các thẻ `<style>` và `<script>` sẽ khớp với thứ tự mà chúng được viết ra. Với ví dụ component trên, style sinh ra sẽ có `red` xuất hiện trước, rồi tới `yellow`; với script, `hello` sẽ được log trước, rồi tới `world!`:
+
+```css
+body {
+	background: red;
+}
+body {
+	background: #ff0;
+}
+```
+
+```js
+console.log('hello');
+console.log('world!');
+```
+
+Trong các phiên bản lớn tương lai, Astro sẽ giữ nguyên thứ tự style và script theo mặc định, nhưng bạn có thể chủ động sử dụng hành vi này sớm với cờ `experimental.preserveScriptOrder`.

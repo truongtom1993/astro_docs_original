@@ -1,0 +1,227 @@
+---
+title: Cloudinary & Astro
+description: Thêm hình ảnh và video vào dự án Astro của bạn bằng Cloudinary
+sidebar:
+  label: Cloudinary
+type: media
+stub: true
+service: Cloudinary
+i18nReady: true
+---
+import PackageManagerTabs from '~/components/tabs/PackageManagerTabs.astro';
+
+[Cloudinary](https://cloudinary.com) là một nền tảng quản lý hình ảnh và video cũng như Trình quản lý Tài sản Kỹ thuật số không giao diện (DAM), cho phép bạn lưu trữ tài nguyên và phân phối chúng qua mạng phân phối nội dung (CDN) của họ.
+
+Khi sử dụng Cloudinary để phân phối, bạn còn có quyền truy cập vào Transformation API của họ, cho phép bạn chỉnh sửa tài nguyên với các công cụ như xóa nền, cắt và thay đổi kích thước động, cũng như AI tạo sinh.
+
+## Sử dụng Cloudinary trong Astro
+
+Cloudinary hỗ trợ nhiều SDK khác nhau, có thể sử dụng tùy thuộc vào môi trường Astro của bạn.
+
+[Cloudinary Astro SDK](https://astro.cloudinary.dev/) cung cấp các component gốc cho Astro, bao gồm các component hình ảnh, video, tải lên, cũng như một content loader có thể dùng với content collections của Astro.
+
+Ngoài ra, cả [Node.js SDK của Cloudinary](https://cloudinary.com/documentation/node_integration) và [JavaScript SDK](https://cloudinary.com/documentation/javascript_integration) đều có thể dùng để tạo URL cho hình ảnh của bạn. Node.js SDK còn có thể thực hiện các yêu cầu tới API Cloudinary như tải lên tài nguyên, yêu cầu tài nguyên hoặc phân tích nội dung.
+
+## Điều kiện tiên quyết
+
+- Một dự án Astro có sẵn
+- Một tài khoản Cloudinary
+
+## Cài đặt Astro Cloudinary
+
+Cài đặt Cloudinary Astro SDK bằng cách chạy lệnh phù hợp với trình quản lý gói của bạn:
+
+<PackageManagerTabs>
+  <Fragment slot="npm">
+  ```shell
+  npm install astro-cloudinary
+  ```
+  </Fragment>
+  <Fragment slot="pnpm">
+  ```shell
+  pnpm add astro-cloudinary
+  ```
+  </Fragment>
+  <Fragment slot="yarn">
+  ```shell
+  yarn add astro-cloudinary
+  ```
+  </Fragment>
+</PackageManagerTabs>
+
+## Cấu hình tài khoản của bạn
+
+Tạo một file `.env` mới ở thư mục gốc dự án và thêm thông tin xác thực Cloudinary của bạn:
+
+```shell title=".env"
+PUBLIC_CLOUDINARY_CLOUD_NAME="<Tên Cloud của bạn>"
+
+// Chỉ cần thiết nếu sử dụng CldUploadWidget hoặc cldAssetsLoader
+PUBLIC_CLOUDINARY_API_KEY="<API Key của bạn>"
+CLOUDINARY_API_SECRET="<API Secret của bạn>"
+```
+
+## Sử dụng hình ảnh Cloudinary
+
+Thêm hình ảnh vào các component `.astro` bằng cách truyền dữ liệu hình ảnh (ví dụ: `src`, `width`, `alt`) vào component `<CldImage>`. Điều này sẽ tự động tối ưu hóa hình ảnh và cho phép bạn sử dụng Transformations API.
+
+```jsx title="Component.astro"
+---
+import { CldImage } from 'astro-cloudinary';
+---
+<CldImage
+  src="<Public ID>"
+  width="<Width>"
+  height="<Height>"
+  alt="<Mô tả>"
+/>
+```
+
+Xem thêm [tài liệu `<CldImage>` của Cloudinary](https://astro.cloudinary.dev/cldimage/basic-usage) để biết thêm thông tin.
+
+## Sử dụng video Cloudinary
+
+Để thêm video vào các component `.astro`, thêm `<CldVideoPlayer>` và truyền các thuộc tính phù hợp. Component này sẽ tự động tối ưu hóa và nhúng video của bạn bằng [Cloudinary Video Player](https://cloudinary.com/documentation/cloudinary_video_player).
+
+```jsx title="Component.astro"
+---
+import { CldVideoPlayer } from 'astro-cloudinary';
+---
+<CldVideoPlayer
+  src="<Public ID>"
+  width="<Width>"
+  height="<Height>"
+/>
+```
+
+Xem thêm [tài liệu `<CldVideoPlayer>` của Cloudinary](https://astro.cloudinary.dev/cldvideoplayer/basic-usage) để biết thêm thông tin.
+
+## Bật tính năng tải lên Cloudinary
+
+Để bật tính năng tải file lên trong giao diện website hoặc ứng dụng của bạn, hãy thêm `<CldUploadWidget>`, widget này sẽ nhúng [Cloudinary Upload Widget](https://cloudinary.com/documentation/upload_widget).
+
+Ví dụ sau đây tạo một widget cho phép tải lên không ký (unsigned) bằng cách truyền một [Upload Preset](https://cloudinary.com/documentation/upload_presets) không ký:
+
+```jsx title="Component.astro"
+---
+import { CldUploadWidget } from 'astro-cloudinary';
+---
+<CldUploadWidget uploadPreset="<Upload Preset>">
+  <button>Tải lên</button>
+</CldUploadWidget>
+```
+
+Đối với tải lên có ký, bạn có thể xem [hướng dẫn và ví dụ](https://astro.cloudinary.dev/clduploadwidget/signed-uploads) trên tài liệu Astro Cloudinary.
+
+Xem thêm [tài liệu `<CldUploadWidget>` của Cloudinary](https://astro.cloudinary.dev/clduploadwidget/basic-usage) để biết thêm thông tin.
+
+## Content loader của Cloudinary
+
+Cloudinary Astro SDK cung cấp content loader `cldAssetsLoader` để tải tài nguyên Cloudinary cho content collections.
+
+Để tải một tập hợp hình ảnh hoặc video, đặt `loader: cldAssetsLoader ({})` với `folder` nếu cần:
+
+```jsx title="config.ts"
+import { defineCollection } from 'astro:content';
+import { cldAssetsLoader } from 'astro-cloudinary/loaders';
+
+export const collections = {
+  assets: defineCollection({
+    loader: cldAssetsLoader({
+      folder: '<Thư mục>' // Tùy chọn, không có sẽ tải thư mục gốc
+    })
+  }),
+}
+```
+
+Sau đó, bạn có thể sử dụng [các hàm truy vấn `getCollection()` hoặc `getEntry()`](/vi/guides/content-collections/#querying-collections) để chọn một hoặc nhiều hình ảnh hoặc video từ collection của mình.
+
+Xem thêm [tài liệu `cldAssetsLoader` của Cloudinary](https://astro.cloudinary.dev/cldassetsloader/basic-usage) để biết thêm thông tin.
+
+## Tạo URL hình ảnh Cloudinary
+
+Astro Cloudinary SDK cung cấp helper `getCldOgImageUrl()` để tạo và sử dụng URL cho hình ảnh của bạn. Sử dụng khi bạn cần URL thay vì một component để hiển thị hình ảnh.
+
+Một trường hợp phổ biến là dùng URL cho ảnh Open Graph trong thẻ `<meta>` cho social media card. Helper này, giống như các component, cho phép bạn sử dụng các chuyển đổi của Cloudinary để tạo các social card động, độc đáo cho bất kỳ trang nào của bạn.
+
+Ví dụ sau cho thấy các thẻ `<meta>` cần thiết cho social media card, dùng `getCldOgImageUrl()` để tạo ảnh Open Graph:
+
+```jsx title="Layout.astro"
+---
+import { getCldOgImageUrl } from 'astro-cloudinary/helpers';
+const ogImageUrl = getCldOgImageUrl({ src: '<Public ID>' });
+---
+<meta property="og:image" content={ogImageUrl} />
+<meta property="og:image:secure_url" content={ogImageUrl} />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+<meta property="twitter:title" content="<Tiêu đề Twitter>" />
+<meta property="twitter:card" content="summary_large_image" />
+<meta property="twitter:image" content={ogImageUrl} />
+```
+
+Tìm [mẫu Social Media Card Cloudinary](https://astro.cloudinary.dev/templates/social-media-cards) trên tài liệu Cloudinary.
+
+Xem thêm [tài liệu `getCldOgImageUrl()` của Cloudinary](https://astro.cloudinary.dev/getcldogimageurl/basic-usage) để biết thêm thông tin.
+
+## Sử dụng Cloudinary trong Node.js
+
+Đối với quản lý tài nguyên phức tạp hơn, tải lên hoặc phân tích, bạn có thể sử dụng Cloudinary Node.js SDK khi làm việc trong môi trường Node.js của Astro.
+
+Cài đặt Cloudinary Node.js SDK bằng lệnh phù hợp với trình quản lý gói của bạn:
+
+<PackageManagerTabs>
+  <Fragment slot="npm">
+  ```shell
+  npm install cloudinary
+  ```
+  </Fragment>
+  <Fragment slot="pnpm">
+  ```shell
+  pnpm add cloudinary
+  ```
+  </Fragment>
+  <Fragment slot="yarn">
+  ```shell
+  yarn add cloudinary
+  ```
+  </Fragment>
+</PackageManagerTabs>
+
+Thêm các biến môi trường sau vào file `.env` của bạn:
+
+```shell title=".env"
+PUBLIC_CLOUDINARY_CLOUD_NAME="<Tên Cloud của bạn>"
+PUBLIC_CLOUDINARY_API_KEY="<API Key của bạn>"
+CLOUDINARY_API_SECRET="<API Secret của bạn>"
+```
+
+Cấu hình tài khoản của bạn với một instance Cloudinary mới bằng cách thêm đoạn mã sau vào giữa các rào của component Astro:
+
+```js title="Component.astro"
+---
+import { v2 as cloudinary } from "cloudinary";
+
+cloudinary.config({
+  cloud_name: import.meta.env.PUBLIC_CLOUDINARY_CLOUD_NAME,
+  api_key: import.meta.env.PUBLIC_CLOUDINARY_API_KEY,
+  api_secret: import.meta.env.CLOUDINARY_API_SECRET,
+});
+---
+```
+
+Điều này sẽ giúp bạn truy cập tất cả API của Cloudinary để tương tác với hình ảnh, video và các file được hỗ trợ khác.
+
+```js title="Component.astro"
+await cloudinary.uploader.upload('./path/to/file');
+```
+
+Tìm hiểu cách [tải file lên bằng Cloudinary Node.js SDK với Astro Forms](https://www.youtube.com/watch?v=DQUYMyT2MTM).
+
+
+## Tài nguyên chính thức
+
+- [Cloudinary Astro SDK](https://astro.cloudinary.dev/)
+- [Cloudinary Node.js SDK](https://cloudinary.com/documentation/node_integration)
+- [Sử dụng Cloudinary với Astro (YouTube)](https://www.youtube.com/playlist?list=PL8dVGjLA2oMqnpf2tShn1exf5GkSWuu5-)
+- [Ví dụ mã nguồn sử dụng Cloudinary Astro SDK (GitHub)](https://github.com/cloudinary-community/cloudinary-examples/tree/main/examples/astro-cloudinary)

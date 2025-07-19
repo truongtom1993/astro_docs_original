@@ -1,0 +1,408 @@
+---
+title: Astro Container API (thử nghiệm)
+sidebar:
+  label: Container API (thử nghiệm)
+i18nReady: false
+---
+
+import Since from '~/components/Since.astro';
+
+<p>
+	<Since v='4.9.0' />
+</p>
+
+Container API cho phép bạn render các component Astro một cách riêng biệt.
+
+API thử nghiệm phía server này mở ra nhiều khả năng sử dụng trong tương lai, nhưng hiện tại được giới hạn để cho phép [kiểm thử đầu ra của component `.astro`](/vi/guides/testing/#vitest-and-container-api) trong môi trường `vite` như `vitest`.
+
+Nó cũng cho phép bạn [tải thủ công các script rendering](#adding-a-renderer-manually) để tạo container trong các trang được render theo yêu cầu hoặc các môi trường "shell" khác bên ngoài `vite` (ví dụ: trong ứng dụng PHP hoặc Elixir).
+
+API này cho phép bạn [tạo container mới](#create), và render component Astro trả về [một chuỗi](#rendertostring) hoặc [`Response`](#rendertoresponse).
+
+API này đang thử nghiệm và có thể thay đổi, kể cả trong [các phiên bản minor hoặc patch](/vi/upgrade-astro/#semantic-versioning). Vui lòng tham khảo [CHANGELOG của Astro](https://github.com/withastro/astro/blob/main/packages/astro/CHANGELOG.md) để theo dõi các thay đổi. Trang này sẽ luôn được cập nhật với thông tin mới nhất cho phiên bản Astro hiện tại.
+
+## `create()`
+
+Tạo một instance mới của container.
+
+```js
+import { experimental_AstroContainer } from 'astro/container';
+
+const container = await experimental_AstroContainer.create();
+```
+
+Nó chấp nhận một object với các tùy chọn sau:
+
+```ts
+export type AstroContainerOptions = {
+	streaming?: boolean;
+	renderers?: AddServerRenderer[];
+};
+
+export type AddServerRenderer =
+	| {
+			renderer: NamedSSRLoadedRendererValue;
+			name: never;
+	  }
+	| {
+			renderer: SSRLoadedRendererValue;
+			name: string;
+	  };
+```
+
+### Tùy chọn `streaming`
+
+**Type:** `boolean`
+
+Kích hoạt render component sử dụng [HTML streaming](/vi/guides/on-demand-rendering/#html-streaming).
+
+### Tùy chọn `renderers`
+
+**Type:** `AddServerRenderer[]`
+
+Danh sách các client renderer đã tải cần thiết cho component. Sử dụng điều này nếu component `.astro` của bạn render bất kỳ [component UI framework](/vi/guides/framework-components/) hoặc MDX nào sử dụng integration Astro chính thức (ví dụ: React, Vue, v.v.).
+
+Renderer có thể được thêm thông qua Container API tự động cho các ứng dụng tĩnh, hoặc trường hợp container không được gọi tại runtime (ví dụ: kiểm thử với `vitest`).
+
+Đối với [ứng dụng render theo yêu cầu](/vi/guides/on-demand-rendering/), hoặc trường hợp container được gọi tại runtime hoặc bên trong các "shell" khác (ví dụ: PHP, Ruby, Java, v.v.), renderer phải được import thủ công.
+
+#### Thêm renderer thông qua Container API
+
+Đối với mỗi integration Astro chính thức, import và sử dụng hàm helper `getContainerRenderer()` để expose các script rendering client và server của nó. Chúng có sẵn cho `@astrojs/react`, `@astrojs/preact`, `@astrojs/solid-js`, `@astrojs/svelte`, `@astrojs/vue`, và `@astrojs/mdx`.
+
+Đối với các package renderer bên ngoài npm org `@astrojs`, tìm trong tài liệu của chúng về `getContainerRenderer()` hoặc hàm tương tự được cung cấp.
+
+Khi sử dụng `vite` (`vitest`, integration Astro, v.v.), các renderer được tải với hàm `loadRenderers()` từ virtual module `astro:container`.
+
+:::caution
+Bên ngoài `vite` hoặc cho việc sử dụng theo yêu cầu, bạn sẽ phải [tải renderer thủ công](#adding-a-renderer-manually).
+:::
+
+Ví dụ sau cung cấp object cần thiết để render component Astro mà render component React và component Svelte:
+
+```js
+import { getContainerRenderer as reactContainerRenderer } from '@astrojs/react';
+import { getContainerRenderer as svelteContainerRenderer } from '@astrojs/svelte';
+import { loadRenderers } from 'astro:container';
+
+const renderers = await loadRenderers([reactContainerRenderer(), svelteContainerRenderer()]);
+const container = await experimental_AstroContainer.create({
+	renderers,
+});
+const result = await container.renderToString(ReactWrapper);
+```
+
+#### Thêm renderer thủ công
+
+Khi container được gọi tại runtime, hoặc bên trong các "shell" khác, các hàm helper của virtual module `astro:container` không khả dụng. Bạn phải import các server và client renderer cần thiết thủ công và lưu trữ chúng bên trong container bằng `addServerRenderer` và `addClientRenderer`.
+
+Server renderer cần thiết để build project của bạn, và phải được lưu trữ trong container cho mọi framework được sử dụng. Client renderer cần bổ sung để hydrate bất kỳ component phía client nào sử dụng [`client:*` directive](/vi/reference/directives-reference/#client-directives).
+
+Chỉ cần một câu lệnh import cho mỗi framework. Import renderer làm cho cả server và client renderer khả dụng cho container của bạn. Tuy nhiên, **server renderer phải được thêm vào container trước client renderer**. Điều này cho phép toàn bộ container render trước, sau đó hydrate bất kỳ component tương tác nào.
+
+Ví dụ sau import thủ công các server renderer cần thiết để có thể hiển thị các component Vue tĩnh và trang `.mdx`. Nó bổ sung thêm cả server và client renderer cho các component React tương tác.
+
+```js
+import reactRenderer from '@astrojs/react/server.js';
+import vueRenderer from '@astrojs/vue/server.js';
+import mdxRenderer from '@astrojs/mdx/server.js';
+
+const container = await experimental_AstroContainer.create();
+container.addServerRenderer({ renderer: vueRenderer });
+container.addServerRenderer({ renderer: mdxRenderer });
+
+container.addServerRenderer({ renderer: reactRenderer });
+container.addClientRenderer({ name: '@astrojs/react', entrypoint: '@astrojs/react/client.js' });
+```
+
+## `renderToString()`
+
+Hàm này render một component được chỉ định bên trong container. Nó nhận component Astro làm đối số và trả về một chuỗi đại diện cho HTML/content được render bởi component Astro.
+
+```js
+import { experimental_AstroContainer } from 'astro/container';
+import Card from '../src/components/Card.astro';
+
+const container = await experimental_AstroContainer.create();
+const result = await container.renderToString(Card);
+```
+
+Về cơ bản, hàm này gọi [`renderToResponse`](#rendertoresponse) và gọi `Response.text()`.
+
+Nó cũng chấp nhận một object làm đối số thứ hai có thể chứa [một số tùy chọn](#rendering-options).
+
+## `renderToResponse()`
+
+Nó render một component và trả về object `Response`.
+
+```js
+import { experimental_AstroContainer } from 'astro/container';
+import Card from '../src/components/Card.astro';
+
+const container = await experimental_AstroContainer.create();
+const result = await container.renderToResponse(Card);
+```
+
+Nó cũng chấp nhận một object làm đối số thứ hai có thể chứa [một số tùy chọn](#rendering-options).
+
+## Tùy chọn rendering
+
+Cả [`renderToResponse`](#rendertoresponse) và [`renderToString`](#rendertostring) đều chấp nhận một object làm đối số thứ hai:
+
+```ts
+export type ContainerRenderOptions = {
+	slots?: Record<string, any>;
+	props?: Record<string, unknown>;
+	request?: Request;
+	params?: Record<string, string | undefined>;
+	locals?: App.Locals;
+	routeType?: 'page' | 'endpoint';
+};
+```
+
+Các giá trị tùy chọn này có thể được truyền cho hàm rendering để cung cấp thông tin bổ sung cần thiết cho component Astro render đúng cách.
+
+### `slots`
+
+**Type**: `Record<string, any>`;
+
+Tùy chọn để truyền content được render với [`<slots>`](/vi/basics/astro-components/#slots).
+
+Nếu component Astro của bạn render một slot mặc định, truyền object với `default` làm key:
+
+```js name="Card.test.js"
+import Card from '../src/components/Card.astro';
+
+const result = await container.renderToString(Card, {
+	slots: { default: 'Some value' },
+});
+```
+
+Nếu component của bạn render các slot có tên, sử dụng tên slot làm key của object:
+
+```astro name="Card.astro"
+---
+---
+<div>
+  <slot name="header" />
+  <slot name="footer" />
+</div>
+```
+
+```js name="Card.test.js"
+import Card from '../src/components/Card.astro';
+
+const result = await container.renderToString(Card, {
+	slots: {
+		header: 'Header content',
+		footer: 'Footer',
+	},
+});
+```
+
+Bạn cũng có thể render component theo tầng:
+
+```astro name="Card.astro"
+---
+---
+<div>
+  <slot name="header" />
+  <slot name="footer" />
+</div>
+```
+
+```js name="Card.test.js"
+import Card from '../src/components/Card.astro';
+import CardHeader from '../src/components/CardHeader.astro';
+import CardFooter from '../src/components/CardFooter.astro';
+
+const result = await container.renderToString(Card, {
+	slots: {
+		header: await container.renderToString(CardHeader),
+		footer: await container.renderToString(CardFooter),
+	},
+});
+```
+
+### Tùy chọn `props`
+
+**Type**: `Record<string, unknown>`
+
+Tùy chọn để truyền [properties](/vi/basics/astro-components/#component-props) cho component Astro.
+
+```js name="Card.test.js"
+import Card from '../src/components/Card.astro';
+
+const result = await container.renderToString(Card, {
+	props: { name: 'Hello, world!' },
+});
+```
+
+```astro name="Card.astro"
+---
+// Cho hỗ trợ TypeScript
+interface Props {
+  name: string;
+};
+
+const { name } = Astro.props;
+---
+<div>
+  {name}
+</div>
+```
+
+### Tùy chọn `request`
+
+**Type**: `Request`
+
+Tùy chọn để truyền `Request` với thông tin về path/URL mà component sẽ render.
+
+Sử dụng tùy chọn này khi component của bạn cần đọc thông tin như `Astro.url` hoặc `Astro.request`.
+
+Bạn cũng có thể inject các header hoặc cookie có thể.
+
+```js file="Card.test.js"
+import Card from '../src/components/Card.astro';
+
+const result = await container.renderToString(Card, {
+	request: new Request('https://example.com/blog', {
+		headers: {
+			'x-some-secret-header': 'test-value',
+		},
+	}),
+});
+```
+
+### Tùy chọn `params`
+
+**Type**: `Record<string, string | undefined>`;
+
+Object để truyền thông tin về parameter đường dẫn cho component Astro chịu trách nhiệm [tạo route động](/vi/guides/routing/#dynamic-routes).
+
+Sử dụng tùy chọn này khi component của bạn cần giá trị cho `Astro.params` để tạo một route động.
+
+```astro name="Card.astro"
+---
+const { locale, slug } = Astro.params;
+---
+<div></div>
+```
+
+```js file="LocaleSlug.test.js"
+import LocaleSlug from '../src/components/[locale]/[slug].astro';
+
+const result = await container.renderToString(LocaleSlug, {
+	params: {
+		locale: 'en',
+		slug: 'getting-started',
+	},
+});
+```
+
+### Tùy chọn `locals`
+
+**Type**: `App.Locals`
+
+Tùy chọn để truyền thông tin từ [`Astro.locals`](/vi/reference/api-reference/#locals) để render component của bạn.
+
+Sử dụng tùy chọn này khi component của bạn cần thông tin được lưu trữ trong lifecycle của request để render, chẳng hạn như trạng thái đăng nhập.
+
+```astro name="Card.astro"
+---
+const { checkAuth } = Astro.locals;
+const isAuthenticated = checkAuth();
+---
+{isAuthenticated ? <span>You're in</span> : <span>You're out</span> }
+```
+
+```js file="Card.test.js"
+import Card from '../src/components/Card.astro';
+
+test('User is in', async () => {
+	const result = await container.renderToString(Card, {
+		locals: {
+			checkAuth() {
+				return true;
+			},
+		},
+	});
+
+	// assert result contains "You're in"
+});
+
+test('User is out', async () => {
+	const result = await container.renderToString(Card, {
+		locals: {
+			checkAuth() {
+				return false;
+			},
+		},
+	});
+
+	// assert result contains "You're out"
+});
+```
+
+### Tùy chọn `routeType`
+
+**Type**: `"page" | "endpoint"`
+
+Tùy chọn có sẵn khi sử dụng `renderToResponse` để chỉ định rằng bạn đang render một [endpoint](/vi/guides/endpoints/):
+
+```js
+container.renderToString(Endpoint, { routeType: 'endpoint' });
+```
+
+```js file="endpoint.test.js"
+import * as Endpoint from '../src/pages/api/endpoint.js';
+
+const response = await container.renderToResponse(Endpoint, {
+	routeType: 'endpoint',
+});
+const json = await response.json();
+```
+
+Để test endpoint của bạn trên các method như `POST`, `PATCH`, v.v., sử dụng tùy chọn `request` để gọi hàm đúng:
+
+```js file="endpoint.js"
+export function GET() {}
+
+// cần test cái này
+export function POST() {}
+```
+
+```js file="endpoint.test.js" ins={5-7}
+import * as Endpoint from '../src/pages/api/endpoint.js';
+
+const response = await container.renderToResponse(Endpoint, {
+	routeType: 'endpoint',
+	request: new Request('https://example.com', {
+		method: 'POST', // Chỉ định method POST để test
+	}),
+});
+const json = await response.json();
+```
+
+### Tùy chọn `partial`
+
+<p>
+
+**Type:** `boolean`<br />
+**Default:** `true`<br/>
+
+<Since v="4.16.6" />
+</p>
+
+Có hay không Container API render component như thể chúng là [page partial](/vi/basics/astro-pages/#page-partials). Đây thường là hành vi bạn muốn khi render `components.boolean` để bạn có thể render component mà không cần shell trang đầy đủ.
+
+Để render component như một trang Astro đầy đủ, bao gồm `<!DOCTYPE html>`, bạn có thể opt-out khỏi hành vi này bằng cách đặt `partial` thành `false`:
+
+```js name="Card.test.js" ins={4}
+import Blog from '../src/pages/Blog.astro';
+
+const result = await container.renderToString(Card, {
+	partial: false,
+});
+console.log(result); // bao gồm `<!DOCTYPE html>` ở đầu HTML
+```

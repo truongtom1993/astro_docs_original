@@ -1,0 +1,674 @@
+---
+title: Astro Adapter API
+sidebar:
+  label: Adapter API
+i18nReady: true
+---
+
+import Since from '~/components/Since.astro';
+import { FileTree } from '@astrojs/starlight/components';
+
+Astro được thiết kế để dễ dàng triển khai lên bất kỳ nhà cung cấp cloud nào cho việc render theo yêu cầu, còn gọi là server-side rendering (SSR). Khả năng này được cung cấp bởi **adapters**, là các [integrations](/vi/reference/integrations-reference/). Xem [hướng dẫn render theo yêu cầu](/vi/guides/on-demand-rendering/) để học cách sử dụng adapter hiện có.
+
+## Adapter là gì?
+
+Adapter là một loại đặc biệt của [integration](/vi/reference/integrations-reference/) cung cấp entry point cho server rendering tại thời điểm request. Adapter thực hiện hai việc:
+
+- Triển khai các API đặc thù của host để xử lý requests.
+- Cấu hình quá trình build theo quy ước của host.
+
+## Xây dựng Adapter
+
+Adapter là một [integration](/vi/reference/integrations-reference/) và có thể làm bất cứ điều gì mà integration có thể làm.
+
+Adapter **phải** gọi API `setAdapter` trong hook `astro:config:done` như sau:
+
+```js title="my-adapter.mjs"
+export default function createIntegration() {
+	return {
+		name: '@example/my-adapter',
+		hooks: {
+			'astro:config:done': ({ setAdapter }) => {
+				setAdapter({
+					name: '@example/my-adapter',
+					serverEntrypoint: '@example/my-adapter/server.js',
+					supportedAstroFeatures: {
+						staticOutput: 'stable',
+					},
+				});
+			},
+		},
+	};
+}
+```
+
+Object được truyền vào `setAdapter` được định nghĩa là:
+
+```ts
+interface AstroAdapter {
+	name: string;
+	serverEntrypoint?: string;
+	previewEntrypoint?: string;
+	exports?: string[];
+	args?: any;
+	adapterFeatures?: AstroAdapterFeatures;
+	supportedAstroFeatures: AstroAdapterFeatureMap;
+}
+
+export interface AstroAdapterFeatures {
+	/**
+	 * Tạo edge function sẽ giao tiếp với Astro middleware.
+	 */
+	edgeMiddleware: boolean;
+	/**
+	 * Xác định loại build output mà adapter dự định. Mặc định là `server`;
+	 */
+	buildOutput?: 'static' | 'server';
+}
+
+export type AdapterSupportsKind = 'unsupported' | 'stable' | 'experimental' | 'deprecated' | 'limited';
+
+export type AdapterSupportWithMessage = {
+	support: Exclude<AdapterSupportsKind, 'stable'>;
+	message: string;
+	suppress?: 'default' | 'all';
+};
+
+export type AdapterSupport = AdapterSupportsKind | AdapterSupportWithMessage;
+
+export type AstroAdapterFeatureMap = {
+	/**
+	 * Adapter có thể phục vụ các trang static
+	 */
+	staticOutput?: AdapterSupport;
+	/**
+	 * Adapter có thể phục vụ các trang static hoặc render qua server
+	 */
+	hybridOutput?: AdapterSupport;
+	/**
+	 * Adapter có thể phục vụ các trang render theo yêu cầu
+	 */
+	serverOutput?: AdapterSupport;
+	/**
+	 * Adapter có thể hỗ trợ i18n domains
+	 */
+	i18nDomains?: AdapterSupport;
+	/**
+	 * Adapter có thể hỗ trợ `getSecret` được export từ `astro:env/server`
+	 */
+	envGetSecret?: AdapterSupport;
+	/**
+	 * Adapter hỗ trợ Sharp image service
+	 */
+	sharpImageService?: AdapterSupport;
+};
+```
+
+Các thuộc tính:
+
+- **name**: Tên duy nhất cho adapter của bạn, được sử dụng để ghi log.
+- **serverEntrypoint**: Entry point cho server rendering theo yêu cầu.
+- **exports**: Mảng các named exports khi sử dụng cùng với `createExports` (được giải thích bên dưới).
+- **adapterFeatures**: Object kích hoạt các tính năng cụ thể phải được adapter hỗ trợ.
+  Những tính năng này sẽ thay đổi built output, và adapter phải triển khai logic thích hợp để xử lý các output khác nhau.
+- **supportedAstroFeatures**: Map các tính năng built-in của Astro. Điều này cho phép Astro xác định những tính năng nào adapter không thể hoặc không muốn hỗ trợ để có thể cung cấp thông báo lỗi phù hợp.
+
+### Server Entrypoint
+
+API adapter của Astro cố gắng hoạt động với bất kỳ loại host nào và cung cấp cách linh hoạt để tuân theo API của host.
+
+#### Exports
+
+Một số serverless host mong đợi bạn export một function, chẳng hạn như `handler`:
+
+```js
+export function handler(event, context) {
+	// ...
+}
+```
+
+Với API adapter bạn có thể đạt được điều này bằng cách triển khai `createExports` trong `serverEntrypoint`:
+
+```js
+import { App } from 'astro/app';
+
+export function createExports(manifest) {
+	const app = new App(manifest);
+
+	const handler = (event, context) => {
+		// ...
+	};
+
+	return { handler };
+}
+```
+
+Và sau đó trong integration của bạn, nơi bạn gọi `setAdapter`, cung cấp tên này trong `exports`:
+
+```js title="my-adapter.mjs" ins={9}
+export default function createIntegration() {
+	return {
+		name: '@example/my-adapter',
+		hooks: {
+			'astro:config:done': ({ setAdapter }) => {
+				setAdapter({
+					name: '@example/my-adapter',
+					serverEntrypoint: '@example/my-adapter/server.js',
+					exports: ['handler'],
+				});
+			},
+		},
+	};
+}
+```
+
+#### Start
+
+Một số host mong đợi bạn _khởi động_ server, ví dụ như listen trên một port. Đối với những loại host này, API adapter cho phép bạn export function `start` sẽ được gọi khi bundle script chạy.
+
+```js
+import { App } from 'astro/app';
+
+export function start(manifest) {
+	const app = new App(manifest);
+
+	addEventListener('fetch', event => {
+		// ...
+	});
+}
+```
+
+#### `astro/app`
+
+Module này được sử dụng để render các trang đã được prebuilt thông qua `astro build`. Astro sử dụng các object [Request](https://developer.mozilla.org/en-US/docs/Web/API/Request) và [Response](https://developer.mozilla.org/en-US/docs/Web/API/Response) chuẩn. Các host có API khác cho request/response nên chuyển đổi sang các loại này trong adapter của họ.
+
+```js
+import { App } from 'astro/app';
+import http from 'http';
+
+export function start(manifest) {
+	const app = new App(manifest);
+
+	addEventListener('fetch', event => {
+		event.respondWith(app.render(event.request));
+	});
+}
+```
+
+Các method sau được cung cấp:
+
+##### `app.render()`
+
+<p>
+
+**Type:** `(request: Request, options?: RenderOptions) => Promise<Response>`
+
+</p>
+
+Method này gọi trang Astro khớp với request, render nó, và trả về Promise tới object [Response](https://developer.mozilla.org/en-US/docs/Web/API/Response). Điều này cũng hoạt động cho API routes không render trang.
+
+```js
+const response = await app.render(request);
+```
+
+##### `RenderOptions`
+
+<p>
+
+**Type:** `{addCookieHeader?: boolean; clientAddress?: string; locals?: object; prerenderedErrorPageFetch?: (url: ErrorPagePath) => Promise<Response>; routeData?: RouteData;}`
+
+</p>
+
+Method `app.render()` nhận tham số `request` bắt buộc, và object `RenderOptions` tùy chọn cho [`addCookieHeader`](#addcookieheader), [`clientAddress`](#clientaddress), [`locals`](#locals), [`prerenderedErrorPageFetch`](#prerenderederrorpagefetch), và [`routeData`](#routedata).
+
+###### `addCookieHeader`
+
+<p>
+
+**Type:** `boolean`<br />
+**Default:** `false`
+
+</p>
+
+Có tự động thêm tất cả cookies được viết bởi `Astro.cookie.set()` vào response headers hay không.
+
+Khi set thành `true`, chúng sẽ được thêm vào header `Set-Cookie` của response dưới dạng key-value pairs phân cách bằng dấu phẩy. Bạn có thể sử dụng API `response.headers.getSetCookie()` chuẩn để đọc từng cái riêng lẻ.
+Khi set thành `false`(mặc định), cookies chỉ có sẵn từ `App.getSetCookieFromResponse(response)`.
+
+```js
+const response = await app.render(request, { addCookieHeader: true });
+```
+
+###### `clientAddress`
+
+<p>
+
+**Type:** `string`<br />
+**Default:** `request[Symbol.for("astro.clientAddress")]`
+
+</p>
+
+Địa chỉ IP client sẽ có sẵn dưới dạng [`Astro.clientAddress`](/vi/reference/api-reference/#clientaddress) trong các trang, và dưới dạng `ctx.clientAddress` trong API routes và middleware.
+
+Ví dụ dưới đây đọc header `x-forwarded-for` và truyền nó dưới dạng `clientAddress`. Giá trị này có sẵn cho người dùng dưới dạng `Astro.clientAddress`.
+
+```js "clientAddress"
+const clientAddress = request.headers.get('x-forwarded-for');
+const response = await app.render(request, { clientAddress });
+```
+
+###### `locals`
+
+<p>
+
+**Type:** `object`
+
+</p>
+
+Object [`context.locals`](/vi/reference/api-reference/#locals) được sử dụng để lưu trữ và truy cập thông tin trong vòng đời của request.
+
+Ví dụ dưới đây đọc header có tên `x-private-header`, cố gắng parse nó thành object và truyền vào `locals`, sau đó có thể được truyền vào bất kỳ [function middleware](/vi/guides/middleware/) nào.
+
+```js "locals"
+const privateHeader = request.headers.get('x-private-header');
+let locals = {};
+try {
+	if (privateHeader) {
+		locals = JSON.parse(privateHeader);
+	}
+} finally {
+	const response = await app.render(request, { locals });
+}
+```
+
+###### `prerenderedErrorPageFetch`
+
+<p>
+
+**Type:** `(url: ErrorPagePath) => Promise<Response>`<br />
+**Default:** `fetch`<br />
+
+<Since v="5.6.0" />
+</p>
+
+Function cho phép bạn cung cấp implementation tùy chỉnh để fetch các trang lỗi prerendered.
+
+Điều này được sử dụng để override hành vi `fetch()` mặc định, ví dụ khi `fetch()` không có sẵn hoặc khi bạn không thể gọi server từ chính nó.
+
+Ví dụ sau đọc `500.html` và `404.html` từ disk thay vì thực hiện HTTP call:
+
+```js "prerenderedErrorPageFetch"
+return app.render(request, {
+  prerenderedErrorPageFetch: async (url: string): Promise<Response> => {
+    if (url.includes("/500")) {
+        const content = await fs.promises.readFile("500.html", "utf-8");
+        return new Response(content, {
+          status: 500,
+          headers: { "Content-Type": "text/html" },
+        });
+    }
+
+    const content = await fs.promises.readFile("404.html", "utf-8");
+      return new Response(content, {
+        status: 404,
+        headers: { "Content-Type": "text/html" },
+      });
+});
+```
+
+Nếu không được cung cấp, Astro sẽ fallback về hành vi mặc định để fetch error pages.
+
+###### `routeData`
+
+<p>
+
+**Type:** `RouteData`<br />
+**Default:** `app.match(request)`
+
+</p>
+
+Cung cấp giá trị cho [`integrationRouteData`](/vi/reference/integrations-reference/#integrationroutedata-type-reference) nếu bạn đã biết route để render. Việc này sẽ bypass cuộc gọi nội bộ tới [`app.match`](#appmatch) để xác định route cần render.
+
+```js "routeData"
+const routeData = app.match(request);
+if (routeData) {
+    return app.render(request, { routeData });
+} else {
+    /* adapter-specific 404 response */
+    return new Response(..., { status: 404 });
+}
+```
+
+##### `app.match()`
+
+<p>
+
+**Type:** `(request: Request) => RouteData | undefined`
+
+</p>
+
+Method này được sử dụng để xác định request có khớp với routing rules của Astro app hay không.
+
+```js
+if (app.match(request)) {
+	const response = await app.render(request);
+}
+```
+
+Bạn thường có thể gọi `app.render(request)` mà không cần sử dụng `.match` vì Astro xử lý 404s nếu bạn cung cấp file `404.astro`. Sử dụng `app.match(request)` nếu bạn muốn xử lý 404s theo cách khác.
+
+## Cho phép cài đặt qua `astro add`
+
+[Lệnh `astro add`](/vi/reference/cli-reference/#astro-add) cho phép người dùng dễ dàng thêm integrations và adapters vào project của họ. Nếu bạn muốn adapter của _bạn_ có thể cài đặt với tool này, **thêm `astro-adapter` vào field `keywords` trong `package.json`**:
+
+```json
+{
+	"name": "example",
+	"keywords": ["astro-adapter"]
+}
+```
+
+Khi bạn [publish adapter lên npm](https://docs.npmjs.com/cli/v8/commands/npm-publish), chạy `astro add example` sẽ cài đặt package với bất kỳ peer dependencies nào được chỉ định trong `package.json`. Chúng tôi cũng sẽ hướng dẫn người dùng cập nhật project config của họ thủ công.
+
+## Astro features
+
+<p>
+	<Since v='3.0.0' />
+</p>
+
+Astro features là cách để adapter thông báo với Astro liệu họ có thể hỗ trợ một tính năng và mức độ hỗ trợ của adapter.
+
+Khi sử dụng các thuộc tính này, Astro sẽ:
+
+- chạy validation cụ thể;
+- emit thông tin ngữ cảnh vào logs;
+
+Các hoạt động này được chạy dựa trên các tính năng được hỗ trợ hoặc không hỗ trợ, mức độ hỗ trợ của chúng, [số lượng logging mong muốn](#suppress), và cấu hình của người dùng.
+
+Cấu hình sau thông báo với Astro rằng adapter này có hỗ trợ experimental cho Sharp-powered built-in image service:
+
+```js title="my-adapter.mjs" ins={9-11}
+export default function createIntegration() {
+	return {
+		name: '@example/my-adapter',
+		hooks: {
+			'astro:config:done': ({ setAdapter }) => {
+				setAdapter({
+					name: '@example/my-adapter',
+					serverEntrypoint: '@example/my-adapter/server.js',
+					supportedAstroFeatures: {
+						sharpImageService: 'experimental',
+					},
+				});
+			},
+		},
+	};
+}
+```
+
+Nếu Sharp image service được sử dụng, Astro sẽ log warning và error vào terminal dựa trên support của adapter:
+
+```
+[@example/my-adapter] The feature is experimental and subject to issues or changes.
+
+[@example/my-adapter] The currently selected adapter `@example/my-adapter` is not compatible with the service "Sharp". Your project will NOT be able to build.
+```
+
+Message có thể được cung cấp thêm để đưa ra nhiều ngữ cảnh hơn cho người dùng:
+
+```js title="my-adapter.mjs" ins={9-14}
+export default function createIntegration() {
+	return {
+		name: '@example/my-adapter',
+		hooks: {
+			'astro:config:done': ({ setAdapter }) => {
+				setAdapter({
+					name: '@example/my-adapter',
+					serverEntrypoint: '@example/my-adapter/server.js',
+					supportedAstroFeatures: {
+						sharpImageService: {
+							support: 'limited',
+							message: 'This adapter has limited support for Sharp. Certain features may not work as expected.',
+						},
+					},
+				});
+			},
+		},
+	};
+}
+```
+
+### `suppress`
+
+<p>
+
+**Type:** `'default' | 'all'`<br />
+
+  <Since v="5.9.0" />
+</p>
+
+Tùy chọn để ngăn hiển thị một số hoặc tất cả logged messages về support của adapter cho một tính năng.
+
+Nếu message log mặc định của Astro thừa hoặc gây nhầm lẫn cho người dùng kết hợp với `message` tùy chỉnh của bạn, bạn có thể sử dụng `suppress: "default"` để suppress message mặc định và chỉ log message của bạn:
+
+```js title="my-adapter.mjs" ins={13}
+export default function createIntegration() {
+	return {
+		name: '@example/my-adapter',
+		hooks: {
+			'astro:config:done': ({ setAdapter }) => {
+				setAdapter({
+					name: '@example/my-adapter',
+					serverEntrypoint: '@example/my-adapter/server.js',
+					supportedAstroFeatures: {
+						sharpImageService: {
+							support: 'limited',
+							message: 'The adapter has limited support for Sharp. It will be used for images during build time, but will not work at runtime.',
+							suppress: 'default', // custom message is more detailed than the default
+						},
+					},
+				});
+			},
+		},
+	};
+}
+```
+
+Bạn cũng có thể sử dụng `suppress: "all"` để suppress tất cả messages về support cho tính năng. Điều này hữu ích khi những messages này không hữu ích cho người dùng trong ngữ cảnh cụ thể, chẳng hạn khi họ có cài đặt cấu hình nghĩa là họ không sử dụng tính năng đó. Ví dụ, bạn có thể chọn ngăn logging bất kỳ messages nào về Sharp support từ adapter của bạn:
+
+```js title="my-adapter.mjs" ins={13}
+export default function createIntegration() {
+	return {
+		name: '@example/my-adapter',
+		hooks: {
+			'astro:config:done': ({ setAdapter }) => {
+				setAdapter({
+					name: '@example/my-adapter',
+					serverEntrypoint: '@example/my-adapter/server.js',
+					supportedAstroFeatures: {
+						sharpImageService: {
+							support: 'limited',
+							message: 'This adapter has limited support for Sharp. Certain features may not work as expected.',
+							suppress: 'all',
+						},
+					},
+				});
+			},
+		},
+	};
+}
+```
+
+## Adapter features
+
+Một tập hợp các tính năng thay đổi output của các files được emit. Khi adapter opt in vào những tính năng này, chúng sẽ nhận thông tin bổ sung bên trong các hooks cụ thể.
+
+### `edgeMiddleware`
+
+<p>
+
+**Type:** `boolean`
+
+</p>
+
+Định nghĩa liệu bất kỳ on-demand rendering middleware code nào sẽ được bundled khi build.
+
+Khi được kích hoạt, điều này ngăn middleware code được bundled và imported bởi tất cả pages trong quá trình build:
+
+```js title="my-adapter.mjs" ins={9-11}
+export default function createIntegration() {
+	return {
+		name: '@example/my-adapter',
+		hooks: {
+			'astro:config:done': ({ setAdapter }) => {
+				setAdapter({
+					name: '@example/my-adapter',
+					serverEntrypoint: '@example/my-adapter/server.js',
+					adapterFeatures: {
+						edgeMiddleware: true,
+					},
+				});
+			},
+		},
+	};
+}
+```
+
+Sau đó, consume hook [`astro:build:ssr`](/vi/reference/integrations-reference/#astrobuildssr), sẽ cung cấp cho bạn `middlewareEntryPoint`, một `URL` tới file vật lý trên file system.
+
+```js title="my-adapter.mjs" ins={15-20}
+export default function createIntegration() {
+	return {
+		name: '@example/my-adapter',
+		hooks: {
+			'astro:config:done': ({ setAdapter }) => {
+				setAdapter({
+					name: '@example/my-adapter',
+					serverEntrypoint: '@example/my-adapter/server.js',
+					adapterFeatures: {
+						edgeMiddleware: true,
+					},
+				});
+			},
+
+			'astro:build:ssr': ({ middlewareEntryPoint }) => {
+				// nhớ check xem property này có tồn tại không, nó sẽ là `undefined` nếu adapter không opt in vào tính năng
+				if (middlewareEntryPoint) {
+					createEdgeMiddleware(middlewareEntryPoint);
+				}
+			},
+		},
+	};
+}
+
+function createEdgeMiddleware(middlewareEntryPoint) {
+	// emit file vật lý mới sử dụng bundler của bạn
+}
+```
+
+### envGetSecret
+
+<p>
+
+**Type:** `AdapterSupportsKind`
+
+</p>
+
+Đây là tính năng cho phép adapter của bạn lấy secrets được cấu hình bởi người dùng trong `env.schema`.
+
+Kích hoạt tính năng bằng cách truyền bất kỳ giá trị `AdapterSupportsKind` hợp lệ nào vào adapter:
+
+```js title="my-adapter.mjs" ins={9-11}
+export default function createIntegration() {
+	return {
+		name: '@example/my-adapter',
+		hooks: {
+			'astro:config:done': ({ setAdapter }) => {
+				setAdapter({
+					name: '@example/my-adapter',
+					serverEntrypoint: '@example/my-adapter/server.js',
+					adapterFeatures: {
+						envGetSecret: 'stable',
+					},
+				});
+			},
+		},
+	};
+}
+```
+
+Module `astro/env/setup` cho phép bạn cung cấp implementation cho `getSecret()`. Trong server entrypoint, gọi `setGetEnv()` càng sớm càng tốt:
+
+```js ins={2,4}
+import { App } from 'astro/app';
+import { setGetEnv } from 'astro/env/setup';
+
+setGetEnv(key => process.env[key]);
+
+export function createExports(manifest) {
+	const app = new App(manifest);
+
+	const handler = (event, context) => {
+		// ...
+	};
+
+	return { handler };
+}
+```
+
+Nếu bạn hỗ trợ secrets, hãy đảm bảo gọi `setGetEnv()` trước `getSecret()` khi environment variables của bạn được gắn với request:
+
+```js ins={3,14}
+import type { SSRManifest } from 'astro';
+import { App } from 'astro/app';
+import { setGetEnv } from 'astro/env/setup';
+import { createGetEnv } from '../utils/env.js';
+
+type Env = {
+	[key: string]: unknown;
+};
+
+export function createExports(manifest: SSRManifest) {
+	const app = new App(manifest);
+
+	const fetch = async (request: Request, env: Env) => {
+		setGetEnv(createGetEnv(env));
+
+		const response = await app.render(request);
+
+		return response;
+	};
+
+	return { default: { fetch } };
+}
+```
+
+### buildOutput
+
+<p>
+
+**Type:** `'static' | 'server'`<br />
+
+<Since v="5.0.0" />
+</p>
+
+Thuộc tính này cho phép bạn ép một output shape cụ thể cho build. Điều này có thể hữu ích cho các adapters chỉ hoạt động với một output type cụ thể, ví dụ adapter của bạn có thể mong đợi một static website, nhưng sử dụng adapter để tạo các files đặc thù của host. Mặc định là `server` nếu không được chỉ định.
+
+```js title="my-adapter.mjs" ins={9-11}
+export default function createIntegration() {
+	return {
+		name: '@example/my-adapter',
+		hooks: {
+			'astro:config:done': ({ setAdapter }) => {
+				setAdapter({
+					name: '@example/my-adapter',
+					serverEntrypoint: '@example/my-adapter/server.js',
+					adapterFeatures: {
+						buildOutput: 'static',
+					},
+				});
+			},
+		},
+	};
+}
+```

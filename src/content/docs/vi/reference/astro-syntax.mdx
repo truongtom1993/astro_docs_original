@@ -1,0 +1,311 @@
+---
+title: Tham chiếu biểu thức template
+i18nReady: true
+---
+
+Cú pháp component Astro là một superset của HTML. Cú pháp được thiết kế để cảm thấy quen thuộc với bất kỳ ai có kinh nghiệm viết HTML hoặc JSX, và bổ sung hỗ trợ bao gồm các component và biểu thức JavaScript.
+
+## Biểu thức giống JSX
+
+Bạn có thể định nghĩa các biến JavaScript local bên trong frontmatter component script giữa hai code fence (`---`) của một component Astro. Sau đó bạn có thể inject các biến này vào template HTML của component bằng cách sử dụng các biểu thức giống JSX!
+
+:::note[Dynamic vs reactive]
+Sử dụng cách tiếp cận này, bạn có thể bao gồm các giá trị **dynamic** được tính toán trong frontmatter. Nhưng một khi được bao gồm, những giá trị này không **reactive** và sẽ không bao giờ thay đổi. Các component Astro là template chỉ chạy một lần, trong bước rendering.
+
+Xem bên dưới để biết thêm ví dụ về [sự khác biệt giữa Astro và JSX](#differences-between-astro-and-jsx).
+:::
+
+### Biến
+
+Các biến local có thể được thêm vào HTML bằng cách sử dụng cú pháp dấu ngoặc nhọn:
+
+```astro title="src/components/Variables.astro" "{name}"
+---
+const name = "Astro";
+---
+<div>
+  <h1>Hello {name}!</h1>  <!-- Outputs <h1>Hello Astro!</h1> -->
+</div>
+```
+
+### Thuộc tính động
+
+Các biến local có thể được sử dụng trong dấu ngoặc nhọn để truyền giá trị thuộc tính cho cả HTML element và component:
+
+```astro title="src/components/DynamicAttributes.astro" "{name}" "${name}"
+---
+const name = "Astro";
+---
+<h1 class={name}>Attribute expressions are supported</h1>
+
+<MyComponent templateLiteralNameAttribute={`MyNameIs${name}`} />
+```
+
+:::caution
+Các thuộc tính HTML sẽ được chuyển đổi thành string, vì vậy không thể truyền function và object cho HTML element.
+Ví dụ, bạn không thể gán event handler cho HTML element trong component Astro:
+
+```astro title="dont-do-this.astro"
+---
+function handleClick () {
+    console.log("button clicked!");
+}
+---
+<!-- ❌ Điều này không hoạt động! ❌ -->
+<button onClick={handleClick}>Nothing will happen when you click me!</button>
+```
+
+Thay vào đó, sử dụng client-side script để thêm event handler, như bạn sẽ làm trong vanilla JavaScript:
+
+```astro title="do-this-instead.astro"
+---
+---
+<button id="button">Click Me</button>
+<script>
+  function handleClick () {
+    console.log("button clicked!");
+  }
+  document.getElementById("button").addEventListener("click", handleClick);
+</script>
+```
+
+:::
+
+### HTML động
+
+Các biến local có thể được sử dụng trong các function giống JSX để tạo ra các HTML element được sinh ra động:
+
+```astro title="src/components/DynamicHtml.astro" "{item}"
+---
+const items = ["Dog", "Cat", "Platypus"];
+---
+<ul>
+  {items.map((item) => (
+    <li>{item}</li>
+  ))}
+</ul>
+```
+
+Astro có thể hiển thị HTML có điều kiện bằng cách sử dụng các toán tử logic JSX và biểu thức ternary.
+
+```astro title="src/components/ConditionalHtml.astro" "visible"
+---
+const visible = true;
+---
+{visible && <p>Show me!</p>}
+
+{visible ? <p>Show me!</p> : <p>Else show me!</p>}
+```
+
+### Tag động
+
+Bạn cũng có thể sử dụng tag động bằng cách gán tên HTML tag cho một biến hoặc với component import reassignment:
+
+```astro title="src/components/DynamicTags.astro" /Element|(?<!My)Component/
+---
+import MyComponent from "./MyComponent.astro";
+const Element = 'div'
+const Component = MyComponent;
+---
+<Element>Hello!</Element> <!-- renders as <div>Hello!</div> -->
+<Component /> <!-- renders as <MyComponent /> -->
+```
+
+Khi sử dụng tag động:
+
+- **Tên biến phải được viết hoa.** Ví dụ, sử dụng `Element`, không phải `element`. Nếu không, Astro sẽ cố gắng render tên biến của bạn như một HTML tag literal.
+
+- **Hydration directive không được hỗ trợ.** Khi sử dụng [`client:*` hydration directive](/vi/guides/framework-components/#hydrating-interactive-components), Astro cần biết component nào để bundle cho production, và dynamic tag pattern ngăn cản điều này hoạt động.
+
+- **[define:vars directive](/vi/reference/directives-reference/#definevars) không được hỗ trợ.** Nếu bạn không thể wrap children bằng một element bổ sung (ví dụ `<div>`), thì bạn có thể thêm một ``style={`--myVar:${value}`}`` thủ công vào Element của bạn.
+
+### Fragment
+
+Astro hỗ trợ notation `<> </>` và cũng cung cấp component `<Fragment />` built-in. Component này có thể hữu ích để tránh wrapper element khi thêm [`set:*` directive](/vi/reference/directives-reference/#sethtml) để inject một HTML string.
+
+Ví dụ sau render văn bản paragraph sử dụng component `<Fragment />`:
+
+```astro title="src/components/SetHtml.astro" "Fragment"
+---
+const htmlString = '<p>Raw HTML content</p>';
+---
+<Fragment set:html={htmlString} />
+```
+
+### Sự khác biệt giữa Astro và JSX
+
+Cú pháp component Astro là một superset của HTML. Nó được thiết kế để cảm thấy quen thuộc với bất kỳ ai có kinh nghiệm HTML hoặc JSX, nhưng có một vài sự khác biệt chính giữa file `.astro` và JSX.
+
+#### Thuộc tính
+
+Trong Astro, bạn sử dụng định dạng `kebab-case` tiêu chuẩn cho tất cả thuộc tính HTML thay vì `camelCase` được sử dụng trong JSX. Điều này thậm chí hoạt động cho `class`, điều mà React không hỗ trợ.
+
+```jsx del={1} ins={2} title="example.astro"
+<div className="box" dataValue="3" />
+<div class="box" data-value="3" />
+```
+
+#### Nhiều Element
+
+Template component Astro có thể render nhiều element mà không cần wrap mọi thứ trong một `<div>` hoặc `<>` duy nhất, không giống như JavaScript hoặc JSX.
+
+```astro title="src/components/RootElements.astro"
+---
+// Template với nhiều element
+---
+<p>No need to wrap elements in a single containing element.</p>
+<p>Astro supports multiple root elements in a template.</p>
+```
+
+#### Comment
+
+Trong Astro, bạn có thể sử dụng comment HTML tiêu chuẩn hoặc comment JavaScript-style.
+
+```astro title="example.astro"
+---
+---
+<!-- HTML comment syntax is valid in .astro files -->
+{/* JS comment syntax is also valid */}
+```
+
+:::caution
+Comment HTML-style sẽ được bao gồm trong browser DOM, trong khi JS comment sẽ bị bỏ qua. Để để lại TODO message hoặc các giải thích chỉ dành cho development khác, bạn có thể muốn sử dụng comment JavaScript-style thay thế.
+:::
+
+## Tiện ích Component
+
+### `Astro.slots`
+
+`Astro.slots` chứa các utility function để modify slotted children của component Astro.
+
+#### `Astro.slots.has()`
+
+<p>
+
+**Type:** `(slotName: string) => boolean`
+
+</p>
+
+Bạn có thể kiểm tra xem content cho tên slot cụ thể có tồn tại hay không với `Astro.slots.has()`. Điều này có thể hữu ích khi bạn muốn wrap slot content nhưng chỉ muốn render wrapper element khi slot được sử dụng.
+
+```astro title="src/pages/index.astro"
+---
+---
+<slot />
+
+{Astro.slots.has('more') && (
+  <aside>
+    <h2>More</h2>
+    <slot name="more" />
+  </aside>
+)}
+```
+
+#### `Astro.slots.render()`
+
+<p>
+
+**Type:** `(slotName: string, args?: any[]) => Promise<string>`
+
+</p>
+
+Bạn có thể render nội dung của slot thành string HTML một cách bất đồng bộ bằng cách sử dụng `Astro.slots.render()`.
+
+```astro
+---
+const html = await Astro.slots.render('default');
+---
+<Fragment set:html={html} />
+```
+
+:::note
+Điều này dành cho các trường hợp sử dụng nâng cao! Trong hầu hết các trường hợp, việc render slot content bằng [element `<slot />`](/vi/basics/astro-components/#slots) đơn giản hơn.
+:::
+
+`Astro.slots.render()` tùy chọn chấp nhận đối số thứ hai: một mảng các tham số sẽ được chuyển tiếp đến bất kỳ function children nào. Điều này có thể hữu ích cho các custom utility component.
+
+Ví dụ, component `<Shout />` này chuyển đổi prop `message` của nó thành chữ hoa và truyền nó đến default slot:
+
+```astro title="src/components/Shout.astro" "await Astro.slots.render('default', [message])"
+---
+const message = Astro.props.message.toUpperCase();
+let html = '';
+if (Astro.slots.has('default')) {
+  html = await Astro.slots.render('default', [message]);
+}
+---
+<Fragment set:html={html} />
+```
+
+Một callback function được truyền như child của `<Shout />` sẽ nhận tham số `message` chữ hoa:
+
+```astro title="src/pages/index.astro"
+---
+import Shout from "../components/Shout.astro";
+---
+<Shout message="slots!">
+  {(message) => <div>{message}</div>}
+</Shout>
+
+<!-- renders as <div>SLOTS!</div> -->
+```
+
+Callback function có thể được truyền đến named slot bên trong một wrapper HTML element tag với thuộc tính `slot`. Element này chỉ được sử dụng để chuyển callback đến named slot và sẽ không được render lên page.
+
+```astro
+<Shout message="slots!">
+  <fragment slot="message">
+    {(message) => <div>{message}</div>}
+  </fragment>
+</Shout>
+```
+
+Sử dụng HTML element tiêu chuẩn cho wrapper tag hoặc bất kỳ lowercase tag nào (ví dụ `<fragment>` thay vì `<Fragment />`) sẽ không được hiểu như một component. Không sử dụng HTML `<slot>` element vì điều này sẽ được hiểu như Astro slot.
+
+### `Astro.self`
+
+`Astro.self` cho phép các component Astro được gọi đệ quy. Hành vi này cho phép bạn render component Astro từ bên trong chính nó bằng cách sử dụng `<Astro.self>` trong component template. Điều này có thể giúp iterate qua các data store lớn và cấu trúc dữ liệu lồng nhau.
+
+```astro
+---
+// NestedList.astro
+const { items } = Astro.props;
+---
+<ul class="nested-list">
+  {items.map((item) => (
+    <li>
+      <!-- Nếu có cấu trúc dữ liệu lồng nhau, chúng ta render `<Astro.self>` -->
+      <!-- và có thể truyền props qua recursive call -->
+      {Array.isArray(item) ? (
+        <Astro.self items={item} />
+      ) : (
+        item
+      )}
+    </li>
+  ))}
+</ul>
+```
+
+Component này sau đó có thể được sử dụng như thế này:
+
+```astro
+---
+import NestedList from './NestedList.astro';
+---
+<NestedList items={['A', ['B', 'C'], 'D']} />
+```
+
+Và sẽ render HTML như thế này:
+
+```html
+<ul class="nested-list">
+	<li>A</li>
+	<li>
+		<ul class="nested-list">
+			<li>B</li>
+			<li>C</li>
+		</ul>
+	</li>
+	<li>D</li>
+</ul>
+```

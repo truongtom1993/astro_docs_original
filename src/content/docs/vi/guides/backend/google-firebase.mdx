@@ -1,0 +1,930 @@
+---
+title: Firebase & Astro
+description: Thêm backend vào dự án của bạn với Firebase
+sidebar:
+  label: Firebase
+type: backend
+service: Firebase
+stub: false
+i18nReady: true
+---
+import PackageManagerTabs from '~/components/tabs/PackageManagerTabs.astro'
+import { FileTree } from '@astrojs/starlight/components';
+
+[Firebase](https://firebase.google.com/) là một nền tảng phát triển ứng dụng cung cấp cơ sở dữ liệu NoSQL, xác thực, đăng ký thời gian thực, hàm số, và lưu trữ.
+
+Xem hướng dẫn riêng của chúng tôi về [triển khai lên Firebase hosting](/vi/guides/deploy/google-firebase/).
+
+## Khởi tạo Firebase trong Astro
+
+### Điều kiện tiên quyết
+
+- Một [dự án Firebase với web app đã được cấu hình](https://firebase.google.com/docs/web/setup).
+- Một dự án Astro với [`output: 'server'` cho render theo yêu cầu](/vi/guides/on-demand-rendering/) đã được bật.
+- Thông tin xác thực Firebase: Bạn sẽ cần hai bộ thông tin xác thực để kết nối Astro với Firebase:
+  - Thông tin xác thực web app: Những thông tin này sẽ được sử dụng bởi phía client của ứng dụng. Bạn có thể tìm thấy chúng trong bảng điều khiển Firebase tại *Project settings > General*. Cuộn xuống phần **Your apps** và nhấp vào biểu tượng **Web app**.
+  - Thông tin xác thực dự án: Những thông tin này sẽ được sử dụng bởi phía server của ứng dụng. Bạn có thể tạo chúng trong bảng điều khiển Firebase tại *Project settings > Service accounts > Firebase Admin SDK > Generate new private key*.
+
+### Thêm thông tin xác thực Firebase
+
+Để thêm thông tin xác thực Firebase vào Astro, tạo file `.env` trong thư mục gốc của dự án với các biến sau:
+
+```ini title=".env"
+FIREBASE_PRIVATE_KEY_ID=YOUR_PRIVATE_KEY_ID
+FIREBASE_PRIVATE_KEY=YOUR_PRIVATE_KEY
+FIREBASE_PROJECT_ID=YOUR_PROJECT_ID
+FIREBASE_CLIENT_EMAIL=YOUR_CLIENT_EMAIL
+FIREBASE_CLIENT_ID=YOUR_CLIENT_ID
+FIREBASE_AUTH_URI=YOUR_AUTH_URI
+FIREBASE_TOKEN_URI=YOUR_TOKEN_URI
+FIREBASE_AUTH_CERT_URL=YOUR_AUTH_CERT_URL
+FIREBASE_CLIENT_CERT_URL=YOUR_CLIENT_CERT_URL
+```
+
+Bây giờ, các biến môi trường này có sẵn để sử dụng trong dự án của bạn.
+
+Nếu bạn muốn có IntelliSense cho các biến môi trường Firebase, chỉnh sửa hoặc tạo file `env.d.ts` trong thư mục `src/` và cấu hình các kiểu:
+
+```ts title="src/env.d.ts"
+interface ImportMetaEnv {
+  readonly FIREBASE_PRIVATE_KEY_ID: string;
+  readonly FIREBASE_PRIVATE_KEY: string;
+  readonly FIREBASE_PROJECT_ID: string;
+  readonly FIREBASE_CLIENT_EMAIL: string;
+  readonly FIREBASE_CLIENT_ID: string;
+  readonly FIREBASE_AUTH_URI: string;
+  readonly FIREBASE_TOKEN_URI: string;
+  readonly FIREBASE_AUTH_CERT_URL: string
+  readonly FIREBASE_CLIENT_CERT_URL: string;
+}
+
+interface ImportMeta {
+  readonly env: ImportMetaEnv;
+}
+```
+
+:::tip
+Đọc thêm về [biến môi trường](/vi/guides/environment-variables/) và file `.env` trong Astro.
+:::
+
+Dự án của bạn bây giờ sẽ bao gồm các file mới này:
+
+<FileTree title="Cấu trúc dự án">
+- src/
+  - **env.d.ts**
+- **.env**
+- astro.config.mjs
+- package.json
+</FileTree>
+
+### Cài đặt dependencies
+
+Để kết nối Astro với Firebase, cài đặt các package sau bằng lệnh duy nhất dưới đây cho trình quản lý package ưa thích của bạn:
+
+- `firebase` - Firebase SDK cho phía client
+- `firebase-admin` - Firebase Admin SDK cho phía server
+
+<PackageManagerTabs>
+  <Fragment slot="npm">
+  ```shell
+  npm install firebase firebase-admin
+  ```
+  </Fragment>
+  <Fragment slot="pnpm">
+  ```shell
+  pnpm add firebase firebase-admin
+  ```
+  </Fragment>
+  <Fragment slot="yarn">
+  ```shell
+  yarn add firebase firebase-admin
+  ```
+  </Fragment>
+</PackageManagerTabs>
+
+Tiếp theo, tạo một thư mục có tên `firebase` trong thư mục `src/` và thêm hai file mới vào thư mục này: `client.ts` và `server.ts`.
+
+Trong `client.ts`, thêm đoạn code sau để khởi tạo Firebase trong client bằng thông tin xác thực web app và package `firebase`:
+
+```ts title="src/firebase/client.ts"
+import { initializeApp } from "firebase/app";
+
+const firebaseConfig = {
+  apiKey: "my-public-api-key",
+  authDomain: "my-auth-domain",
+  projectId: "my-project-id",
+  storageBucket: "my-storage-bucket",
+  messagingSenderId: "my-sender-id",
+  appId: "my-app-id",
+};
+
+export const app = initializeApp(firebaseConfig);
+```
+
+:::note
+Nhớ thay thế object `firebaseConfig` bằng thông tin xác thực web app của bạn.
+:::
+
+Trong `server.ts`, thêm đoạn code sau để khởi tạo Firebase trong server bằng thông tin xác thực dự án và package `firebase-admin`:
+
+```ts title="src/firebase/server.ts"
+import type { ServiceAccount } from "firebase-admin";
+import { initializeApp, cert, getApps } from "firebase-admin/app";
+
+const activeApps = getApps();
+const serviceAccount = {
+  type: "service_account",
+  project_id: import.meta.env.FIREBASE_PROJECT_ID,
+  private_key_id: import.meta.env.FIREBASE_PRIVATE_KEY_ID,
+  private_key: import.meta.env.FIREBASE_PRIVATE_KEY,
+  client_email: import.meta.env.FIREBASE_CLIENT_EMAIL,
+  client_id: import.meta.env.FIREBASE_CLIENT_ID,
+  auth_uri: import.meta.env.FIREBASE_AUTH_URI,
+  token_uri: import.meta.env.FIREBASE_TOKEN_URI,
+  auth_provider_x509_cert_url: import.meta.env.FIREBASE_AUTH_CERT_URL,
+  client_x509_cert_url: import.meta.env.FIREBASE_CLIENT_CERT_URL,
+};
+
+const initApp = () => {
+  if (import.meta.env.PROD) {
+    console.info('Phát hiện môi trường PROD. Sử dụng service account mặc định.')
+    // Sử dụng cấu hình mặc định trong firebase functions. Sẽ được tự động inject vào server bởi Firebase.
+    return initializeApp()
+  }
+  console.info('Đang tải service account từ env.')
+  return initializeApp({
+    credential: cert(serviceAccount as ServiceAccount)
+  })
+}
+
+export const app = activeApps.length === 0 ? initApp() : activeApps[0];
+```
+
+:::note
+Nhớ thay thế object `serviceAccount` bằng thông tin xác thực dự án của bạn.
+:::
+
+Cuối cùng, dự án của bạn bây giờ sẽ bao gồm các file mới này:
+
+<FileTree title="Cấu trúc dự án">
+- src
+  - env.d.ts
+  - firebase
+    - **client.ts**
+    - **server.ts**
+- .env
+- astro.config.mjs
+- package.json
+</FileTree>
+
+## Thêm xác thực với Firebase
+
+### Điều kiện tiên quyết
+
+- Một dự án Astro [đã được khởi tạo với Firebase](#khởi-tạo-firebase-trong-astro).
+- Một dự án Firebase với xác thực email/password đã được bật trong bảng điều khiển Firebase tại *Authentication > Sign-in* method.
+
+### Tạo các server endpoint xác thực
+
+Xác thực Firebase trong Astro yêu cầu ba [Astro server endpoint](/vi/guides/endpoints/) sau:
+
+- `GET /api/auth/signin` - để đăng nhập người dùng
+- `GET /api/auth/signout` - để đăng xuất người dùng
+- `POST /api/auth/register` - để đăng ký người dùng
+
+Tạo ba endpoint liên quan đến xác thực trong thư mục mới `src/pages/api/auth/`: `signin.ts`, `signout.ts` và `register.ts`.
+
+`signin.ts` chứa code để đăng nhập người dùng bằng Firebase:
+
+```ts title="src/pages/api/auth/signin.ts"
+import type { APIRoute } from "astro";
+import { app } from "../../../firebase/server";
+import { getAuth } from "firebase-admin/auth";
+
+export const GET: APIRoute = async ({ request, cookies, redirect }) => {
+  const auth = getAuth(app);
+
+  /* Lấy token từ request header */
+  const idToken = request.headers.get("Authorization")?.split("Bearer ")[1];
+  if (!idToken) {
+    return new Response(
+      "Không tìm thấy token",
+      { status: 401 }
+    );
+  }
+
+  /* Xác minh id token */
+  try {
+    await auth.verifyIdToken(idToken);
+  } catch (error) {
+    return new Response(
+      "Token không hợp lệ",
+      { status: 401 }
+    );
+  }
+
+  /* Tạo và đặt session cookie */
+  const fiveDays = 60 * 60 * 24 * 5 * 1000;
+  const sessionCookie = await auth.createSessionCookie(idToken, {
+    expiresIn: fiveDays,
+  });
+
+  cookies.set("__session", sessionCookie, {
+    path: "/",
+  });
+
+  return redirect("/dashboard");
+};
+```
+
+:::caution
+Firebase chỉ cho phép sử dụng [một cookie, và nó phải có tên là `__session`](https://firebase.google.com/docs/hosting/manage-cache#using_cookies). Bất kỳ cookie nào khác mà client gửi sẽ không hiển thị cho ứng dụng của bạn.
+:::
+
+:::note
+Đây là triển khai cơ bản của signin endpoint. Bạn có thể thêm logic khác vào endpoint này để phù hợp với nhu cầu của mình.
+:::
+
+`signout.ts` chứa code để đăng xuất người dùng bằng cách xóa session cookie:
+
+```ts title="src/pages/api/auth/signout.ts"
+import type { APIRoute } from "astro";
+
+export const GET: APIRoute = async ({ redirect, cookies }) => {
+  cookies.delete("__session", {
+    path: "/",
+  });
+  return redirect("/signin");
+};
+```
+
+:::note
+Đây là triển khai cơ bản của signout endpoint. Bạn có thể thêm logic khác vào endpoint này để phù hợp với nhu cầu của mình.
+:::
+
+`register.ts` chứa code để đăng ký người dùng bằng Firebase:
+
+```ts title="src/pages/api/auth/register.ts"
+import type { APIRoute } from "astro";
+import { getAuth } from "firebase-admin/auth";
+import { app } from "../../../firebase/server";
+
+export const POST: APIRoute = async ({ request, redirect }) => {
+  const auth = getAuth(app);
+
+  /* Lấy dữ liệu form */
+  const formData = await request.formData();
+  const email = formData.get("email")?.toString();
+  const password = formData.get("password")?.toString();
+  const name = formData.get("name")?.toString();
+
+  if (!email || !password || !name) {
+    return new Response(
+      "Thiếu dữ liệu form",
+      { status: 400 }
+    );
+  }
+
+  /* Tạo người dùng */
+  try {
+    await auth.createUser({
+      email,
+      password,
+      displayName: name,
+    });
+  } catch (error: any) {
+    return new Response(
+      "Có lỗi xảy ra",
+      { status: 400 }
+    );
+  }
+  return redirect("/signin");
+};
+```
+
+:::note
+Đây là triển khai cơ bản của register endpoint. Bạn có thể thêm logic khác vào endpoint này để phù hợp với nhu cầu của mình.
+:::
+
+Sau khi tạo các server endpoint cho xác thực, thư mục dự án của bạn bây giờ sẽ bao gồm các file mới này:
+
+<FileTree title="Cấu trúc dự án">
+- src
+  - env.d.ts
+  - firebase
+    - client.ts
+    - server.ts
+  - pages
+    - api
+      - auth
+        - **signin.ts**
+        - **signout.ts**
+        - **register.ts**
+- .env
+- astro.config.mjs
+- package.json
+</FileTree>
+
+### Tạo các trang
+
+Tạo các trang sẽ sử dụng Firebase endpoints:
+
+- `src/pages/register` - sẽ chứa form để đăng ký người dùng
+- `src/pages/signin` - sẽ chứa form để đăng nhập người dùng
+- `src/pages/dashboard` - sẽ chứa dashboard chỉ có thể truy cập bởi người dùng đã xác thực
+
+Ví dụ `src/pages/register.astro` bên dưới bao gồm một form sẽ gửi request `POST` tới endpoint `/api/auth/register`. Endpoint này sẽ tạo người dùng mới bằng dữ liệu từ form và sau đó sẽ chuyển hướng người dùng tới trang `/signin`.
+
+```astro title="src/pages/register.astro"
+---
+import Layout from "../layouts/Layout.astro";
+---
+
+<Layout title="Đăng ký">
+  <h1>Đăng ký</h1>
+  <p>Đã có tài khoản? <a href="/signin">Đăng nhập</a></p>
+  <form action="/api/auth/register" method="post">
+    <label for="name">Tên</label>
+    <input type="text" name="name" id="name" />
+    <label for="email" for="email">Email</label>
+    <input type="email" name="email" id="email" />
+    <label for="password">Mật khẩu</label>
+    <input type="password" name="password" id="password" />
+    <button type="submit">Đăng nhập</button>
+  </form>
+</Layout>
+```
+
+`src/pages/signin.astro` sử dụng Firebase server app để xác minh session cookie của người dùng. Nếu người dùng đã được xác thực, trang sẽ chuyển hướng người dùng tới trang `/dashboard`.
+
+Trang ví dụ bên dưới chứa một form sẽ gửi request `POST` tới endpoint `/api/auth/signin` với ID token được tạo bởi Firebase client app.
+
+Endpoint sẽ xác minh ID token và tạo session cookie mới cho người dùng. Sau đó, endpoint sẽ chuyển hướng người dùng tới trang `/dashboard`.
+
+```astro title="src/pages/signin.astro"
+---
+import { app } from "../firebase/server";
+import { getAuth } from "firebase-admin/auth";
+import Layout from "../layouts/Layout.astro";
+
+/* Kiểm tra nếu người dùng đã được xác thực */
+const auth = getAuth(app);
+if (Astro.cookies.has("__session")) {
+  const sessionCookie = Astro.cookies.get("__session")!.value;
+  const decodedCookie = await auth.verifySessionCookie(sessionCookie);
+  if (decodedCookie) {
+    return Astro.redirect("/dashboard");
+  }
+}
+---
+
+<Layout title="Đăng nhập">
+  <h1>Đăng nhập</h1>
+  <p>Người dùng mới? <a href="/register">Tạo tài khoản</a></p>
+  <form action="/api/auth/signin" method="post">
+    <label for="email" for="email">Email</label>
+    <input type="email" name="email" id="email" />
+    <label for="password">Mật khẩu</label>
+    <input type="password" name="password" id="password" />
+    <button type="submit">Đăng nhập</button>
+  </form>
+</Layout>
+<script>
+  import {
+    getAuth,
+    inMemoryPersistence,
+    signInWithEmailAndPassword,
+  } from "firebase/auth";
+  import { app } from "../firebase/client";
+
+  const auth = getAuth(app);
+  // Điều này sẽ ngăn trình duyệt lưu trữ dữ liệu session
+  auth.setPersistence(inMemoryPersistence);
+
+  const form = document.querySelector("form") as HTMLFormElement;
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const formData = new FormData(form);
+    const email = formData.get("email")?.toString();
+    const password = formData.get("password")?.toString();
+
+    if (!email || !password) {
+      return;
+    }
+    const userCredential = await signInWithEmailAndPassword(
+      auth,
+      email,
+      password
+    );
+    const idToken = await userCredential.user.getIdToken();
+    const response = await fetch("/api/auth/signin", {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${idToken}`,
+      },
+    });
+
+    if (response.redirected) {
+      window.location.assign(response.url);
+    }
+  });
+</script>
+```
+
+`src/pages/dashboard.astro` sẽ xác minh session cookie của người dùng bằng Firebase server app. Nếu người dùng chưa được xác thực, trang sẽ chuyển hướng người dùng tới trang `/signin`.
+
+Trang ví dụ bên dưới hiển thị tên người dùng và một nút để đăng xuất. Nhấp vào nút sẽ gửi request `GET` tới endpoint `/api/auth/signout`.
+
+Endpoint sẽ xóa session cookie của người dùng và chuyển hướng người dùng tới trang `/signin`.
+
+```astro title="src/pages/dashboard.astro"
+---
+import { app } from "../firebase/server";
+import { getAuth } from "firebase-admin/auth";
+import Layout from "../layouts/Layout.astro";
+
+const auth = getAuth(app);
+
+/* Kiểm tra session hiện tại */
+if (!Astro.cookies.has("__session")) {
+  return Astro.redirect("/signin");
+}
+const sessionCookie = Astro.cookies.get("__session")!.value;
+const decodedCookie = await auth.verifySessionCookie(sessionCookie);
+const user = await auth.getUser(decodedCookie.uid);
+
+if (!user) {
+  return Astro.redirect("/signin");
+}
+---
+
+<Layout title="dashboard">
+  <h1>Chào mừng {user.displayName}</h1>
+  <p>Chúng tôi rất vui khi thấy bạn ở đây</p>
+  <form action="/api/auth/signout">
+    <button type="submit">Đăng xuất</button>
+  </form>
+</Layout>
+```
+
+### Thêm OAuth providers
+
+Để thêm OAuth providers vào ứng dụng của bạn, bạn cần bật chúng trong bảng điều khiển Firebase.
+
+Trong bảng điều khiển Firebase, đi tới phần **Authentication** và nhấp vào tab **Sign-in method**. Sau đó, nhấp vào nút **Add a new provider** và bật các provider bạn muốn sử dụng.
+
+Ví dụ bên dưới sử dụng provider **Google**.
+
+Chỉnh sửa trang `signin.astro` để thêm:
+- một nút để đăng nhập với Google bên dưới form hiện có
+- một event listener trên nút để xử lý quy trình đăng nhập trong `<script>` hiện có.
+
+```astro title="src/pages/signin.astro" ins={27, 34, 35, 69-83}
+---
+import { app } from "../firebase/server";
+import { getAuth } from "firebase-admin/auth";
+import Layout from "../layouts/Layout.astro";
+
+/* Kiểm tra nếu người dùng đã được xác thực */
+const auth = getAuth(app);
+if (Astro.cookies.has("__session")) {
+  const sessionCookie = Astro.cookies.get("__session")!.value;
+  const decodedCookie = await auth.verifySessionCookie(sessionCookie);
+  if (decodedCookie) {
+    return Astro.redirect("/dashboard");
+  }
+}
+---
+
+<Layout title="Đăng nhập">
+  <h1>Đăng nhập</h1>
+  <p>Người dùng mới? <a href="/register">Tạo tài khoản</a></p>
+  <form action="/api/auth/signin" method="post">
+    <label for="email" for="email">Email</label>
+    <input type="email" name="email" id="email" />
+    <label for="password">Mật khẩu</label>
+    <input type="password" name="password" id="password" />
+    <button type="submit">Đăng nhập</button>
+  </form>
+  <button id="google">Đăng nhập với Google</button>
+</Layout>
+<script>
+  import {
+    getAuth,
+    inMemoryPersistence,
+    signInWithEmailAndPassword,
+    GoogleAuthProvider,
+    signInWithPopup,
+  } from "firebase/auth";
+  import { app } from "../firebase/client";
+
+  const auth = getAuth(app);
+  auth.setPersistence(inMemoryPersistence);
+
+  const form = document.querySelector("form") as HTMLFormElement;
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const formData = new FormData(form);
+    const email = formData.get("email")?.toString();
+    const password = formData.get("password")?.toString();
+
+    if (!email || !password) {
+      return;
+    }
+    const userCredential = await signInWithEmailAndPassword(
+      auth,
+      email,
+      password
+    );
+    const idToken = await userCredential.user.getIdToken();
+    const response = await fetch("/api/auth/signin", {
+      headers: {
+        Authorization: `Bearer ${idToken}`,
+      },
+    });
+
+    if (response.redirected) {
+      window.location.assign(response.url);
+    }
+  });
+
+  const googleSignin = document.querySelector("#google") as HTMLButtonElement;
+  googleSignin.addEventListener("click", async () => {
+    const provider = new GoogleAuthProvider();
+    const userCredential = await signInWithPopup(auth, provider);
+    const idToken = await userCredential.user.getIdToken();
+    const res = await fetch("/api/auth/signin", {
+      headers: {
+        Authorization: `Bearer ${idToken}`,
+      },
+    });
+
+    if (res.redirected) {
+      window.location.assign(res.url);
+    }
+  });
+</script>
+```
+
+Khi được nhấp, nút đăng nhập Google sẽ mở một cửa sổ popup để đăng nhập với Google. Sau khi người dùng đăng nhập, nó sẽ gửi request `POST` tới endpoint `/api/auth/signin` với ID token được tạo bởi OAuth provider.
+
+Endpoint sẽ xác minh ID token và tạo session cookie mới cho người dùng. Sau đó, endpoint sẽ chuyển hướng người dùng tới trang `/dashboard`.
+
+## Kết nối với cơ sở dữ liệu Firestore
+
+### Điều kiện tiên quyết
+
+- Một dự án Astro đã khởi tạo với Firebase như được mô tả trong phần [Khởi tạo Firebase trong Astro](#khởi-tạo-firebase-trong-astro).
+
+- Một dự án Firebase với cơ sở dữ liệu Firestore. Bạn có thể làm theo [tài liệu Firebase để tạo dự án mới và thiết lập cơ sở dữ liệu Firestore](https://firebase.google.com/docs/firestore/quickstart).
+
+Trong hướng dẫn này, collection Firestore sẽ được gọi là **friends** và sẽ chứa các tài liệu với các trường sau:
+
+- `id`: tự động tạo bởi Firestore
+- `name`: trường chuỗi
+- `age`: trường số
+- `isBestFriend`: trường boolean
+
+### Tạo server endpoints
+
+Tạo hai file mới trong thư mục mới `src/pages/api/friends/`: `index.ts` và `[id].ts`. Chúng sẽ tạo hai server endpoint để tương tác với cơ sở dữ liệu Firestore theo các cách sau:
+
+- `POST /api/friends`: để tạo tài liệu mới trong collection friends.
+- `POST /api/friends/:id`: để cập nhật tài liệu trong collection friends.
+- `DELETE /api/friends/:id`: để xóa tài liệu trong collection friends.
+
+`index.ts` sẽ chứa code để tạo tài liệu mới trong collection friends:
+
+```ts title="src/pages/api/friends/index.ts"
+import type { APIRoute } from "astro";
+import { app } from "../../../firebase/server";
+import { getFirestore } from "firebase-admin/firestore";
+
+export const POST: APIRoute = async ({ request, redirect }) => {
+  const formData = await request.formData();
+  const name = formData.get("name")?.toString();
+  const age = formData.get("age")?.toString();
+  const isBestFriend = formData.get("isBestFriend") === "on";
+
+  if (!name || !age) {
+    return new Response("Thiếu các trường bắt buộc", {
+      status: 400,
+    });
+  }
+  try {
+    const db = getFirestore(app);
+    const friendsRef = db.collection("friends");
+    await friendsRef.add({
+      name,
+      age: parseInt(age),
+      isBestFriend,
+    });
+  } catch (error) {
+    return new Response("Có lỗi xảy ra", {
+      status: 500,
+    });
+  }
+  return redirect("/dashboard");
+};
+```
+
+:::note
+Đây là triển khai cơ bản của endpoint `friends`. Bạn có thể thêm logic khác vào endpoint này để phù hợp với nhu cầu của mình.
+:::
+
+`[id].ts` sẽ chứa code để cập nhật và xóa tài liệu trong collection friends:
+
+```ts title="src/pages/api/friends/[id].ts"
+import type { APIRoute } from "astro";
+import { app } from "../../../firebase/server";
+import { getFirestore } from "firebase-admin/firestore";
+
+const db = getFirestore(app);
+const friendsRef = db.collection("friends");
+
+export const POST: APIRoute = async ({ params, redirect, request }) => {
+  const formData = await request.formData();
+  const name = formData.get("name")?.toString();
+  const age = formData.get("age")?.toString();
+  const isBestFriend = formData.get("isBestFriend") === "on";
+
+  if (!name || !age) {
+    return new Response("Thiếu các trường bắt buộc", {
+      status: 400,
+    });
+  }
+
+  if (!params.id) {
+    return new Response("Không thể tìm thấy bạn bè", {
+      status: 404,
+    });
+  }
+
+  try {
+    await friendsRef.doc(params.id).update({
+      name,
+      age: parseInt(age),
+      isBestFriend,
+    });
+  } catch (error) {
+    return new Response("Có lỗi xảy ra", {
+      status: 500,
+    });
+  }
+  return redirect("/dashboard");
+};
+
+export const DELETE: APIRoute = async ({ params, redirect }) => {
+  if (!params.id) {
+    return new Response("Không thể tìm thấy bạn bè", {
+      status: 404,
+    });
+  }
+
+  try {
+    await friendsRef.doc(params.id).delete();
+  } catch (error) {
+    return new Response("Có lỗi xảy ra", {
+      status: 500,
+    });
+  }
+  return redirect("/dashboard");
+};
+```
+
+:::note
+Đây là triển khai cơ bản của endpoint `friends/:id`. Bạn có thể thêm logic khác vào endpoint này để phù hợp với nhu cầu của mình.
+:::
+
+Sau khi tạo server endpoints cho Firestore, thư mục dự án của bạn bây giờ sẽ bao gồm các file mới này:
+
+<FileTree title="Cấu trúc dự án">
+- src
+  - env.d.ts
+  - firebase
+    - client.ts
+    - server.ts
+  - pages
+    - api
+      - friends
+        - **index.ts**
+        - **[id].ts**
+- .env
+- astro.config.mjs
+- package.json
+</FileTree>
+
+### Tạo các trang
+
+Tạo các trang sẽ sử dụng Firestore endpoints:
+
+- `src/pages/add.astro` - sẽ chứa form để thêm bạn bè mới.
+- `src/pages/edit/[id].astro` - sẽ chứa form để chỉnh sửa bạn bè và nút để xóa bạn bè.
+- `src/pages/friend/[id].astro` - sẽ chứa chi tiết của một bạn bè.
+- `src/pages/dashboard.astro` - sẽ hiển thị danh sách bạn bè.
+
+#### Thêm bản ghi mới
+
+Ví dụ `src/pages/add.astro` bên dưới bao gồm một form sẽ gửi request `POST` tới endpoint `/api/friends`. Endpoint này sẽ tạo bạn bè mới bằng dữ liệu từ form và sau đó sẽ chuyển hướng người dùng tới trang `/dashboard`.
+
+```astro title="src/pages/add.astro"
+---
+import Layout from "../layouts/Layout.astro";
+---
+
+<Layout title="Thêm bạn bè mới">
+  <h1>Thêm bạn bè mới</h1>
+  <form method="post" action="/api/friends">
+    <label for="name">Tên</label>
+    <input type="text" id="name" name="name" />
+    <label for="age">Tuổi</label>
+    <input type="number" id="age" name="age" />
+    <label for="isBestFriend">Là bạn thân?</label>
+    <input type="checkbox" id="isBestFriend" name="isBestFriend" />
+    <button type="submit">Thêm bạn bè</button>
+  </form>
+</Layout>
+```
+
+#### Chỉnh sửa hoặc Xóa bản ghi
+
+`src/pages/edit/[id].astro` sẽ chứa form để chỉnh sửa dữ liệu bạn bè và nút để xóa bạn bè. Khi submit, trang này sẽ gửi request `POST` tới endpoint `/api/friends/:id` để cập nhật dữ liệu bạn bè.
+
+Nếu người dùng nhấp vào nút xóa, trang này sẽ gửi request `DELETE` tới endpoint `/api/friends/:id` để xóa bạn bè.
+
+```astro title="src/pages/edit/[id].astro"
+---
+import Layout from "../../layouts/Layout.astro";
+import { app } from "../../firebase/server";
+import { getFirestore } from "firebase-admin/firestore";
+
+interface Friend {
+  name: string;
+  age: number;
+  isBestFriend: boolean;
+}
+
+const { id } = Astro.params;
+
+if (!id) {
+  return Astro.redirect("/404");
+}
+
+const db = getFirestore(app);
+const friendsRef = db.collection("friends");
+const friendSnapshot = await friendsRef.doc(id).get();
+
+if (!friendSnapshot.exists) {
+  return Astro.redirect("/404");
+}
+
+const friend = friendSnapshot.data() as Friend;
+---
+
+<Layout title="Chỉnh sửa {friend.name}">
+  <h1>Chỉnh sửa {friend.name}</h1>
+  <p>Ở đây bạn có thể chỉnh sửa hoặc xóa dữ liệu bạn bè của mình.</p>
+  <form method="post" action={`/api/friends/${id}`}>
+    <label for="name">Tên</label>
+    <input type="text" id="name" name="name" value={friend.name} />
+    <label for="age">Tuổi</label>
+    <input type="number" id="age" name="age" value={friend.age} />
+    <label for="isBestFriend">Là bạn thân?</label>
+    <input
+      type="checkbox"
+      id="isBestFriend"
+      name="isBestFriend"
+      checked={friend.isBestFriend}
+    />
+    <button type="submit">Chỉnh sửa bạn bè</button>
+  </form>
+  <button type="button" id="delete-document">Xóa</button>
+</Layout>
+<script>
+  const deleteButton = document.getElementById(
+    "delete-document"
+  ) as HTMLButtonElement;
+  const url = document.querySelector("form")?.getAttribute("action") as string;
+  deleteButton.addEventListener("click", async () => {
+    const response = await fetch(url, {
+      method: "DELETE",
+    });
+    if (response.redirected) {
+      window.location.assign(response.url);
+    }
+  });
+</script>
+```
+
+#### Hiển thị bản ghi cá nhân
+
+`src/pages/friend/[id].astro` sẽ hiển thị chi tiết của một bạn bè.
+
+```astro title="src/pages/friend/[id].astro"
+---
+import Layout from "../../layouts/Layout.astro";
+import { app } from "../../firebase/server";
+import { getFirestore } from "firebase-admin/firestore";
+
+interface Friend {
+  name: string;
+  age: number;
+  isBestFriend: boolean;
+}
+
+const { id } = Astro.params;
+
+if (!id) {
+  return Astro.redirect("/404");
+}
+
+const db = getFirestore(app);
+const friendsRef = db.collection("friends");
+const friendSnapshot = await friendsRef.doc(id).get();
+
+if (!friendSnapshot.exists) {
+  return Astro.redirect("/404");
+}
+
+const friend = friendSnapshot.data() as Friend;
+---
+
+<Layout title={friend.name}>
+  <h1>{friend.name}</h1>
+  <p>Tuổi: {friend.age}</p>
+  <p>Là bạn thân: {friend.isBestFriend ? "Có" : "Không"}</p>
+</Layout>
+```
+
+#### Hiển thị danh sách bản ghi với nút chỉnh sửa
+
+Cuối cùng, `src/pages/dashboard.astro` sẽ hiển thị danh sách bạn bè. Mỗi bạn bè sẽ có một liên kết tới trang chi tiết của họ và một nút chỉnh sửa sẽ chuyển hướng người dùng tới trang chỉnh sửa.
+
+```astro title="src/pages/dashboard.astro"
+---
+import { app } from "../firebase/server";
+import { getFirestore } from "firebase-admin/firestore";
+import Layout from "../layouts/Layout.astro";
+
+interface Friend {
+  id: string;
+  name: string;
+  age: number;
+  isBestFriend: boolean;
+}
+
+const db = getFirestore(app);
+const friendsRef = db.collection("friends");
+const friendsSnapshot = await friendsRef.get();
+const friends = friendsSnapshot.docs.map((doc) => ({
+  id: doc.id,
+  ...doc.data(),
+})) as Friend[];
+---
+
+<Layout title="Bạn bè của tôi">
+  <h1>Bạn bè</h1>
+  <ul>
+    {
+      friends.map((friend) => (
+        <li>
+          <a href={`/friend/${friend.id}`}>{friend.name}</a>
+          <span>({friend.age})</span>
+          <strong>{friend.isBestFriend ? "Bạn thân" : "Bạn bè"}</strong>
+          <a href={`/edit/${friend.id}`}>Chỉnh sửa</a>
+        </li>
+      ))
+    }
+  </ul>
+</Layout>
+
+```
+
+Sau khi tạo tất cả các trang, bạn sẽ có cấu trúc file sau:
+
+<FileTree title="Cấu trúc dự án">
+- src
+  - env.d.ts
+  - firebase
+    - client.ts
+    - server.ts
+  - pages
+    - dashboard.astro
+    - add.astro
+    - edit
+      - [id].astro
+    - friend
+      - [id].astro
+    - api
+      - friends
+        - index.ts
+        - [id].ts
+- .env
+- astro.config.mjs
+- package.json
+</FileTree>
+
+## Tài nguyên cộng đồng
+
+- [Ví dụ ứng dụng Astro và Firebase SSR](https://github.com/kevinzunigacuellar/astro-firebase)
+- [Sử dụng Firebase Realtime Database trong Astro với Vue: Hướng dẫn từng bước](https://www.launchfa.st/blog/vue-astro-firebase-realtime-database)

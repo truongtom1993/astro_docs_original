@@ -1,0 +1,165 @@
+---
+type: integration
+title: '@astrojs/alpinejs'
+description: Tìm hiểu cách sử dụng tích hợp framework @astrojs/alpinejs để mở rộng hỗ trợ component trong dự án Astro của bạn.
+sidebar:
+  label: Alpine.js
+githubIntegrationURL: 'https://github.com/withastro/astro/tree/main/packages/integrations/alpinejs/'
+category: renderer
+i18nReady: true
+---
+import PackageManagerTabs from '~/components/tabs/PackageManagerTabs.astro'
+
+**[Tích hợp Astro][astro-integration]** này thêm [Alpine.js](https://alpinejs.dev/) vào dự án của bạn để bạn có thể sử dụng Alpine.js ở bất cứ đâu trên trang.
+
+## Cài đặt
+
+Astro bao gồm lệnh `astro add` để tự động thiết lập các tích hợp chính thức. Nếu muốn, bạn có thể [cài đặt tích hợp thủ công](#cài-đặt-thủ-công) thay thế.
+
+Để cài đặt `@astrojs/alpinejs`, chạy lệnh sau từ thư mục dự án của bạn và làm theo hướng dẫn:
+
+<PackageManagerTabs>
+  <Fragment slot="npm">
+    ```sh
+    npx astro add alpinejs
+    ```
+  </Fragment>
+  <Fragment slot="pnpm">
+    ```sh
+    pnpm astro add alpinejs
+    ```
+  </Fragment>
+  <Fragment slot="yarn">
+    ```sh
+    yarn astro add alpinejs
+    ```
+  </Fragment>
+</PackageManagerTabs>
+
+Nếu gặp bất kỳ vấn đề nào, [hãy báo cáo cho chúng tôi trên GitHub](https://github.com/withastro/astro/issues) và thử các bước cài đặt thủ công bên dưới.
+
+### Cài đặt thủ công
+
+Đầu tiên, cài đặt gói `@astrojs/alpinejs`.
+
+<PackageManagerTabs>
+  <Fragment slot="npm">
+    ```sh
+    npm install @astrojs/alpinejs
+    ```
+  </Fragment>
+  <Fragment slot="pnpm">
+    ```sh
+    pnpm add @astrojs/alpinejs
+    ```
+  </Fragment>
+  <Fragment slot="yarn">
+    ```sh
+    yarn add @astrojs/alpinejs
+    ```
+  </Fragment>
+</PackageManagerTabs>
+
+Hầu hết các trình quản lý gói cũng sẽ cài đặt các dependency đồng cấp liên quan. Tuy nhiên, nếu bạn thấy cảnh báo `Cannot find package 'alpinejs'` (hoặc tương tự) khi khởi động Astro, bạn cần cài đặt Alpine.js thủ công:
+
+<PackageManagerTabs>
+  <Fragment slot="npm">
+  ```sh
+  npm install alpinejs @types/alpinejs
+  ```
+  </Fragment>
+  <Fragment slot="pnpm">
+  ```sh
+  pnpm add alpinejs @types/alpinejs
+  ```
+  </Fragment>
+  <Fragment slot="yarn">
+  ```sh
+  yarn add alpinejs @types/alpinejs
+  ```
+  </Fragment>
+</PackageManagerTabs>
+
+Sau đó, áp dụng tích hợp vào file `astro.config.*` của bạn bằng thuộc tính `integrations`:
+
+```js ins="alpinejs()" title="astro.config.mjs" ins={2}
+import { defineConfig } from 'astro/config';
+import alpinejs from '@astrojs/alpinejs';
+
+export default defineConfig({
+  // ...
+  integrations: [alpinejs()],
+});
+```
+
+## Tùy chọn cấu hình
+
+### `entrypoint`
+
+Bạn có thể mở rộng Alpine bằng cách đặt tùy chọn `entrypoint` thành một import specifier tương đối với thư mục gốc (ví dụ: `entrypoint: "/src/entrypoint"`).
+
+Export mặc định của file này phải là một hàm nhận một instance Alpine trước khi khởi động. Điều này cho phép sử dụng các directive tùy chỉnh, plugin và customization khác cho các trường hợp sử dụng nâng cao.
+
+```js title="astro.config.mjs"
+import { defineConfig } from 'astro/config';
+import alpine from '@astrojs/alpinejs';
+
+export default defineConfig({
+  // ...
+  integrations: [alpine({ entrypoint: '/src/entrypoint' })],
+});
+```
+
+```js title="src/entrypoint.ts"
+import type { Alpine } from 'alpinejs'
+import intersect from '@alpinejs/intersect'
+
+export default (Alpine: Alpine) => {
+    Alpine.plugin(intersect)
+}
+```
+
+## Sử dụng
+
+Khi tích hợp được cài đặt, bạn có thể sử dụng [Alpine.js](https://alpinejs.dev/) directive và syntax bên trong bất kỳ component Astro nào. Script Alpine.js được tự động thêm và kích hoạt trên mọi trang của website, vì vậy không cần directive client nào. Thêm script plugin vào `<head>` của trang.
+
+Ví dụ sau thêm [plugin Collapse của Alpine](https://alpinejs.dev/plugins/collapse) để mở rộng và thu gọn văn bản đoạn văn:
+
+```astro title="src/pages/index.astro" ins={6} ins="x-collapse"
+---
+---
+<html>
+	<head>
+		<!-- ... -->
+		<script defer src="https://cdn.jsdelivr.net/npm/@alpinejs/collapse@3.x.x/dist/cdn.min.js"></script>
+	</head>
+	<body>
+    <!-- ... -->
+		<div x-data="{ expanded: false }">
+			<button @click="expanded = ! expanded">Toggle Content</button>
+
+			<p id="foo" x-show="expanded" x-collapse>
+        Lorem ipsum
+			</p>
+		</div>
+	</body>
+</html>
+```
+
+## Intellisense cho TypeScript
+
+Tích hợp `@astrojs/alpine` thêm `Alpine` vào đối tượng window toàn cục. Để IDE tự động hoàn thành, thêm đoạn sau vào `src/env.d.ts`:
+
+```ts title="src/env.d.ts"
+interface Window {
+  Alpine: import('alpinejs').Alpine;
+}
+```
+
+## Ví dụ
+
+* [Ví dụ Astro Alpine.js](https://github.com/withastro/astro/tree/main/examples/framework-alpine) cho thấy cách sử dụng Alpine.js trong dự án Astro.
+
+[astro-integration]: /vi/guides/integrations-guide/
+
+[astro-ui-frameworks]: /vi/guides/framework-components/#using-framework-components

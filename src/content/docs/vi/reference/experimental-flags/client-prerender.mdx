@@ -1,0 +1,43 @@
+---
+title: Kết xuất trước phía khách thử nghiệm
+sidebar:
+  label: Kết xuất trước phía khách
+i18nReady: true
+---
+
+import Since from '~/components/Since.astro';
+
+<p>
+
+**Kiểu:** `boolean`<br />
+**Mặc định:** `false`<br />
+
+<Since v="4.2.0" />
+</p>
+
+Kích hoạt việc kết xuất trước các trang đã được tải trước trên phía khách trong các trình duyệt được hỗ trợ.
+
+Tính năng này sử dụng [Speculation Rules Web API](https://developer.mozilla.org/en-US/docs/Web/API/Speculation_Rules_API) thử nghiệm và nâng cao hành vi `prefetch` mặc định trên toàn bộ trang để kết xuất trước các liên kết trên phía khách.
+Bạn nên xem xét [các rủi ro có thể xảy ra khi kết xuất trước trên phía khách](https://developer.mozilla.org/en-US/docs/Web/API/Speculation_Rules_API#unsafe_prefetching) trước khi bật tính năng này.
+
+Bật kết xuất trước phía khách trong `astro.config.mjs` của bạn cùng với các tùy chọn cấu hình `prefetch` mong muốn:
+
+```js
+// astro.config.mjs
+{
+  prefetch: {
+    prefetchAll: true,
+    defaultStrategy: 'viewport',
+  },
+	experimental: {
+		clientPrerender: true,
+	},
+}
+```
+
+Tiếp tục sử dụng thuộc tính `data-astro-prefetch` trên bất kỳ liên kết `<a />` nào trên trang của bạn để bật tính năng tải trước.
+Thay vì thêm một thẻ `<link>` vào phần head của tài liệu hoặc tải trang bằng JavaScript, một thẻ `<script>` sẽ được thêm vào với các quy tắc speculation tương ứng.
+
+Kết xuất trước phía khách yêu cầu trình duyệt hỗ trợ. Nếu API Speculation Rules không được hỗ trợ, `prefetch` sẽ tự động chuyển sang chiến lược được hỗ trợ.
+
+Xem [Hướng dẫn Prefetch](/vi/guides/prefetch/) để biết thêm các tùy chọn và cách sử dụng `prefetch`.

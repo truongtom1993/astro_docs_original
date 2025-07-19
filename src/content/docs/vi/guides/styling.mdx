@@ -1,0 +1,776 @@
+---
+title: Styles và CSS
+description: >-
+  Học cách tạo style cho các components trong Astro với scoped styles, CSS bên ngoài, và các công cụ như Sass và PostCSS.
+i18nReady: true
+---
+import Since from '~/components/Since.astro';
+import PackageManagerTabs from '~/components/tabs/PackageManagerTabs.astro'
+import ReadMore from '~/components/ReadMore.astro'
+import { Steps } from '@astrojs/starlight/components';
+import RecipeLinks from "~/components/RecipeLinks.astro";
+
+Astro được thiết kế để làm cho việc tạo style và viết CSS trở nên dễ dàng. Viết CSS trực tiếp bên trong một component Astro hoặc import thư viện CSS yêu thích của bạn như [Tailwind][tailwind]. Các ngôn ngữ styling nâng cao như [Sass][sass] và [Less][less] cũng được hỗ trợ.
+
+## Styling trong Astro
+
+Tạo style cho một component Astro dễ như việc thêm thẻ `<style>` vào component hoặc page template của bạn. Khi bạn đặt thẻ `<style>` bên trong một component Astro, Astro sẽ phát hiện CSS và xử lý styles cho bạn một cách tự động.
+
+```astro title="src/components/MyComponent.astro"
+<style>
+  h1 { color: red; }
+</style>
+```
+
+### Scoped Styles
+
+Các quy tắc CSS `<style>` của Astro được **scoped tự động theo mặc định**. Scoped styles được biên dịch phía sau để chỉ áp dụng cho HTML được viết bên trong cùng component đó. CSS mà bạn viết bên trong một component Astro được tự động đóng gói bên trong component đó.
+
+CSS này:
+```astro title="src/pages/index.astro"
+<style>
+  h1 {
+    color: red;
+  }
+
+  .text {
+    color: blue;
+  }
+</style>
+```
+
+Được biên dịch thành:
+```astro
+<style>
+  h1[data-astro-cid-hhnqfkh6] {
+     color: red;
+  }
+
+  .text[data-astro-cid-hhnqfkh6] {
+    color: blue;
+  }
+</style>
+```
+
+Scoped styles không rò rỉ và sẽ không ảnh hưởng đến phần còn lại của trang web. Trong Astro, việc sử dụng các selector có độ ưu tiên thấp như `h1 {}` hoặc `p {}` là ổn vì chúng sẽ được biên dịch với scopes trong output cuối cùng.
+
+Scoped styles cũng sẽ không áp dụng cho các component Astro khác được chứa bên trong template của bạn. Nếu bạn cần tạo style cho một child component, hãy xem xét bao bọc component đó trong một `<div>` (hoặc element khác) mà bạn có thể tạo style.
+
+Độ ưu tiên của scoped styles được bảo toàn, cho phép chúng hoạt động nhất quán cùng với các file CSS khác hoặc thư viện CSS trong khi vẫn bảo toàn ranh giới độc quyền để ngăn styles áp dụng bên ngoài component.
+
+### Global Styles
+
+Mặc dù chúng tôi khuyến nghị scoped styles cho hầu hết các components, cuối cùng bạn có thể tìm thấy lý do hợp lệ để viết CSS global, không scoped. Bạn có thể opt-out khỏi CSS scoping tự động với thuộc tính `<style is:global>`.
+
+```astro title="src/components/GlobalStyles.astro" "is:global"
+<style is:global>
+  /* Không scoped, được gửi như-là đến trình duyệt.
+     Áp dụng cho tất cả thẻ <h1> trên trang web của bạn. */
+  h1 { color: red; }
+</style>
+```
+
+Bạn cũng có thể kết hợp các quy tắc CSS global & scoped cùng nhau trong cùng thẻ `<style>` bằng cách sử dụng selector `:global()`. Điều này trở thành một pattern mạnh mẽ để áp dụng CSS styles cho children của component của bạn.
+
+```astro title="src/components/MixedStyles.astro" ":global(h1)"
+<style>
+  /* Scoped chỉ cho component này. */
+  h1 { color: red; }
+  /* Kết hợp: Chỉ áp dụng cho các element `h1` con. */
+  article :global(h1) {
+    color: blue;
+  }
+</style>
+<h1>Title</h1>
+<article><slot /></article>
+```
+
+Đây là một cách tuyệt vời để tạo style cho những thứ như blog posts, hoặc documents với nội dung từ CMS nơi các nội dung tồn tại bên ngoài Astro. Nhưng hãy cẩn thận: các components mà appearance khác nhau dựa trên việc có hay không có một parent component nhất định có thể trở nên khó khắc phục sự cố.
+
+Scoped styles nên được sử dụng thường xuyên nhất có thể. Global styles chỉ nên được sử dụng khi cần thiết.
+
+### Kết hợp classes với `class:list`
+
+Nếu bạn cần kết hợp classes trên một element một cách động, bạn có thể sử dụng thuộc tính utility `class:list` trong các file `.astro`.
+
+```astro title="src/components/ClassList.astro" /class:list={.*}/
+---
+const { isRed } = Astro.props;
+---
+<!-- Nếu `isRed` là truthy, class sẽ là "box red". -->
+<!-- Nếu `isRed` là falsy, class sẽ là "box". -->
+<div class:list={['box', { red: isRed }]}><slot /></div>
+
+<style>
+  .box { border: 1px solid blue; }
+  .red { border-color: red; }
+</style>
+```
+
+<ReadMore>Xem trang [tham khảo directives](/vi/reference/directives-reference/#classlist) để tìm hiểu thêm về `class:list`.</ReadMore>
+
+### CSS Variables
+
+<p><Since v="0.21.0" /></p>
+
+`<style>` của Astro có thể tham chiếu bất kỳ CSS variables nào có sẵn trên trang. Bạn cũng có thể truyền CSS variables trực tiếp từ component frontmatter của bạn bằng cách sử dụng directive `define:vars`.
+
+```astro title="src/components/DefineVars.astro" /define:vars={{.*}}/ /var\\(.*\\)/
+---
+const foregroundColor = "rgb(221 243 228)";
+const backgroundColor = "rgb(24 121 78)";
+---
+<style define:vars={{ foregroundColor, backgroundColor }}>
+  h1 {
+    background-color: var(--backgroundColor);
+    color: var(--foregroundColor);
+  }
+</style>
+<h1>Hello</h1>
+```
+
+<ReadMore>Xem trang [tham khảo directives](/vi/reference/directives-reference/#definevars) để tìm hiểu thêm về `define:vars`.</ReadMore>
+
+### Truyền `class` cho child component
+
+Trong Astro, các thuộc tính HTML như `class` không tự động truyền qua cho child components.
+
+Thay vào đó, hãy chấp nhận prop `class` trong child component và áp dụng nó cho root element. Khi destructuring, bạn phải đổi tên nó, vì `class` là một [từ dành riêng](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Lexical_grammar#reserved_words) trong JavaScript.
+
+Sử dụng chiến lược scoped style mặc định, bạn cũng phải truyền thuộc tính `data-astro-cid-*`. Bạn có thể làm điều này bằng cách truyền `...rest` của props cho component. Nếu bạn đã thay đổi `scopedStyleStrategy` thành `'class'` hoặc `'where'`, prop `...rest` không cần thiết.
+
+```astro title="src/components/MyComponent.astro" {2,4}
+---
+const { class: className, ...rest } = Astro.props;
+---
+<div class={className} {...rest}>
+  <slot/>
+</div>
+```
+
+```astro title="src/pages/index.astro"
+---
+import MyComponent from "../components/MyComponent.astro"
+---
+<style>
+  .red {
+    color: red;
+  }
+</style>
+<MyComponent class="red">Điều này sẽ có màu đỏ!</MyComponent>
+```
+
+:::note[Scoped styles từ parent components]
+Vì thuộc tính `data-astro-cid-*` bao gồm child trong scope của parent, có thể styles cascade từ parent xuống child. Để tránh điều này có tác dụng phụ không mong muốn, hãy đảm bảo bạn sử dụng class names độc nhất trong child component.
+:::
+
+### Inline styles
+
+Bạn có thể tạo style cho các HTML elements inline bằng cách sử dụng thuộc tính `style`. Điều này có thể là một CSS string hoặc một object của CSS properties:
+
+```astro title="src/pages/index.astro"
+// Những cái này tương đương:
+<p style={{ color: "brown", textDecoration: "underline" }}>My text</p>
+<p style="color: brown; text-decoration: underline;">My text</p>
+```
+
+## External Styles
+
+Có hai cách để resolve external global stylesheets: một ESM import cho các files nằm trong project source của bạn, và một absolute URL link cho các files trong thư mục `public/` của bạn, hoặc được host bên ngoài project của bạn.
+
+<ReadMore>Đọc thêm về việc sử dụng [static assets](/vi/guides/imports/) nằm trong `public/` hoặc `src/`.</ReadMore>
+
+### Import một local stylesheet
+
+:::caution[Sử dụng npm package?]
+Bạn có thể cần cập nhật `astro.config` khi importing từ npm packages. Xem phần ["import stylesheets from an npm package"](#import-a-stylesheet-from-an-npm-package) bên dưới.
+:::
+
+Bạn có thể import stylesheets trong Astro component frontmatter của bạn bằng cách sử dụng ESM import syntax. CSS imports hoạt động như [bất kỳ ESM import nào khác trong một component Astro](/vi/basics/astro-components/#the-component-script), đó là nên được tham chiếu **relative to the component** và phải được viết ở **top** của component script của bạn, với bất kỳ imports nào khác.
+
+```astro title="src/pages/index.astro" {4}
+---
+// Astro sẽ bundle và optimize CSS này cho bạn một cách tự động
+// Điều này cũng hoạt động cho các preprocessor files như .scss, .styl, etc.
+import '../styles/utils.css';
+---
+<html><!-- Trang của bạn ở đây --></html>
+```
+
+CSS `import` thông qua ESM được hỗ trợ bên trong bất kỳ JavaScript file nào, bao gồm JSX components như React & Preact. Điều này có thể hữu ích để viết granular, per-component styles cho các React components của bạn.
+
+### Import một stylesheet từ npm package
+
+Bạn cũng có thể cần load stylesheets từ một external npm package. Điều này đặc biệt phổ biến cho các utilities như [Open Props](https://open-props.style/). Nếu package của bạn **khuyến nghị sử dụng file extension** (tức `package-name/styles.css` thay vì `package-name/styles`), điều này nên hoạt động như bất kỳ local stylesheet nào:
+
+```astro {3}
+---
+// src/pages/random-page.astro
+import 'package-name/styles.css';
+---
+<html><!-- Trang của bạn ở đây --></html>
+```
+
+Nếu package của bạn **không đề xuất sử dụng file extension** (tức `package-name/styles`), bạn sẽ cần cập nhật Astro config của bạn trước!
+
+Giả sử bạn đang importing một CSS file từ `package-name` gọi là `normalize` (với file extension bị bỏ qua). Để đảm bảo chúng tôi có thể prerender trang của bạn một cách chính xác, hãy thêm `package-name` vào [the `vite.ssr.noExternal` array](https://vite.dev/config/ssr-options.html#ssr-noexternal):
+
+```js ins={7}
+// astro.config.mjs
+import { defineConfig } from 'astro/config';
+
+export default defineConfig({
+  vite: {
+    ssr: {
+      noExternal: ['package-name'],
+    }
+  }
+})
+```
+
+:::note
+Đây là một [Vite-specific setting](https://vite.dev/config/ssr-options.html#ssr-noexternal) mà _không_ liên quan đến (hoặc yêu cầu) [Astro SSR](/vi/guides/on-demand-rendering/).
+:::
+
+Bây giờ, bạn có thể import `package-name/normalize`. Điều này sẽ được bundled và optimized bởi Astro như bất kỳ local stylesheet nào khác.
+
+```astro {3}
+---
+// src/pages/random-page.astro
+import 'package-name/normalize';
+---
+<html><!-- Trang của bạn ở đây --></html>
+```
+
+### Load một static stylesheet thông qua "link" tags
+
+Bạn cũng có thể sử dụng element `<link>` để load một stylesheet trên trang. Điều này nên là một absolute URL path đến một CSS file nằm trong thư mục `/public` của bạn, hoặc một URL đến một website bên ngoài. Relative `<link>` href values không được hỗ trợ.
+
+```astro title="src/pages/index.astro" {3,5}
+<head>
+  <!-- Local: /public/styles/global.css -->
+  <link rel="stylesheet" href="/styles/global.css" />
+  <!-- External -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/prismjs@1.24.1/themes/prism-tomorrow.css" />
+</head>
+```
+
+Vì cách tiếp cận này sử dụng thư mục `public/`, nó bỏ qua CSS processing, bundling và optimizations bình thường được cung cấp bởi Astro. Nếu bạn cần các transformations này, hãy sử dụng phương pháp [Import a Stylesheet](#import-a-local-stylesheet) ở trên.
+
+## Cascading Order
+
+Các component Astro đôi khi sẽ phải đánh giá nhiều nguồn CSS. Ví dụ, component của bạn có thể import một CSS stylesheet, bao gồm thẻ `<style>` riêng của nó, *và* được render bên trong một layout import CSS.
+
+Khi các quy tắc CSS xung đột áp dụng cho cùng một element, trình duyệt trước tiên sử dụng _specificity_ và sau đó _order of appearance_ để xác định giá trị nào để hiển thị.
+
+Nếu một quy tắc _specific_ hơn một quy tắc khác, bất kể quy tắc CSS xuất hiện ở đâu, giá trị của nó sẽ được ưu tiên:
+
+```astro title="src/components/MyComponent.astro"
+<style>
+  h1 { color: red }
+  div > h1 {
+    color: purple
+  }
+</style>
+<div>
+  <h1>
+    Header này sẽ có màu tím!
+  </h1>
+</div>
+```
+
+Nếu hai quy tắc có cùng specificity, thì _order of appearance_ được đánh giá, và giá trị của quy tắc cuối cùng sẽ được ưu tiên:
+```astro title="src/components/MyComponent.astro"
+<style>
+  h1 { color: purple }
+  h1 { color: red }
+</style>
+<div>
+  <h1>
+    Header này sẽ có màu đỏ!
+  </h1>
+</div>
+```
+
+Các quy tắc CSS Astro được đánh giá theo thứ tự xuất hiện này:
+
+- **`<link>` tags trong head** (độ ưu tiên thấp nhất)
+- **imported styles**
+- **scoped styles** (độ ưu tiên cao nhất)
+
+### Scoped Styles
+
+Tùy thuộc vào giá trị bạn chọn cho [`scopedStyleStrategy`](/vi/reference/configuration-reference/#scopedstylestrategy), scoped styles có thể hoặc không thể tăng [CLASS column specificity](https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_cascade/Specificity#class_column).
+
+Tuy nhiên, [scoped styles](#scoped-styles) sẽ luôn đến cuối cùng trong order of appearance. Những styles này do đó sẽ được ưu tiên hơn các styles khác có cùng specificity. Ví dụ, nếu bạn import một stylesheet xung đột với một scoped style, giá trị của scoped style sẽ áp dụng:
+
+```css title="src/components/make-it-purple.css"
+h1 {
+  color: purple;
+}
+```
+```astro title="src/components/MyComponent.astro"
+---
+import "./make-it-purple.css"
+---
+<style>
+  h1 { color: red }
+</style>
+<div>
+  <h1>
+    Header này sẽ có màu đỏ!
+  </h1>
+</div>
+```
+
+Scoped styles sẽ bị ghi đè nếu imported style specific hơn. Style với specificity cao hơn sẽ được ưu tiên hơn scoped style:
+
+```css title="src/components/make-it-purple.css"
+#intro {
+  color: purple;
+}
+```
+```astro title="src/components/MyComponent.astro"
+---
+import "./make-it-purple.css"
+---
+<style>
+  h1 { color: red }
+</style>
+<div>
+  <h1 id="intro">
+    Header này sẽ có màu tím!
+  </h1>
+</div>
+```
+
+### Import Order
+
+Khi importing nhiều stylesheets trong một component Astro, các quy tắc CSS được đánh giá theo thứ tự chúng được imported. Một specificity cao hơn sẽ luôn xác định styles nào để hiển thị, bất kể khi nào CSS được đánh giá. Nhưng, khi các styles xung đột có cùng specificity, _cái được imported cuối cùng_ thắng:
+
+```css title="src/components/make-it-purple.css"
+div > h1 {
+  color: purple;
+}
+```
+```css title="src/components/make-it-green.css"
+div > h1 {
+  color: green;
+}
+```
+```astro title="src/components/MyComponent.astro"
+---
+import "./make-it-green.css"
+import "./make-it-purple.css"
+---
+<style>
+  h1 { color: red }
+</style>
+<div>
+  <h1>
+    Header này sẽ có màu tím!
+  </h1>
+</div>
+```
+
+Trong khi các thẻ `<style>` được scoped và chỉ áp dụng cho component khai báo chúng, _imported_ CSS có thể "leak". Importing một component áp dụng bất kỳ CSS nào nó imports, ngay cả khi component không bao giờ được sử dụng:
+
+```astro title="src/components/PurpleComponent.astro"
+---
+import "./make-it-purple.css"
+---
+<div>
+  <h1>Tôi import purple CSS.</h1>
+</div>
+```
+```astro title="src/components/MyComponent.astro"
+---
+import "./make-it-green.css"
+import PurpleComponent from "./PurpleComponent.astro";
+---
+<style>
+  h1 { color: red }
+</style>
+<div>
+  <h1>
+    Header này sẽ có màu tím!
+  </h1>
+</div>
+```
+
+:::tip
+Một pattern phổ biến trong Astro là import global CSS bên trong một [Layout component](/vi/basics/layouts/). Hãy đảm bảo import Layout component trước các imports khác để nó có độ ưu tiên thấp nhất.
+:::
+
+### Link Tags
+Các style sheets được load thông qua [link tags](#load-a-static-stylesheet-via-link-tags) được đánh giá theo thứ tự, trước bất kỳ styles nào khác trong một file Astro. Do đó, những styles này sẽ có độ ưu tiên thấp hơn imported stylesheets và scoped styles:
+
+```astro title="src/pages/index.astro"
+---
+import "../components/make-it-purple.css"
+---
+
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+		<meta name="viewport" content="width=device-width" />
+		<meta name="generator" content={Astro.generator} />
+		<title>Astro</title>
+		<link rel="stylesheet" href="/styles/make-it-blue.css" />
+	</head>
+	<body>
+		<div>
+			<h1>Này sẽ có màu tím</h1>
+		</div>
+	</body>
+</html>
+```
+
+## Tailwind
+
+Astro đi kèm với hỗ trợ để thêm các thư viện CSS, công cụ, và frameworks phổ biến vào project của bạn như [Tailwind](https://tailwindcss.com) và nhiều hơn nữa!
+
+Astro hỗ trợ cả Tailwind 3 và 4. Bạn có thể [thêm hỗ trợ Tailwind 4 thông qua Vite plugin](#add-tailwind-4) vào project của bạn với một CLI command, hoặc cài đặt legacy dependencies thủ công để thêm [hỗ trợ Tailwind 3 thông qua Astro integration](#legacy-tailwind-3-support).
+
+Để [nâng cấp project Astro của bạn từ Tailwind 3 lên 4](#upgrade-from-tailwind-3) bạn sẽ cần cả thêm hỗ trợ Tailwind 4, và loại bỏ hỗ trợ legacy Tailwind 3.
+
+### Thêm Tailwind 4
+
+Trong Astro `>=5.2.0`, sử dụng lệnh `astro add tailwind` cho package manager của bạn để cài đặt official Vite Tailwind plugin. Để thêm hỗ trợ Tailwind 4 vào các phiên bản Astro cũ hơn, hãy làm theo [hướng dẫn trong Tailwind docs][tailwind] để thêm `@tailwindcss/vite` Vite plugin thủ công.
+
+<PackageManagerTabs>
+  <Fragment slot="npm">
+    ```shell
+    npx astro add tailwind
+    ```
+  </Fragment>
+  <Fragment slot="pnpm">
+    ```shell
+    pnpm astro add tailwind
+    ```
+  </Fragment>
+  <Fragment slot="yarn">
+    ```shell
+    yarn astro add tailwind
+    ```
+  </Fragment>
+</PackageManagerTabs>
+
+Sau đó, import `tailwindcss` vào `src/styles/global.css` (hoặc một CSS file khác của sự lựa chọn của bạn) để làm cho Tailwind classes có sẵn cho project Astro của bạn. File này bao gồm import sẽ được tạo mặc định nếu bạn sử dụng lệnh `astro add tailwind` để cài đặt Vite plugin.
+
+```css title="src/styles/global.css"
+@import "tailwindcss";
+```
+
+Import file này trong các pages nơi bạn muốn Tailwind áp dụng. Điều này thường được thực hiện trong một layout component để Tailwind styles có thể được sử dụng trên tất cả các pages chia sẻ layout đó:
+
+```astro title="src/layouts/Layout.astro"
+---
+import "../styles/global.css";
+---
+```
+
+### Nâng cấp từ Tailwind 3
+
+Làm theo các bước để cập nhật một project Astro hiện có sử dụng Tailwind v3 (sử dụng `@astrojs/tailwind` integration) lên Tailwind 4 (sử dụng [the `@tailwindcss/vite` plugin](https://tailwindcss.com/docs/installation/framework-guides/astro)).
+
+<Steps>
+1. [Thêm hỗ trợ Tailwind 4 vào project của bạn](#add-tailwind-4) thông qua CLI cho phiên bản mới nhất của Astro, hoặc bằng cách thêm Vite plugin thủ công.
+
+2. Gỡ cài đặt `@astrojs/tailwind` integration từ project của bạn:
+
+    <PackageManagerTabs>
+      <Fragment slot="npm">
+      ```shell
+      npm uninstall @astrojs/tailwind
+      ```
+      </Fragment>
+      <Fragment slot="pnpm">
+      ```shell
+      pnpm remove @astrojs/tailwind
+      ```
+      </Fragment>
+      <Fragment slot="yarn">
+      ```shell
+      yarn remove @astrojs/tailwind
+      ```
+      </Fragment>
+    </PackageManagerTabs>
+
+3. Loại bỏ `@astrojs/tailwind` integration từ `astro.config.mjs` của bạn:
+
+    ```js title="astro.config.mjs" del={2} del="tailwind()"
+    import { defineConfig } from 'astro/config';
+    import tailwind from '@astrojs/tailwind';
+
+    export default defineConfig({
+      // ...
+      integrations: [tailwind()],
+      // ...
+    });
+    ```
+
+4. Sau đó, nâng cấp project của bạn theo [Tailwind's v4 upgrade guide](https://tailwindcss.com/docs/upgrade-guide#changes-from-v3).
+</Steps>
+
+### Hỗ trợ Legacy Tailwind 3
+
+Để thêm (hoặc giữ) hỗ trợ cho Tailwind 3, bạn sẽ cần có cả `tailwindcss@3` và official Astro Tailwind integration `@astrojs/tailwind` được cài đặt. Cài đặt những dependencies này thủ công chỉ được sử dụng cho khả năng tương thích legacy Tailwind 3, và không yêu cầu cho Tailwind 4. Bạn cũng sẽ cần một [legacy Tailwind configuration](https://v3.tailwindcss.com/docs/configuration#creating-your-configuration-file):
+
+<Steps>
+1. Cài đặt Tailwind và Astro Tailwind integration vào project dependencies của bạn bằng cách sử dụng package manager ưa thích của bạn:
+
+   <PackageManagerTabs>
+     <Fragment slot="npm">
+     ```shell
+     npm install tailwindcss@3 @astrojs/tailwind
+     ```
+     </Fragment>
+     <Fragment slot="pnpm">
+     ```shell
+     pnpm add tailwindcss@3 @astrojs/tailwind
+     ```
+     </Fragment>
+     <Fragment slot="yarn">
+     ```shell
+     yarn add tailwindcss@3 @astrojs/tailwind
+     ```
+     </Fragment>
+   </PackageManagerTabs>
+
+2. Import integration vào file `astro.config.mjs` của bạn, và thêm nó vào `integrations[]` array của bạn:
+
+    ```js title="astro.config.mjs" ins={2} ins="tailwind()"
+    import { defineConfig } from 'astro/config';
+    import tailwind from '@astrojs/tailwind';
+
+    export default defineConfig({
+      // ...
+      integrations: [tailwind()],
+      // ...
+    });
+    ```
+3. Tạo một file `tailwind.config.mjs` trong root directory của project của bạn. Bạn có thể sử dụng lệnh sau để tạo một basic configuration file cho bạn:
+
+   <PackageManagerTabs>
+     <Fragment slot="npm">
+     ```shell
+     npx tailwindcss init
+     ```
+     </Fragment>
+     <Fragment slot="pnpm">
+     ```shell
+     pnpm dlx tailwindcss init
+     ```
+     </Fragment>
+     <Fragment slot="yarn">
+     ```shell
+     yarn dlx tailwindcss init
+     ```
+     </Fragment>
+   </PackageManagerTabs>
+
+4. Thêm basic configuration sau vào file `tailwind.config.mjs` của bạn:
+
+    ```ts title="tailwind.config.mjs" ins={3}
+    /** @type {import('tailwindcss').Config} */
+    export default {
+      content: ['./src/**/*.{astro,html,js,jsx,md,mdx,svelte,ts,tsx,vue}'],
+      theme: {
+        extend: {},
+      },
+      plugins: [],
+    };
+    ```
+</Steps>
+
+<RecipeLinks slugs={["en/recipes/tailwind-rendered-markdown"]}/>
+
+## CSS Preprocessors
+
+Astro hỗ trợ CSS preprocessors như [Sass][sass], [Stylus][stylus], và [Less][less] thông qua [Vite][vite-preprocessors].
+
+### Sass và SCSS
+
+ ```shell
+ npm install sass
+ ```
+
+Sử dụng `<style lang="scss">` hoặc `<style lang="sass">` trong các file `.astro`.
+
+### Stylus
+
+```shell
+npm install stylus
+```
+
+Sử dụng `<style lang="styl">` hoặc `<style lang="stylus">` trong các file `.astro`.
+
+### Less
+
+```shell
+npm install less
+```
+
+Sử dụng `<style lang="less">` trong các file `.astro`.
+
+### LightningCSS
+
+```shell
+npm install lightningcss
+```
+
+Cập nhật cấu hình `vite` của bạn trong `astro.config.mjs`:
+
+```js title="astro.config.mjs" ins={4-8}
+import { defineConfig } from 'astro/config'
+
+export default defineConfig({
+  vite: {
+    css: {
+      transformer: "lightningcss",
+    },
+  },
+})
+
+```
+
+### Trong framework components
+
+Bạn cũng có thể sử dụng tất cả các CSS preprocessors ở trên trong JS frameworks! Hãy đảm bảo làm theo các patterns mà mỗi framework khuyến nghị:
+
+- **React** / **Preact**: `import Styles from './styles.module.scss';`
+- **Vue**: `<style lang="scss">`
+- **Svelte**: `<style lang="scss">`
+
+## PostCSS
+
+Astro đi kèm với PostCSS được bao gồm như một phần của [Vite](https://vite.dev/guide/features.html#postcss). Để cấu hình PostCSS cho project của bạn, tạo một file `postcss.config.cjs` trong project root. Bạn có thể import plugins bằng cách sử dụng `require()` sau khi cài đặt chúng (ví dụ `npm install autoprefixer`).
+
+```js title="postcss.config.cjs" ins={3-4}
+module.exports = {
+  plugins: [
+    require('autoprefixer'),
+    require('cssnano'),
+  ],
+};
+```
+
+## Frameworks và Libraries
+
+### 📘 React / Preact
+
+Các file `.jsx` hỗ trợ cả global CSS và CSS Modules. Để kích hoạt cái sau, sử dụng extension `.module.css` (hoặc `.module.scss`/`.module.sass` nếu sử dụng Sass).
+
+```jsx title="src/components/MyReactComponent.jsx" /[a-z]+(\\.module\\.css)/
+import './global.css'; // include global CSS
+import Styles from './styles.module.css'; // Sử dụng CSS Modules (phải kết thúc bằng `.module.css`, `.module.scss`, hoặc `.module.sass`!)
+```
+
+### 📗 Vue
+
+Vue trong Astro hỗ trợ các phương pháp tương tự như `vue-loader` làm:
+
+- [vue-loader - Scoped CSS][vue-scoped]
+- [vue-loader - CSS Modules][vue-css-modules]
+
+### 📕 Svelte
+
+Svelte trong Astro cũng hoạt động chính xác như mong đợi: [Svelte Styling Docs][svelte-style].
+
+## Markdown Styling
+
+Bất kỳ phương pháp styling Astro nào đều có sẵn cho một [Markdown layout component](/vi/basics/layouts/#markdown-layouts), nhưng các phương pháp khác nhau sẽ có các hiệu ứng styling khác nhau trên trang của bạn.
+
+Bạn có thể áp dụng global styles cho nội dung Markdown của bạn bằng cách thêm [imported stylesheets](#external-styles) vào layout bao bọc nội dung trang của bạn. Cũng có thể tạo style cho Markdown của bạn với [`<style is:global>` tags](#global-styles) trong layout component. Lưu ý rằng bất kỳ styles nào được thêm đều tuân theo [Astro's cascading order](#cascading-order), và bạn nên kiểm tra trang được render của mình một cách cẩn thận để đảm bảo styles của bạn được áp dụng như dự định.
+
+Bạn cũng có thể thêm CSS integrations bao gồm [Tailwind](/vi/recipes/tailwind-rendered-markdown/). Nếu bạn đang sử dụng Tailwind, [typography plugin](https://tailwindcss.com/docs/typography-plugin) có thể hữu ích để tạo style cho Markdown.
+
+## Production
+
+### Bundle control
+
+Khi Astro build trang web của bạn để triển khai production, nó minifies và kết hợp CSS của bạn thành các chunks. Mỗi trang trên trang web của bạn có chunk riêng của nó, và ngoài ra, CSS được chia sẻ giữa nhiều trang được tách ra thành các chunks riêng của chúng để tái sử dụng.
+
+Tuy nhiên, khi bạn có nhiều trang chia sẻ styles, một số shared chunks có thể trở nên thực sự nhỏ. Nếu tất cả chúng được gửi riêng biệt, điều đó sẽ dẫn đến nhiều stylesheets requests và ảnh hưởng đến hiệu suất trang web. Do đó, theo mặc định Astro sẽ chỉ link những cái trong HTML của bạn trên 4kB kích thước như `<link rel="stylesheet">` tags, trong khi inline những cái nhỏ hơn vào `<style type="text/css">`. Cách tiếp cận này cung cấp sự cân bằng giữa số lượng additional requests và volume CSS có thể được cached giữa các trang.
+
+Bạn có thể cấu hình kích thước mà stylesheets sẽ được linked externally (theo bytes) bằng cách sử dụng `assetsInlineLimit` vite build option. Lưu ý rằng option này cũng ảnh hưởng đến script và image inlining.
+
+```js title="astro.config.mjs"
+import { defineConfig } from 'astro/config';
+
+export default defineConfig({
+  vite: {
+    build: {
+      assetsInlineLimit: 1024,
+    }
+  };
+});
+```
+
+Nếu bạn muốn tất cả project styles vẫn external, bạn có thể cấu hình `inlineStylesheets` build option.
+
+```js title="astro.config.mjs"
+import { defineConfig } from 'astro/config';
+
+export default defineConfig({
+  build: {
+    inlineStylesheets: 'never'
+  }
+});
+```
+
+Bạn cũng có thể đặt option này thành `'always'` sẽ inline tất cả stylesheets.
+
+## Advanced
+
+:::caution
+Hãy cẩn thận khi bypass CSS bundling tích hợp của Astro! Styles sẽ không được tự động bao gồm trong built output, và nó là trách nhiệm của bạn để đảm bảo rằng referenced file được bao gồm đúng cách trong final page output.
+:::
+
+### `?raw` CSS Imports
+
+Cho các use cases nâng cao, CSS có thể được đọc trực tiếp từ disk mà không được bundled hoặc optimized bởi Astro. Điều này có thể hữu ích khi bạn cần kiểm soát hoàn toàn một số snippet CSS, và cần bypass automatic CSS handling của Astro.
+
+Điều này không được khuyến nghị cho hầu hết người dùng.
+
+```astro title="src/components/RawInlineStyles.astro" "?raw"
+---
+// Ví dụ nâng cao! Không được khuyến nghị cho hầu hết người dùng.
+import rawStylesCSS from '../styles/main.css?raw';
+---
+<style is:inline set:html={rawStylesCSS}></style>
+```
+
+Xem [Vite's docs](https://vite.dev/guide/assets.html#importing-asset-as-string) để biết chi tiết đầy đủ.
+
+### `?url` CSS Imports
+
+Cho các use cases nâng cao, bạn có thể import một direct URL reference cho một CSS file bên trong thư mục `src/` của project của bạn. Điều này có thể hữu ích khi bạn cần kiểm soát hoàn toàn cách một CSS file được loaded trên trang. Tuy nhiên, điều này sẽ ngăn optimization của CSS file đó với phần còn lại của page CSS của bạn.
+
+Điều này không được khuyến nghị cho hầu hết người dùng. Thay vào đó, hãy đặt CSS files của bạn bên trong `public/` để có được một consistent URL reference.
+
+:::caution
+Importing một CSS file nhỏ hơn với `?url` có thể trả về base64 encoded contents của CSS file như một data URL trong final build của bạn. Hoặc viết code của bạn để hỗ trợ encoded data URLs (`data:text/css;base64,...`) hoặc đặt [`vite.build.assetsInlineLimit`](https://vite.dev/config/#build-assetsinlinelimit) config option thành `0` để vô hiệu hóa tính năng này.
+:::
+
+```astro title="src/components/RawStylesUrl.astro" "?url"
+---
+// Ví dụ nâng cao! Không được khuyến nghị cho hầu hết người dùng.
+import stylesUrl from '../styles/main.css?url';
+---
+<link rel="preload" href={stylesUrl} as="style">
+<link rel="stylesheet" href={stylesUrl}>
+```
+
+Xem [Vite's docs](https://vite.dev/guide/assets.html#importing-asset-as-url) để biết chi tiết đầy đủ.
+
+[less]: https://lesscss.org/
+[sass]: https://sass-lang.com/
+[stylus]: https://stylus-lang.com/
+[svelte-style]: https://svelte.dev/docs#component-format-style
+[tailwind]: https://tailwindcss.com/docs/installation/framework-guides/astro
+[vite-preprocessors]: https://vite.dev/guide/features.html#css-pre-processors
+[vue-css-modules]: https://vue-loader.vuejs.org/guide/css-modules.html
+[vue-scoped]: https://vue-loader.vuejs.org/guide/scoped-css.html

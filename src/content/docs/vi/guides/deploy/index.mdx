@@ -1,0 +1,121 @@
+---
+title: Triển khai trang web Astro của bạn
+description: Cách triển khai trang web Astro của bạn lên web.
+sidebar:
+  label: Tổng quan triển khai
+i18nReady: true
+---
+
+import DeployGuidesNav from '~/components/DeployGuidesNav.astro';
+import PackageManagerTabs from '~/components/tabs/PackageManagerTabs.astro';
+import { Steps } from '@astrojs/starlight/components'
+
+**Sẵn sàng xây dựng và triển khai trang web Astro của bạn?** Hãy làm theo một trong các hướng dẫn của chúng tôi cho các dịch vụ triển khai khác nhau hoặc cuộn xuống để xem hướng dẫn chung về triển khai trang web Astro.
+
+## Hướng dẫn triển khai
+
+<DeployGuidesNav />
+
+## Các phương án triển khai nhanh
+
+Bạn có thể xây dựng và triển khai trang web Astro lên nhiều máy chủ một cách nhanh chóng bằng cách sử dụng giao diện dashboard trên website của họ hoặc thông qua CLI.
+
+### Giao diện website
+
+Một cách nhanh để triển khai trang web là kết nối kho lưu trữ Git trực tuyến của dự án Astro của bạn (ví dụ: GitHub, GitLab, Bitbucket) với nhà cung cấp dịch vụ lưu trữ và tận dụng triển khai liên tục bằng Git.
+
+Các nền tảng lưu trữ này sẽ tự động phát hiện các lần đẩy (push) đến kho mã nguồn dự án Astro của bạn, xây dựng trang web và triển khai nó lên web với một URL tùy chỉnh hoặc tên miền cá nhân của bạn. Thông thường, việc thiết lập triển khai trên các nền tảng này sẽ theo các bước như sau:
+
+<Steps>
+1. Thêm kho lưu trữ của bạn vào một nhà cung cấp Git trực tuyến (ví dụ: trong GitHub, GitLab, Bitbucket)
+
+2. Chọn một nhà cung cấp hỗ trợ **triển khai liên tục** (ví dụ: [Netlify](/vi/guides/deploy/netlify/) hoặc [Vercel](/vi/guides/deploy/vercel/)) và nhập kho Git của bạn như một trang web/dự án mới.
+
+    Nhiều máy chủ phổ biến sẽ nhận diện dự án của bạn là một trang Astro, và nên tự động chọn các thiết lập cấu hình phù hợp để xây dựng và triển khai trang web của bạn như phía dưới đây. (Nếu không, bạn có thể thay đổi các thiết lập này.)
+
+    :::note[Deploy settings]
+    - **Build Command:** `astro build` hoặc `npm run build`
+    - **Publish directory:** `dist`
+    :::
+
+3. Nhấn "Deploy" và trang web mới của bạn sẽ được tạo tại một URL duy nhất của nhà cung cấp đó (ví dụ: `new-astro-site.netlify.app`).
+</Steps>
+
+Nhà cung cấp sẽ tự động cấu hình để theo dõi nhánh chính của kho Git của bạn cho các thay đổi, và xây dựng lại cũng như xuất bản lại trang web mỗi khi có commit mới. Các thiết lập này thường có thể được cấu hình trong giao diện dashboard của nhà cung cấp.
+
+### Triển khai bằng CLI
+
+Một số nhà cung cấp sẽ có giao diện dòng lệnh (CLI) riêng mà bạn có thể cài đặt toàn cục trên máy tính bằng npm. Thông thường, triển khai bằng CLI sẽ như sau:
+
+<Steps>
+1. Cài đặt CLI của nhà cung cấp lên máy tính, ví dụ:
+
+    <PackageManagerTabs>
+        <Fragment slot="npm">
+        ```shell
+        npm install --global netlify-cli
+        ```
+        </Fragment>
+        <Fragment slot="pnpm">
+        ```shell
+        pnpm add --global netlify-cli
+        ```
+        </Fragment>
+        <Fragment slot="yarn">
+        ```shell
+        yarn global add netlify-cli
+        ```
+        </Fragment>
+    </PackageManagerTabs>
+
+2. Chạy CLI và làm theo các hướng dẫn để xác thực, thiết lập, v.v.
+
+3. Xây dựng trang web của bạn và triển khai lên máy chủ
+
+    Nhiều nhà cung cấp phổ biến sẽ tự động xây dựng và triển khai trang web của bạn. Họ thường sẽ nhận diện dự án của bạn là một trang Astro và nên tự động chọn các thiết lập cấu hình phù hợp để xây dựng và triển khai như phía dưới đây. (Nếu không, bạn có thể thay đổi các thiết lập này.)
+
+    :::note[Deploy settings]
+    - **Build Command:** `astro build` hoặc `npm run build`
+    - **Publish directory:** `dist`
+    :::
+
+
+    Các nhà cung cấp khác sẽ yêu cầu bạn [xây dựng trang web tại máy cục bộ](#building-your-site-locally) và triển khai bằng dòng lệnh.
+</Steps>
+
+## Xây dựng trang web tại máy cục bộ
+
+Nhiều nhà cung cấp như Netlify và Vercel sẽ xây dựng trang web cho bạn và xuất bản kết quả đó lên web. Tuy nhiên, một số trang sẽ yêu cầu bạn xây dựng cục bộ và sau đó chạy lệnh triển khai hoặc tải lên kết quả xây dựng.
+
+Bạn cũng có thể muốn xây dựng cục bộ để xem trước trang web, hoặc để phát hiện lỗi và cảnh báo tiềm ẩn trong môi trường riêng của bạn.
+
+Chạy lệnh `npm run build` để xây dựng trang web Astro của bạn.
+
+<PackageManagerTabs>
+      <Fragment slot="npm">
+      ```shell
+      npm run build
+      ```
+      </Fragment>
+      <Fragment slot="pnpm">
+      ```shell
+      pnpm run build
+      ```
+      </Fragment>
+      <Fragment slot="yarn">
+      ```shell
+      yarn run build
+      ```
+      </Fragment>
+  </PackageManagerTabs>
+
+Theo mặc định, kết quả xây dựng sẽ được đặt tại `dist/`. Vị trí này có thể thay đổi bằng cách sử dụng tùy chọn cấu hình [`outDir`](/vi/reference/configuration-reference/#outdir).
+
+## Thêm adapter để kết xuất theo yêu cầu
+
+:::note
+Trước khi triển khai trang web Astro với [kết xuất theo yêu cầu](/vi/guides/on-demand-rendering/) được bật, hãy chắc chắn rằng bạn đã:
+
+- Cài đặt [adapter phù hợp](/vi/guides/on-demand-rendering/) vào phụ thuộc dự án của bạn (thủ công, hoặc sử dụng lệnh `astro add` của adapter, ví dụ: `npx astro add netlify`).
+- [Thêm adapter](/vi/reference/configuration-reference/#integrations) vào phần import và export mặc định của file `astro.config.mjs` khi cài đặt thủ công. (Lệnh `astro add` sẽ tự động thực hiện bước này cho bạn!)
+:::

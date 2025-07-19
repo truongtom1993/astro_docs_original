@@ -1,0 +1,35 @@
+---
+title: Triển khai trang Astro của bạn lên AWS với Flightcontrol
+description: Cách triển khai trang Astro của bạn lên AWS bằng Flightcontrol
+sidebar:
+  label: Flightcontrol
+type: deploy
+i18nReady: true
+---
+import { Steps } from '@astrojs/starlight/components';
+
+Bạn có thể triển khai một trang Astro bằng [Flightcontrol](https://www.flightcontrol.dev?ref=astro), dịch vụ cung cấp quá trình triển khai tự động hoàn toàn lên tài khoản AWS của bạn.
+
+Hỗ trợ cả trang Astro tĩnh và SSR.
+
+## Cách triển khai
+
+<Steps>
+1. Tạo tài khoản Flightcontrol tại [app.flightcontrol.dev/signup](https://app.flightcontrol.dev/signup?ref=astro)
+
+2. Truy cập [app.flightcontrol.dev/projects/new/1](https://app.flightcontrol.dev/projects/new/1)
+
+3. Kết nối tài khoản GitHub và chọn kho lưu trữ của bạn
+
+4. Chọn "Loại cấu hình" mong muốn:
+    - `GUI` (toàn bộ cấu hình được quản lý qua bảng điều khiển Flightcontrol) nơi bạn sẽ chọn preset `Astro Static` hoặc `Astro SSR`
+    - `flightcontrol.json` (tùy chọn "infrastructure as code" nơi toàn bộ cấu hình nằm trong kho lưu trữ của bạn) tại đây bạn sẽ chọn một cấu hình mẫu cho Astro, sau đó thêm vào mã nguồn của bạn với tên `flightcontrol.json`
+
+5. Điều chỉnh bất kỳ cấu hình nào nếu cần
+
+6. Nhấn "Create Project" và hoàn thành các bước yêu cầu (như liên kết tài khoản AWS của bạn).
+</Steps>
+
+### Thiết lập SSR
+
+Để triển khai với hỗ trợ SSR, hãy đảm bảo bạn đã cài đặt adapter [`@astrojs/node`](/vi/guides/integrations-guide/node/) trước tiên. Sau đó, làm theo các bước ở trên và chọn cấu hình phù hợp cho Astro SSR.

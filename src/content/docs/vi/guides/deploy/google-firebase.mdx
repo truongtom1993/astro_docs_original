@@ -1,0 +1,134 @@
+---
+title: Triển khai trang web Astro lên Google Firebase Hosting
+description: Cách triển khai trang web Astro lên web sử dụng Google Firebase Hosting.
+sidebar:
+  label: Google Firebase
+type: deploy
+i18nReady: true
+---
+import { Steps } from '@astrojs/starlight/components';
+import PackageManagerTabs from '~/components/tabs/PackageManagerTabs.astro';
+
+[Firebase Hosting](https://firebase.google.com/products/hosting) là dịch vụ được cung cấp bởi nền tảng phát triển ứng dụng [Firebase](https://firebase.google.com/) của Google, có thể được sử dụng để triển khai trang web Astro.
+
+Xem hướng dẫn riêng của chúng tôi để [thêm các dịch vụ backend Firebase](/vi/guides/backend/google-firebase/) như cơ sở dữ liệu, xác thực và lưu trữ.
+
+## Cấu hình dự án
+
+Dự án Astro của bạn có thể được triển khai lên Firebase như một trang web tĩnh, hoặc như một trang web render phía server (SSR).
+
+### Trang web tĩnh
+
+Dự án Astro của bạn mặc định là một trang web tĩnh. Bạn không cần cấu hình thêm gì để triển khai trang web Astro tĩnh lên Firebase.
+
+### Adapter cho SSR
+
+Để kích hoạt SSR trong dự án Astro của bạn và triển khai trên Firebase, hãy thêm [adapter Node.js](/vi/guides/integrations-guide/node/).
+
+:::note
+Triển khai trang web Astro SSR lên Firebase yêu cầu [gói Blaze](https://firebase.google.com/pricing) trở lên.
+:::
+
+## Cách triển khai
+
+<Steps>
+1. Cài đặt [Firebase CLI](https://github.com/firebase/firebase-tools). Đây là công cụ dòng lệnh cho phép bạn tương tác với Firebase từ terminal.
+
+    <PackageManagerTabs>
+      <Fragment slot="npm">
+      ```shell
+      npm install firebase-tools
+      ```
+      </Fragment>
+      <Fragment slot="pnpm">
+      ```shell
+      pnpm add firebase-tools
+      ```
+      </Fragment>
+      <Fragment slot="yarn">
+      ```shell
+      yarn add firebase-tools
+      ```
+      </Fragment>
+    </PackageManagerTabs>
+
+2. Xác thực Firebase CLI với tài khoản Google của bạn. Điều này sẽ mở cửa sổ trình duyệt nơi bạn có thể đăng nhập vào tài khoản Google của mình.
+
+    <PackageManagerTabs>
+      <Fragment slot="npm">
+      ```shell
+      npx firebase login
+      ```
+      </Fragment>
+      <Fragment slot="pnpm">
+      ```shell
+      pnpm exec firebase login
+      ```
+      </Fragment>
+      <Fragment slot="yarn">
+      ```shell
+      yarn firebase login
+      ```
+      </Fragment>
+    </PackageManagerTabs>
+
+3. Kích hoạt hỗ trợ web frameworks thử nghiệm. Đây là tính năng thử nghiệm cho phép Firebase CLI phát hiện và cấu hình cài đặt triển khai cho Astro.
+
+    <PackageManagerTabs>
+      <Fragment slot="npm">
+      ```shell
+      npx firebase experiments:enable webframeworks
+      ```
+      </Fragment>
+      <Fragment slot="pnpm">
+      ```shell
+      pnpm exec firebase experiments:enable webframeworks
+      ```
+      </Fragment>
+      <Fragment slot="yarn">
+      ```shell
+      yarn firebase experiments:enable webframeworks
+      ```
+      </Fragment>
+    </PackageManagerTabs>
+
+4. Khởi tạo Firebase Hosting trong dự án của bạn. Điều này sẽ tạo file `firebase.json` và `.firebaserc` trong root dự án của bạn.
+
+    <PackageManagerTabs>
+      <Fragment slot="npm">
+      ```shell
+      npx firebase init hosting
+      ```
+      </Fragment>
+      <Fragment slot="pnpm">
+      ```shell
+      pnpm exec firebase init hosting
+      ```
+      </Fragment>
+      <Fragment slot="yarn">
+      ```shell
+      yarn firebase init hosting
+      ```
+      </Fragment>
+    </PackageManagerTabs>
+
+5. Triển khai trang web của bạn lên Firebase Hosting. Điều này sẽ build trang web Astro của bạn và triển khai lên Firebase.
+
+    <PackageManagerTabs>
+      <Fragment slot="npm">
+      ```shell
+      npx firebase deploy --only hosting
+      ```
+      </Fragment>
+      <Fragment slot="pnpm">
+      ```shell
+      pnpm exec firebase deploy --only hosting
+      ```
+      </Fragment>
+      <Fragment slot="yarn">
+      ```shell
+      yarn firebase deploy --only hosting
+      ```
+      </Fragment>
+    </PackageManagerTabs>
+</Steps>

@@ -1,0 +1,774 @@
+---
+title: View transitions
+description: Kích hoạt điều hướng liền mạch giữa các trang trong Astro với view transitions.
+i18nReady: true
+---
+import Since from '~/components/Since.astro'
+import { Steps } from '@astrojs/starlight/components'
+
+Astro hỗ trợ view transitions chỉ với vài dòng code. View transitions cập nhật nội dung trang mà không cần làm mới toàn bộ trang như trình duyệt thông thường và cung cấp các animation liền mạch giữa các trang. Khi [trình duyệt không hỗ trợ View Transition API](https://developer.mozilla.org/en-US/docs/Web/API/View_Transition_API#browser_compatibility), Astro cho phép bạn [kiểm soát các chiến lược fallback](#fallback-control) để có trải nghiệm tốt nhất cho tất cả người dùng.
+
+Astro cung cấp component routing `<ClientRouter />` có thể được thêm vào `<head>` của một trang để kiểm soát các chuyển tiếp trang khi bạn điều hướng đến trang khác. Nó cung cấp một client-side router nhẹ để [chặn điều hướng](#client-side-navigation-process) và cho phép bạn tùy chỉnh chuyển tiếp giữa các trang.
+
+Thêm component này vào một component `.astro` có thể tái sử dụng, chẳng hạn như common head hoặc layout, để có [animated page transitions trên toàn bộ trang web (chế độ SPA)](#full-site-view-transitions-spa-mode).
+
+Hỗ trợ view transitions của Astro được hỗ trợ bởi [View Transitions](https://developer.chrome.com/docs/web-platform/view-transitions/) browser API mới và cũng bao gồm:
+
+- Một vài [tùy chọn animation có sẵn](#built-in-animation-directives), như `fade`, `slide`, và `none`.
+- Hỗ trợ animation điều hướng cả tiến và lùi.
+- Khả năng [tùy chỉnh hoàn toàn mọi khía cạnh của transition animation](#customizing-animations), và xây dựng animation riêng của bạn.
+- Tùy chọn [ngăn chặn client-side navigation cho các liên kết không phải trang](#preventing-client-side-navigation).
+- [Kiểm soát hành vi fallback](#fallback-control) cho các trình duyệt chưa hỗ trợ View Transition APIs.
+- Tự động hỗ trợ [`prefers-reduced-motion`](#prefers-reduced-motion).
+
+:::note
+Theo mặc định, mọi trang sẽ sử dụng điều hướng trình duyệt thông thường, toàn trang. Bạn phải opt-in vào view transitions và có thể sử dụng chúng theo từng trang hoặc toàn trang web.
+:::
+
+## Thêm View Transitions vào một Trang
+
+Opt-in để sử dụng view transitions trên các trang riêng lẻ bằng cách import và thêm component routing `<ClientRouter />` vào `<head>` trên mọi trang mong muốn.
+
+```astro title="src/pages/index.astro" ins={2,7}
+---
+import { ClientRouter } from "astro:transitions";
+---
+<html lang="en">
+  <head>
+    <title>My Homepage</title>
+    <ClientRouter />
+  </head>
+  <body>
+    <h1>Welcome to my website!</h1>
+  </body>
+</html>
+```
+
+## View transitions toàn trang web (chế độ SPA)
+
+Import và thêm component `<ClientRouter />` vào `<head>` chung hoặc shared layout component của bạn. Astro sẽ tạo default page animations dựa trên sự tương đồng giữa trang cũ và trang mới, và cũng sẽ cung cấp hành vi fallback cho các trình duyệt không được hỗ trợ.
+
+Ví dụ dưới đây cho thấy việc thêm default page navigation animations của Astro trên toàn trang web, bao gồm tùy chọn fallback control mặc định cho các trình duyệt không hỗ trợ, bằng cách import và thêm component này vào component Astro `<CommonHead />`:
+
+```astro title="src/components/CommonHead.astro" ins={2,12}
+---
+import { ClientRouter } from "astro:transitions";
+---
+<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+<meta name="generator" content={Astro.generator} />
+
+<!-- Primary Meta Tags -->
+<title>{title}</title>
+<meta name="title" content={title} />
+<meta name="description" content={description} />
+
+<ClientRouter />
+```
+
+Không cần cấu hình thêm nào khác để kích hoạt default client-side navigation của Astro!
+
+Sử dụng [transition directives](#transition-directives) hoặc [override default client-side navigation](#preventing-client-side-navigation) trên các phần tử riêng lẻ để kiểm soát tốt hơn.
+
+## Transition Directives
+
+Astro sẽ tự động gán cho các phần tử tương ứng được tìm thấy trong cả trang cũ và trang mới một `view-transition-name` được chia sẻ, duy nhất. Cặp phần tử khớp này được suy ra bởi cả loại phần tử và vị trí của nó trong DOM.
+
+Sử dụng các directive `transition:*` tùy chọn trên các phần tử trang trong components `.astro` của bạn để kiểm soát tốt hơn hành vi chuyển tiếp trang trong quá trình điều hướng.
+
+- `transition:name`: Cho phép bạn override việc khớp phần tử mặc định của Astro cho old/new content animation và [chỉ định tên transition](#naming-a-transition) để liên kết một cặp phần tử DOM.
+- `transition:animate`: Cho phép bạn override animation mặc định của Astro khi thay thế phần tử cũ bằng phần tử mới bằng cách chỉ định loại animation. Sử dụng [built-in animation directives](#built-in-animation-directives) của Astro hoặc [tạo custom transition animations](#customizing-animations).
+- `transition:persist`: Cho phép bạn override việc thay thế phần tử cũ bằng phần tử mới mặc định của Astro và thay vào đó [duy trì components và HTML elements](#maintaining-state) khi điều hướng đến trang khác.
+
+### Đặt tên cho một transition
+
+Trong một số trường hợp, bạn có thể muốn hoặc cần tự xác định các phần tử view transition tương ứng. Bạn có thể chỉ định tên cho một cặp phần tử bằng cách sử dụng directive `transition:name`.
+
+```astro title="src/pages/old-page.astro"
+<aside transition:name="hero">
+```
+
+```astro title="src/pages/new-page.astro"
+<aside transition:name="hero">
+```
+
+Lưu ý rằng giá trị `transition:name` được cung cấp chỉ có thể được sử dụng một lần trên mỗi trang. Đặt điều này thủ công khi Astro không thể suy ra tên phù hợp hoặc để kiểm soát tốt hơn việc khớp các phần tử.
+
+### Duy trì State
+
+<p><Since v="2.10.0" /></p>
+
+Bạn có thể duy trì components và HTML elements (thay vì thay thế chúng) qua các lần điều hướng trang bằng cách sử dụng directive `transition:persist`.
+
+Ví dụ, `<video>` sau sẽ tiếp tục phát khi bạn điều hướng đến trang khác có cùng video element. Điều này hoạt động cho cả điều hướng tiến và lùi.
+
+```astro title="src/components/Video.astro" "transition:persist"
+<video controls muted autoplay transition:persist>
+  <source
+    src="https://ia804502.us.archive.org/33/items/GoldenGa1939_3/GoldenGa1939_3_512kb.mp4"
+    type="video/mp4"
+  />
+</video>
+```
+
+Bạn cũng có thể đặt directive trên một [Astro island](/vi/concepts/islands/) (một UI framework component với [`client:` directive](/vi/reference/directives-reference/#client-directives)). Nếu component đó tồn tại trên trang tiếp theo, island từ trang cũ **với state hiện tại của nó** sẽ tiếp tục được hiển thị, thay vì thay thế nó bằng island từ trang mới.
+
+Trong ví dụ dưới đây, internal state của component về count sẽ không bị reset khi điều hướng qua lại giữa các trang chứa component `<Counter />` với thuộc tính `transition:persist`.
+
+```astro title="components/Header.astro" "transition:persist"
+<Counter client:load transition:persist initialCount={5} />
+```
+
+:::note[Những hạn chế đã biết]
+Không phải tất cả state đều có thể được bảo toàn theo cách này. Việc khởi động lại CSS animations và reload iframe không thể tránh được trong view transitions ngay cả khi sử dụng `transition:persist`.
+:::
+
+Bạn cũng có thể [tự xác định các phần tử tương ứng](#naming-a-transition) nếu island/element nằm trong một component khác giữa hai trang.
+
+```astro title="src/pages/old-page.astro" "video" 'transition:name="media-player"'
+<video
+  controls
+  muted
+  autoplay
+  transition:name="media-player"
+  transition:persist
+/>
+```
+
+```astro title="src/pages/new-page.astro" "MyVideo" 'transition:name="media-player"'
+<MyVideo
+  controls
+  muted
+  autoplay
+  transition:name="media-player"
+  transition:persist
+/>
+```
+
+Như một shorthand thuận tiện, `transition:persist` có thể nhận một tên transition làm giá trị.
+
+```astro title="src/pages/index.astro" 'transition:persist="media-player"'
+<video controls muted autoplay transition:persist="media-player">
+```
+
+#### `transition:persist-props`
+
+<p><Since v="4.5.0" /></p>
+
+Điều này cho phép bạn kiểm soát liệu props của island có nên được duy trì khi điều hướng hay không.
+
+Theo mặc định, khi bạn thêm `transition:persist` vào một island, state được giữ lại khi điều hướng, nhưng component của bạn sẽ re-render với props mới. Điều này hữu ích, ví dụ, khi một component nhận props dành riêng cho trang như `title` của trang hiện tại.
+
+Bạn có thể override hành vi này bằng cách đặt `transition:persist-props` thêm vào `transition:persist`. Thêm directive này sẽ giữ props hiện có của island (không re-render với giá trị mới) thêm vào việc duy trì state hiện có.
+
+### Built-in Animation Directives
+
+Astro đi kèm với một vài animation có sẵn để override transition `fade` mặc định. Thêm directive `transition:animate` vào các phần tử riêng lẻ để tùy chỉnh hành vi của các transition cụ thể.
+
+- `fade` (mặc định): Animation crossfade có ý kiến. Nội dung cũ fade out và nội dung mới fade in.
+- `initial`: Opt out khỏi animation crossfade có ý kiến của Astro và sử dụng styling mặc định của trình duyệt.
+- `slide`: Animation nơi nội dung cũ slide out sang trái và nội dung mới slide in từ phải. Với điều hướng lùi, animations ngược lại.
+- `none`: Tắt animations mặc định của trình duyệt. Sử dụng trên phần tử `<html>` của trang để tắt fade mặc định cho mọi phần tử trên trang.
+
+Kết hợp các directive để kiểm soát hoàn toàn animation trang của bạn. Đặt default trang trên phần tử `<html>`, và override trên bất kỳ phần tử riêng lẻ nào theo mong muốn.
+
+Ví dụ dưới đây tạo slide animation cho nội dung body trong khi tắt fade animation mặc định của trình duyệt cho phần còn lại của trang:
+
+```astro
+---
+import CommonHead from "../components/CommonHead.astro";
+---
+
+<html transition:name="root" transition:animate="none">
+  <head>
+    <CommonHead />
+  </head>
+  <body>
+    <header>
+      ...
+    </header>
+    <!-- Override your page default on a single element -->
+    <main transition:animate="slide">
+      ...
+    </main>
+  </body>
+</html>
+```
+
+### Tùy chỉnh Animations
+
+Bạn có thể tùy chỉnh tất cả các khía cạnh của một transition với bất kỳ CSS animation properties nào.
+
+Để tùy chỉnh một animation có sẵn, trước tiên import animation từ `astro:transitions`, sau đó truyền vào các tùy chọn tùy chỉnh.
+
+Ví dụ dưới đây tùy chỉnh duration của animation `fade` có sẵn:
+
+```astro
+---
+import { fade } from "astro:transitions";
+---
+<header transition:animate={fade({ duration: "0.4s" })}>
+```
+
+Bạn cũng có thể định nghĩa animations riêng để sử dụng với `transition:animate` bằng cách định nghĩa cả hành vi forwards và backwards, cũng như new và old pages, theo các types sau:
+
+```ts
+export interface TransitionAnimation {
+  name: string; // Tên của keyframe
+  delay?: number | string;
+  duration?: number | string;
+  easing?: string;
+	fillMode?: string;
+	direction?: string;
+}
+
+export interface TransitionAnimationPair {
+	old: TransitionAnimation | TransitionAnimation[];
+	new: TransitionAnimation | TransitionAnimation[];
+}
+
+export interface TransitionDirectionalAnimations {
+	forwards: TransitionAnimationPair;
+	backwards: TransitionAnimationPair;
+}
+```
+
+Ví dụ sau cho thấy tất cả các properties cần thiết để định nghĩa animation `bump` tùy chỉnh bên trong tag `<style is:global>` trong root layout file của bạn:
+
+```astro title="src/layouts/Layout.astro"
+---
+import { ClientRouter } from "astro:transitions";
+---
+<html lang="en">
+  <head>
+    <ClientRouter />
+  </head>
+  <body>
+    <slot />
+  </body>
+</html>
+
+<style is:global>
+  @keyframes bump {
+    0% {
+      opacity: 0;
+      transform: scale(1) translateX(200px);
+    }
+    50% {
+      opacity: 0.5;
+      transform: scale(1.1);
+    }
+    100% {
+      opacity: 1;
+      transform: scale(1) translateX(0);
+    }
+  }
+</style>
+```
+
+Hành vi của animation phải được định nghĩa trong frontmatter của mọi component sử dụng animation:
+
+```astro title="src/pages/index.astro"
+---
+const anim = {
+  old: {
+    name: "bump",
+    duration: "0.5s",
+    easing: "ease-in",
+    direction: "reverse",
+  },
+  new: {
+    name: "bump",
+    duration: "0.5s",
+    easing: "ease-in-out",
+  },
+};
+
+const customTransition = {
+  forwards: anim,
+  backwards: anim,
+};
+---
+<header transition:animate={customTransition}> ... </header>
+```
+
+Bạn có sự linh hoạt tuyệt vời khi định nghĩa custom animations. Để đạt được kết quả mong muốn, bạn có thể muốn xem xét các kết hợp khác thường như sử dụng các objects khác nhau cho forward và backward, hoặc cung cấp các keyframe animations riêng biệt cho old và new.
+
+## Kiểm soát Router
+
+Router `<ClientRouter />` xử lý điều hướng bằng cách lắng nghe:
+
+- Clicks trên các phần tử `<a>`.
+- Backwards và forwards navigation events.
+
+Các tùy chọn sau cho phép bạn kiểm soát thêm khi nào điều hướng xảy ra trong router:
+
+- `data-astro-reload`: thuộc tính tag `<a>` để [force full-page navigation](#preventing-client-side-navigation)
+- `data-astro-history="auto | push | replace"`: thuộc tính tag `<a>` để [kiểm soát history của trình duyệt](#replace-entries-in-the-browser-history)
+- `navigate(href, options)`: một method có sẵn cho bất kỳ client script hoặc client component nào để [trigger navigation](#trigger-navigation)
+
+### Ngăn chặn client-side navigation
+
+Có một số trường hợp bạn không thể điều hướng qua client-side routing vì cả hai trang liên quan phải sử dụng router `<ClientRouter />` để ngăn chặn full-page reload. Bạn cũng có thể không muốn client-side routing trên mọi thay đổi điều hướng và sẽ thích điều hướng trang truyền thống trên các routes chọn lọc thay thế.
+
+Bạn có thể opt out khỏi client-side routing trên cơ sở từng liên kết bằng cách thêm thuộc tính `data-astro-reload` vào bất kỳ tag `<a>` hoặc `<form>` nào. Thuộc tính này sẽ override bất kỳ component `<ClientRouter />` hiện có nào và thay vào đó trigger browser refresh trong quá trình điều hướng.
+
+Ví dụ sau cho thấy việc ngăn chặn client-side routing khi điều hướng đến một article từ home page only. Điều này vẫn cho phép bạn có animation trên các phần tử được chia sẻ, chẳng hạn như hero image, khi điều hướng đến cùng một trang từ article listing page:
+
+```astro title="src/pages/index.astro"
+<a href="/articles/emperor-penguins" data-astro-reload>
+```
+
+```astro title="src/pages/articles.astro"
+<a href="/articles/emperor-penguins">
+```
+
+Các liên kết với thuộc tính `data-astro-reload` sẽ bị router bỏ qua và full-page navigation sẽ xảy ra.
+
+### Trigger navigation
+
+Bạn cũng có thể trigger client-side navigation qua các events không được router `<ClientRouter />` lắng nghe thông thường bằng cách sử dụng `navigate`. Function này từ module `astro:transitions/client` có thể được sử dụng trong scripts, và trong framework components được hydrated với [client directive](/vi/reference/directives-reference/#client-directives).
+
+Ví dụ sau cho thấy một Astro component điều hướng visitor đến trang khác mà họ chọn từ menu:
+
+```astro title="src/components/Form.astro"
+<script>
+  import { navigate } from "astro:transitions/client";
+
+  // Navigate to the selected option automatically.
+  document.querySelector("select").onchange = (event) => {
+    let href = event.target.value;
+    navigate(href);
+  };
+</script>
+<select>
+  <option value="/play">Play</option>
+  <option value="/blog">Blog</option>
+  <option value="/about">About</option>
+  <option value="/contact">Contact</option>
+</select>
+```
+
+```astro title="src/pages/index.astro"
+---
+import Form from "../components/Form.astro";
+import { ClientRouter } from "astro:transitions";
+---
+<html>
+	<head>
+		<ClientRouter />
+	</head>
+	<body>
+		<Form />
+	</body>
+</html>
+```
+
+Ví dụ sau triển khai cùng một điều bằng cách sử dụng `navigate()` trong React `<Form />` component:
+
+```js title="src/components/Form.jsx"
+import { navigate } from "astro:transitions/client";
+
+export default function Form() {
+  return (
+    <select onChange={(e) => navigate(e.target.value)}>
+      <option value="/play">Play</option>
+      <option value="/blog">Blog</option>
+      <option value="/about">About</option>
+      <option value="/contact">Contact</option>
+    </select>
+  );
+}
+```
+
+Component `<Form />` sau đó có thể được render trên trang Astro sử dụng router `<ClientRouter />`, với client directive:
+
+```astro title="src/pages/index.astro"
+---
+import Form from "../components/Form.jsx";
+import { ClientRouter } from "astro:transitions";
+---
+<html>
+	<head>
+		<ClientRouter />
+	</head>
+	<body>
+		<Form client:load />
+	</body>
+</html>
+```
+
+Method `navigate` nhận các arguments này:
+
+- `href` (bắt buộc) - Trang mới để điều hướng đến.
+- `options` - Một object tùy chọn với các properties sau:
+	- `history`: `"push"` | `"replace"` | `"auto"`
+		- `"push"`: router sẽ sử dụng `history.pushState` để tạo entry mới trong browser history.
+		- `"replace"`: router sẽ sử dụng `history.replaceState` để cập nhật URL mà không thêm entry mới vào navigation.
+		- `"auto"` (mặc định): router sẽ thử `history.pushState`, nhưng nếu URL không phải là một URL có thể được chuyển tiếp đến, URL hiện tại sẽ giữ nguyên mà không thay đổi browser history.
+  - `formData`: Một object [`FormData`](https://developer.mozilla.org/en-US/docs/Web/API/FormData) cho các requests `POST`.
+
+Để điều hướng backward và forward thông qua browser history, bạn có thể kết hợp `navigate()` với các functions `history.back()`, `history.forward()` và `history.go()` có sẵn của trình duyệt. Nếu `navigate()` được gọi trong quá trình server-side render của component, nó không có hiệu lực.
+
+### Thay thế entries trong browser history
+
+Thông thường, mỗi lần bạn điều hướng, một entry mới được ghi vào history của trình duyệt. Điều này cho phép điều hướng giữa các trang bằng cách sử dụng nút `back` và `forward` của trình duyệt.
+
+Router `<ClientRouter />` cho phép bạn ghi đè history entries bằng cách thêm thuộc tính `data-astro-history` vào bất kỳ tag `<a>` riêng lẻ nào.
+
+Thuộc tính `data-astro-history` có thể được đặt thành ba giá trị giống như [`history` option của function `navigate()`](#trigger-navigation):
+
+`data-astro-history`: `"push"` | `"replace"` | `"auto"`
+
+- `"push"`: router sẽ sử dụng `history.pushState` để tạo entry mới trong browser history.
+- `"replace"`: router sẽ sử dụng `history.replaceState` để cập nhật URL mà không thêm entry mới vào navigation.
+- `"auto"` (mặc định): router sẽ thử `history.pushState`, nhưng nếu URL không phải là một URL có thể được chuyển tiếp đến, URL hiện tại sẽ giữ nguyên mà không thay đổi browser history.
+
+Ví dụ sau điều hướng đến trang `/main` nhưng không thêm entry mới vào browsing history. Thay vào đó, nó tái sử dụng entry hiện tại trong history (`/confirmation`) và ghi đè nó.
+
+```astro title="src/pages/confirmation.astro"
+<a href="/main" data-astro-history="replace">
+```
+
+Điều này có hiệu quả là nếu bạn quay lại từ trang `/main`, trình duyệt sẽ không hiển thị trang `/confirmation`, mà là trang trước đó.
+
+### Transitions với forms
+
+<p><Since v="4.0.0" /></p>
+
+Router `<ClientRouter />` sẽ trigger in-page transitions từ các phần tử `<form>`, hỗ trợ cả requests `GET` và `POST`.
+
+Theo mặc định, Astro gửi form data của bạn dưới dạng `multipart/form-data` khi `method` của bạn được đặt thành `POST`. Nếu bạn muốn khớp với hành vi mặc định của web browsers, hãy sử dụng thuộc tính `enctype` để gửi data được mã hóa dưới dạng `application/x-www-form-urlencoded`:
+
+```astro title="src/components/Form.astro"
+<form
+  action="/contact"
+  method="POST"
+  enctype="application/x-www-form-urlencoded"
+>
+```
+
+Bạn có thể opt out khỏi router transitions trên bất kỳ form riêng lẻ nào bằng cách sử dụng thuộc tính `data-astro-reload`:
+
+```astro title="src/components/Form.astro"
+<form action="/contact" data-astro-reload>
+```
+
+## Fallback control
+
+Router `<ClientRouter />` hoạt động tốt nhất trong các trình duyệt hỗ trợ View Transitions (tức là trình duyệt Chromium), nhưng cũng bao gồm hỗ trợ fallback mặc định cho các trình duyệt khác. Ngay cả khi trình duyệt không hỗ trợ View Transitions API, client router của Astro vẫn có thể cung cấp in-browser navigation bằng cách sử dụng một trong các tùy chọn fallback.
+
+Tùy thuộc vào hỗ trợ trình duyệt, bạn có thể cần đặt rõ ràng `name` hoặc `animate` [transition directives](#transition-directives) trên các phần tử bạn muốn animate để có trải nghiệm tương tự trên tất cả trình duyệt:
+
+```astro title="src/pages/about.astro"
+---
+import Layout from "../layouts/LayoutUsingClientRouter.astro";
+---
+<title transition:animate="fade">About my site</title>
+```
+
+Bạn có thể override hỗ trợ fallback mặc định của Astro bằng cách thêm property `fallback` trên component `<ClientRouter />` và đặt nó thành `swap` hoặc `none`:
+
+- `animate` (mặc định, được khuyến nghị): Astro sẽ mô phỏng view transitions bằng cách sử dụng custom attributes trước khi cập nhật page content.
+- `swap`: Astro sẽ không cố gắng animate trang. Thay vào đó, trang cũ sẽ được thay thế ngay lập tức bằng trang mới.
+- `none`: Astro sẽ không thực hiện bất kỳ animated page transitions nào cả. Thay vào đó, bạn sẽ có full page navigation trong các trình duyệt không hỗ trợ.
+
+```astro
+---
+import { ClientRouter } from "astro:transitions";
+---
+<title>My site</title>
+
+<ClientRouter fallback="swap" />
+```
+
+:::note[Những hạn chế đã biết]
+Animation `initial` của trình duyệt không được Astro mô phỏng. Vì vậy, bất kỳ phần tử nào sử dụng animation này hiện tại sẽ không được animate.
+:::
+
+## Quá trình client-side navigation
+
+Khi sử dụng router `<ClientRouter />`, các bước sau sẽ xảy ra để tạo ra client-side navigation của Astro:
+
+<Steps>
+1. Visitor của trang web của bạn trigger navigation bằng bất kỳ action nào sau đây:
+    - Click vào tag `<a>` liên kết nội bộ đến trang khác trên trang web của bạn.
+    - Click nút back.
+    - Click nút forward.
+2. Router bắt đầu fetch trang tiếp theo.
+3. Router thêm thuộc tính `data-astro-transition` vào HTML element với giá trị `"forward"` hoặc `"back"` tùy thuộc vào tình huống.
+4. Router gọi `document.startViewTransition`. Điều này trigger [view transition process](https://developer.mozilla.org/en-US/docs/Web/API/View_Transition_API/Using#the_view_transition_process) của chính trình duyệt. Quan trọng là, trình duyệt chụp ảnh màn hình trạng thái hiện tại của trang.
+5. Bên trong callback `startViewTransition`, router thực hiện một __swap__, bao gồm chuỗi events sau:
+
+    - Nội dung của `<head>` được swap out, với một số phần tử được giữ lại:
+      - Stylesheet DOM nodes được giữ lại nếu chúng tồn tại trên trang mới, để ngăn chặn FOUC.
+      - Scripts được giữ lại nếu chúng tồn tại trên trang mới.
+      - Bất kỳ head elements nào khác với `transition:persist` được giữ lại nếu có phần tử tương ứng trong trang mới.
+      
+    - `<body>` được thay thế hoàn toàn bằng body của trang mới.
+    
+    - Elements được đánh dấu `transition:persist` được chuyển sang DOM mới nếu chúng tồn tại trên trang mới.
+    
+    - Scroll position được khôi phục nếu cần thiết.
+    
+    - Event `astro:after-swap` được trigger trên `document`. Đây là kết thúc của quá trình __swap__.
+    
+6. Router đợi bất kỳ stylesheets mới nào load trước khi resolve transition.
+7. Router thực thi bất kỳ scripts mới nào được thêm vào trang.
+8. Event `astro:page-load` fires. Đây là kết thúc của quá trình navigation.
+</Steps>
+
+## Hành vi Script với view transitions
+
+Khi bạn thêm view transitions vào project Astro hiện có, một số scripts của bạn có thể không còn re-run sau page navigation như chúng đã làm với full-page browser refreshes. Sử dụng thông tin sau để đảm bảo scripts của bạn thực thi như mong đợi.
+
+### Thứ tự Script
+
+Khi điều hướng giữa các trang với component `<ClientRouter />`, scripts được chạy theo thứ tự tuần tự để khớp với hành vi trình duyệt.
+
+### Script re-execution
+
+[Bundled module scripts](/vi/guides/client-side-scripts/#script-processing), là scripts mặc định trong Astro, chỉ được thực thi một lần. Sau lần thực thi đầu tiên, chúng sẽ bị bỏ qua, ngay cả khi script tồn tại trên trang mới sau một transition.
+
+Không giống như bundled module scripts, [inline scripts](/vi/guides/client-side-scripts/#opting-out-of-processing) có khả năng được re-execute trong quá trình visit của user đến trang web nếu chúng tồn tại trên trang được visit nhiều lần. Inline scripts cũng có thể re-execute khi visitor điều hướng đến trang không có script, và sau đó quay lại trang có script.
+
+Với view transitions, một số scripts có thể không còn re-run sau page navigation như chúng làm với full-page browser refreshes. Có một số [events trong client-side routing mà bạn có thể lắng nghe](#lifecycle-events), và fire events khi chúng xảy ra. Bạn có thể wrap một script hiện có trong event listener để đảm bảo nó chạy vào thời điểm thích hợp trong navigation cycle.
+
+Ví dụ sau wrap một script cho mobile "hamburger" menu trong event listener cho `astro:page-load` chạy ở cuối page navigation để làm cho menu responsive với việc được click sau khi điều hướng đến trang mới:
+
+```js title="src/scripts/menu.js" ins={1,5}
+document.addEventListener("astro:page-load", () => {
+  document.querySelector(".hamburger").addEventListener("click", () => {
+    document.querySelector(".nav-links").classList.toggle("expanded");
+  });
+});
+```
+
+Ví dụ sau cho thấy một function chạy để phản hồi event `astro:after-swap`, xảy ra ngay sau khi trang mới đã thay thế trang cũ và trước khi DOM elements được paint lên màn hình. Điều này tránh flash of light mode theme sau page navigation bằng cách kiểm tra và, nếu cần thiết, đặt dark mode theme trước khi trang mới được render:
+
+```astro title="src/components/ThemeToggle.astro"
+<script is:inline>
+  function applyTheme() {
+    localStorage.theme === "dark"
+      ? document.documentElement.classList.add("dark")
+      : document.documentElement.classList.remove("dark");
+  }
+
+  document.addEventListener("astro:after-swap", applyTheme);
+  applyTheme(); 
+</script>
+```
+
+#### `data-astro-rerun`
+
+<p><Since v="4.5.0" /></p>
+
+Để buộc inline scripts re-execute sau mỗi transition, thêm property `data-astro-rerun`. Thêm bất kỳ attribute nào vào script cũng ngầm thêm `is:inline`, vì vậy điều này chỉ có sẵn cho scripts không được bundled và processed bởi Astro.
+
+```astro
+<script is:inline data-astro-rerun>...</script>
+```
+
+Để đảm bảo rằng một script chạy mỗi lần trang được load trong client-side navigation, nó nên được thực thi bởi một [lifecycle event](#lifecycle-events). Ví dụ, event listeners cho `DOMContentLoaded` có thể được thay thế bằng lifecycle event [`astro:page-load`](/vi/guides/view-transitions/#astropage-load).
+
+Nếu bạn có code thiết lập global state trong inline script, state này sẽ cần tính đến việc script có thể thực thi nhiều hơn một lần. Kiểm tra global state trong tag `<script>` của bạn, và thực thi code có điều kiện nếu có thể. Điều này hoạt động vì `window` được bảo toàn.
+
+```astro
+<script is:inline>
+  if (!window.SomeGlobal) {
+    window.SomeGlobal = {};
+  }
+</script>
+```
+
+## Lifecycle events
+
+Router `<ClientRouter />` fires một số events trên `document` trong quá trình navigation. Các events này cung cấp hooks vào lifecycle của navigation, cho phép bạn làm những việc như hiển thị indicators rằng trang mới đang loading, override hành vi mặc định, và khôi phục state khi navigation hoàn thành.
+
+Quá trình navigation bao gồm **preparation** phase, khi nội dung mới được load; **DOM swap** phase, nơi nội dung của trang cũ được thay thế bằng nội dung của trang mới; và **completion** phase nơi scripts được thực thi, loading được báo cáo là completed và clean-up work được thực hiện.
+
+Các lifecycle events của Astro's View Transition API theo thứ tự là:
+
+- [`astro:before-preparation`](#astrobefore-preparation)
+- [`astro:after-preparation`](#astroafter-preparation)
+- [`astro:before-swap`](#astrobefore-swap)
+- [`astro:after-swap`](#astroafter-swap)
+- [`astro:page-load`](#astropage-load)
+
+:::tip
+`before-` events cho phép bạn ảnh hưởng và sửa đổi actions sắp diễn ra, và `after-` events là thông báo rằng một phase đã hoàn thành.
+:::
+
+Trong khi một số actions có thể được trigger trong bất kỳ event nào, một số tasks chỉ có thể được thực hiện trong một event cụ thể để có kết quả tốt nhất, chẳng hạn như hiển thị loading spinner trước preparation hoặc override animation pairs trước khi swap content.
+
+### `astro:before-preparation`
+
+<p><Since v="3.6.0" /></p>
+
+Một event fires ở đầu preparation phase, sau khi navigation đã bắt đầu (ví dụ: sau khi user đã click một liên kết), nhưng trước khi content được load.
+
+Event này được sử dụng:
+
+- Để làm gì đó trước khi loading đã bắt đầu, chẳng hạn như hiển thị loading spinner.
+- Để thay đổi loading, chẳng hạn như loading content bạn đã định nghĩa trong template thay vì từ external URL.
+- Để thay đổi `direction` của navigation (thường là `forward` hoặc `backward`) cho custom animation.
+
+Đây là ví dụ về việc sử dụng event `astro:before-preparation` để load spinner trước khi content được load và dừng nó ngay sau khi loading. Lưu ý rằng việc sử dụng callback `loader` theo cách này cho phép asynchronous execution của code.
+
+```astro
+<script is:inline>
+  document.addEventListener("astro:before-preparation", (event) => {
+    const originalLoader = event.loader;
+    event.loader = async function () {
+      const { startSpinner } = await import("./spinner.js");
+      const stop = startSpinner();
+      await originalLoader();
+      stop();
+    };
+  });
+</script>
+```
+
+### `astro:after-preparation`
+
+<p><Since v="3.6.0" /></p>
+
+Một event fires ở cuối preparation phase, sau khi content của trang mới đã được load và parsed thành document. Event này xảy ra trước view transitions phase.
+
+Ví dụ này sử dụng event `astro:before-preparation` để start loading indicator và event `astro:after-preparation` để stop nó:
+
+```astro
+<script is:inline>
+  document.addEventListener("astro:before-preparation", () => {
+    document.querySelector("#loading").classList.add("show");
+  });
+  document.addEventListener("astro:after-preparation", () => {
+    document.querySelector("#loading").classList.remove("show");
+  });
+</script>
+```
+
+Đây là phiên bản đơn giản hơn của loading spinner so với ví dụ được hiển thị ở trên: nếu tất cả code của listener có thể được thực thi synchronously, không cần hook vào callback `loader`.
+
+### `astro:before-swap`
+
+<p><Since v="3.6.0" /></p>
+
+Một event fires trước khi document mới (được populated trong preparation phase) thay thế document hiện tại. Event này xảy ra bên trong view transition, nơi user vẫn đang thấy snapshot của trang cũ.
+
+Event này có thể được sử dụng để thực hiện thay đổi trước khi swap xảy ra. Property `newDocument` trên event đại diện cho incoming document. Đây là ví dụ về việc đảm bảo browser's light hoặc dark mode preference trong `localStorage` được mang sang trang mới:
+
+```astro
+<script is:inline>
+  function setDarkMode(document) {
+    let theme = localStorage.darkMode ? "dark" : "light";
+    document.documentElement.dataset.theme = theme;
+  }
+  
+  setDarkMode(document);
+  
+  document.addEventListener("astro:before-swap", (event) => {
+    // Pass the incoming document to set the theme on it
+    setDarkMode(event.newDocument);
+  });
+</script>
+```
+
+Event `astro:before-swap` cũng có thể được sử dụng để thay đổi *implementation* của swap. Default swap implementation diffs head content, moves __persistent__ elements từ document cũ sang `newDocument`, và sau đó thay thế toàn bộ `body` bằng body của document mới.
+
+Tại điểm này của lifecycle, bạn có thể chọn định nghĩa swap implementation riêng của mình, ví dụ để diff toàn bộ contents của document hiện có (mà một số routers khác làm):
+
+```astro
+<script is:inline>
+  document.addEventListener("astro:before-swap", (event) => {
+    event.swap = () => {
+      diff(document, event.newDocument);
+    };
+  });
+</script>
+```
+
+#### Xây dựng custom swap function
+
+<p><Since v="4.15.0" /></p>
+
+Object `swapFunctions` của module `astro:transitions/client` cung cấp năm utility functions xử lý các swap-related tasks cụ thể, bao gồm xử lý document attributes, page elements, và script execution. Các functions này có thể được sử dụng trực tiếp để định nghĩa custom swap implementation.
+
+Ví dụ sau minh họa cách sử dụng các functions này để tái tạo built-in swap implementation của Astro:
+
+```astro
+<script>
+  import { swapFunctions } from "astro:transitions/client";
+  
+  // substitutes `window.document` with `doc`
+  function mySwap(doc: Document) {
+    swapFunctions.deselectScripts(doc);
+    swapFunctions.swapRootAttributes(doc);
+    swapFunctions.swapHeadElements(doc);
+    const restoreFocusFunction = swapFunctions.saveFocus();
+    swapFunctions.swapBodyElement(doc.body, document.body);
+    restoreFocusFunction();
+  }
+  
+  event.swap = () => mySwap(event.newDocument);
+<script>
+```
+
+Custom swap implementations có thể bắt đầu với template này và thêm hoặc thay thế các bước riêng lẻ bằng custom logic khi cần thiết.
+
+### `astro:after-swap`
+
+Một event fires ngay sau khi trang mới thay thế trang cũ. Bạn có thể lắng nghe event này trên `document` và trigger actions sẽ xảy ra trước khi DOM elements của trang mới render và scripts chạy.
+
+Event này, khi được lắng nghe trên **outgoing page**, hữu ích để truyền đi và khôi phục bất kỳ state nào trên DOM cần transfer sang trang mới.
+
+Đây là điểm muộn nhất trong lifecycle nơi vẫn an toàn để, ví dụ, thêm dark mode class name (`<html class="dark-mode">`), mặc dù bạn có thể muốn làm như vậy trong event sớm hơn.
+
+Event `astro:after-swap` xảy ra ngay sau khi browser history đã được cập nhật và scroll position đã được set.
+Do đó, một cách sử dụng của việc targeting event này là override default scroll restore cho history navigation. Ví dụ sau reset horizontal và vertical scroll position về góc trên bên trái của trang cho mỗi navigation.
+
+```js
+document.addEventListener("astro:after-swap", () =>
+  window.scrollTo({ left: 0, top: 0, behavior: "instant" }),
+);
+```
+
+### `astro:page-load`
+
+Một event fires ở cuối page navigation, sau khi trang mới hiển thị cho user và blocking styles và scripts được load. Bạn có thể lắng nghe event này trên `document`.
+
+Component `<ClientRouter />` fires event này cả trên initial page navigation cho pre-rendered page và trên bất kỳ subsequent navigation nào, hoặc forwards hoặc backwards.
+
+Bạn có thể sử dụng event này để chạy code trên mọi page navigation, ví dụ để thiết lập event listeners sẽ bị mất trong quá trình navigation.
+
+```astro
+<script>
+  document.addEventListener("astro:page-load", () => {
+    // This runs on first page load and after every navigation.
+    setupStuff(); // e.g. add event listeners
+  });
+</script>
+```
+
+## Accessibility
+
+Kích hoạt client-side routing và animating page transitions đều đi kèm với thử thách accessibility, và Astro mục tiêu làm cho các trang web opt-in vào View Transitions accessible-by-default càng nhiều càng tốt.
+
+### Route announcement
+
+<p><Since v="3.2.0" /></p>
+
+Component `<ClientRouter />` bao gồm route announcer cho page navigation trong client-side routing. Không cần cấu hình hoặc action nào để kích hoạt điều này.
+
+Assistive technologies cho visitors biết rằng trang đã thay đổi bằng cách announce title của trang mới sau navigation. Khi sử dụng server-side routing với traditional full-page browser refreshes, điều này xảy ra mặc định sau khi trang mới loads. Trong client-side routing, component `<ClientRouter />` thực hiện action này.
+
+Để thêm route announcement vào client-side routing, component thêm một element vào trang mới với thuộc tính `aria-live` được set thành `assertive`. Điều này nói với AT (assistive technology) announce ngay lập tức. Component cũng kiểm tra những điều sau, theo thứ tự ưu tiên, để xác định announcement text:
+
+- `<title>`, nếu nó tồn tại.
+- `<h1>` đầu tiên nó tìm thấy.
+- `pathname` của trang.
+
+Chúng tôi khuyến khích mạnh mẽ bạn luôn bao gồm `<title>` trong mỗi trang cho accessibility.
+
+### `prefers-reduced-motion`
+
+Component `<ClientRouter />` của Astro bao gồm CSS media query tắt *tất cả* view transition animations, bao gồm fallback animation, bất cứ khi nào setting [`prefer-reduced-motion`](https://developer.mozilla.org/en-US/docs/Web/CSS/@media/prefers-reduced-motion) được phát hiện. Thay vào đó, trình duyệt sẽ chỉ đơn giản swap DOM elements mà không có animation.

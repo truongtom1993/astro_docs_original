@@ -1,0 +1,112 @@
+---
+title: Xata & Astro
+description: Thêm cơ sở dữ liệu serverless với tìm kiếm toàn văn vào dự án của bạn bằng Xata
+sidebar:
+  label: Xata
+type: backend
+service: Xata
+stub: false
+i18nReady: true
+---
+import PackageManagerTabs from '~/components/tabs/PackageManagerTabs.astro'
+import { FileTree } from '@astrojs/starlight/components';
+
+
+[Xata](https://xata.io) là một **Nền tảng Dữ liệu Serverless** kết hợp các tính năng của cơ sở dữ liệu quan hệ, công cụ tìm kiếm và công cụ phân tích thông qua một API REST nhất quán duy nhất.
+
+## Thêm cơ sở dữ liệu với Xata
+
+### Điều kiện tiên quyết
+
+- Một tài khoản [Xata](https://app.xata.io/signin) đã tạo cơ sở dữ liệu. (Bạn có thể dùng cơ sở dữ liệu mẫu từ giao diện Web.)
+- Một Access Token (`XATA_API_KEY`).
+- URL cơ sở dữ liệu của bạn.
+
+Sau khi bạn cập nhật và khởi tạo [Xata CLI](https://xata.io/docs/getting-started/installation), bạn sẽ có token API trong tệp `.env` và URL cơ sở dữ liệu đã được định nghĩa.
+
+Sau khi hoàn tất cài đặt, bạn sẽ có:
+
+```ini title=".env"
+XATA_API_KEY=hash_key
+
+# Nhánh Xata sẽ được sử dụng
+# nếu không có nhánh xata nào
+# trùng tên với nhánh git của bạn
+XATA_BRANCH=main
+```
+
+Và `databaseURL` được định nghĩa:
+
+```ini title=".xatarc"
+{
+  "databaseUrl": "https://your-database-url"
+}
+```
+
+### Cấu hình môi trường
+
+Để có IntelliSense và kiểm tra kiểu cho biến môi trường, hãy chỉnh sửa hoặc tạo tệp `env.d.ts` trong thư mục `src/` của bạn:
+
+```ts title="src/env.d.ts"
+interface ImportMetaEnv {
+  readonly XATA_API_KEY: string;
+  readonly XATA_BRANCH?: string;
+}
+
+interface ImportMeta {
+  readonly env: ImportMetaEnv;
+}
+```
+
+:::tip
+Đọc thêm về [biến môi trường](/vi/guides/environment-variables/) và tệp `.env` trong Astro.
+:::
+
+Sử dụng tính năng sinh mã từ Xata CLI và chọn tuỳ chọn TypeScript, sẽ tạo ra một instance SDK cho bạn, với các kiểu dữ liệu phù hợp với schema cơ sở dữ liệu của bạn. Bên cạnh đó, `@xata.io/client` cũng được thêm vào `package.json` của bạn.
+
+Các biến môi trường Xata và url cơ sở dữ liệu của bạn đã được instance SDK tự động lấy, nên bạn không cần cấu hình thêm gì nữa.
+
+Bây giờ, cấu trúc dự án của bạn sẽ như sau:
+
+<FileTree title="Cấu trúc dự án">
+- src/
+  - **xata.ts**
+  - **env.d.ts**
+- **.env**
+- astro.config.mjs
+- package.json
+- **.xatarc**
+</FileTree>
+
+## Tạo truy vấn
+
+Để truy vấn các bài viết, import và sử dụng class `XataClient` trong một tệp `.astro`. Ví dụ dưới đây truy vấn 50 bài viết đầu tiên từ Cơ sở Dữ liệu Blog Mẫu của Xata.
+
+```astro title="src/pages/blog/index.astro"
+---
+import { XataClient } from '../../xata';
+ 
+const xata = new XataClient({
+  apiKey: import.meta.env.XATA_API_KEY,
+  branch: import.meta.env.XATA_BRANCH
+});
+
+const { records } = await xata.db.Posts.getPaginated({
+  pagination: {
+    size: 50
+  }
+})
+---
+
+<ul>
+  {records.map((post) => (
+    <li>{post.title}</li>
+  ))}
+</ul>
+```
+Lưu ý quan trọng là SDK cần được sinh lại mỗi khi schema thay đổi. Vì vậy, hãy tránh chỉnh sửa các tệp được Xata CLI tạo ra vì khi schema cập nhật, các thay đổi của bạn sẽ bị ghi đè.
+
+
+## Tài nguyên chính thức
+- [Xata Astro Starter](https://github.com/xataio/examples/tree/main/apps/getting-started-astro)
+- [Tài liệu Xata: Hướng dẫn Bắt đầu Nhanh](https://xata.io/docs/getting-started/quickstart-astro)

@@ -1,0 +1,397 @@
+---
+title: Tài liệu tham khảo về Import
+description: Tìm hiểu cách import các loại tệp khác nhau vào dự án Astro của bạn.
+i18nReady: true
+---
+
+import RecipeLinks from '~/components/RecipeLinks.astro';
+import ReadMore from '~/components/ReadMore.astro';
+
+Astro hỗ trợ hầu hết các tài sản tĩnh mà không cần cấu hình. Bạn có thể sử dụng câu lệnh `import` ở bất kỳ đâu trong JavaScript của dự án (bao gồm cả frontmatter Astro) và Astro sẽ bao gồm một bản sao được xây dựng và tối ưu hóa của tài sản tĩnh đó trong bản dựng cuối cùng. `@import` cũng được hỗ trợ bên trong CSS và thẻ `<style>`.
+
+## Các loại tệp được hỗ trợ
+
+Các loại tệp sau được hỗ trợ sẵn bởi Astro:
+
+- Astro Components (`.astro`)
+- Markdown (`.md`, `.markdown`, v.v.)
+- JavaScript (`.js`, `.mjs`)
+- TypeScript (`.ts`)
+- NPM Packages
+- JSON (`.json`)
+- CSS (`.css`)
+- CSS Modules (`.module.css`)
+- Images & Assets (`.svg`, `.jpg`, `.png`, v.v.)
+
+Ngoài ra, bạn có thể mở rộng Astro để thêm hỗ trợ cho các [UI Framework](/vi/guides/framework-components/) khác nhau như React, Svelte và Vue components. Bạn cũng có thể cài đặt [Astro MDX integration](/vi/guides/integrations-guide/mdx/) hoặc [Astro Markdoc integration](/vi/guides/integrations-guide/markdoc/) để sử dụng tệp `.mdx` hoặc `.mdoc` trong dự án của bạn.
+
+### Tệp trong `public/`
+
+Bạn có thể đặt bất kỳ tài sản tĩnh nào trong [thư mục `public/`](/vi/basics/project-structure/#public) của dự án và Astro sẽ sao chép trực tiếp vào bản dựng cuối cùng mà không có thay đổi. Tệp `public/` không được xây dựng hoặc đóng gói bởi Astro, có nghĩa là bất kỳ loại tệp nào đều được hỗ trợ.
+
+Bạn có thể tham chiếu tệp `public/` bằng đường dẫn URL trực tiếp trong template HTML của mình.
+
+```astro
+// Để liên kết đến /public/reports/annual/2024.pdf
+Download the <a href="/reports/annual/2024.pdf">báo cáo thường niên 2024 dưới dạng PDF</a>.
+
+// Để hiển thị /public/assets/cats/ginger.jpg
+<img src="/assets/cats/ginger.jpg" alt="Một con mèo cam đang ngủ trên giường.">
+```
+
+## Câu lệnh Import
+
+Astro sử dụng ESM, cùng cú pháp [`import`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/import#syntax) và [`export`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/export) được hỗ trợ trong trình duyệt.
+
+### JavaScript
+
+```js
+import { getUser } from './user.js';
+```
+
+JavaScript có thể được import sử dụng cú pháp ESM `import` & `export` bình thường.
+
+:::note[Import tệp JSX]
+
+Một [UI framework](/vi/guides/framework-components/) phù hợp ([React](/vi/guides/integrations-guide/react/), [Preact](/vi/guides/integrations-guide/preact/), hoặc [Solid](/vi/guides/integrations-guide/solid-js/)) là cần thiết để render tệp JSX/TSX.
+Sử dụng extension `.jsx`/`.tsx` khi phù hợp, vì Astro không hỗ trợ JSX trong tệp `.js`/`.ts`.
+
+:::
+
+### TypeScript
+
+```js
+import { getUser } from './user';
+import type { UserType } from './user';
+```
+
+Astro có hỗ trợ tích hợp sẵn cho [TypeScript](https://www.typescriptlang.org/). Bạn có thể import tệp `.ts` và `.tsx` trực tiếp trong dự án Astro, và thậm chí viết code TypeScript trực tiếp bên trong [script của Astro component](/vi/basics/astro-components/#the-component-script) và bất kỳ [thẻ script](/vi/guides/client-side-scripts/) nào.
+
+**Astro không thực hiện kiểm tra kiểu tự động.** Kiểm tra kiểu nên được thực hiện bên ngoài Astro, thông qua IDE của bạn hoặc qua script riêng biệt. Để kiểm tra kiểu cho tệp Astro, lệnh [`astro check`](/vi/reference/cli-reference/#astro-check) được cung cấp.
+
+:::note[TypeScript và phần mở rộng tệp]
+Theo [quy tắc phân giải module của TypeScript](https://www.typescriptlang.org/docs/handbook/module-resolution.html), phần mở rộng tệp `.ts` và `.tsx` không nên được sử dụng khi import tệp TypeScript. Thay vào đó, sử dụng phần mở rộng tệp `.js`/`.jsx` hoặc bỏ qua phần mở rộng tệp hoàn toàn.
+
+```ts
+import { getUser } from './user.js'; // user.ts
+import MyComponent from './MyComponent'; // MyComponent.tsx
+```
+
+:::
+
+<ReadMore>Đọc thêm về [hỗ trợ TypeScript trong Astro](/vi/guides/typescript/).</ReadMore>
+
+### NPM Packages
+
+Nếu bạn đã cài đặt một NPM package, bạn có thể import nó trong Astro.
+
+```astro
+---
+import { Icon } from 'astro-icon';
+---
+```
+
+Nếu một package được xuất bản sử dụng định dạng cũ, Astro sẽ cố gắng chuyển đổi package thành ESM để câu lệnh `import` hoạt động. Trong một số trường hợp, bạn có thể cần điều chỉnh [cấu hình `vite`](/vi/reference/configuration-reference/#vite) để nó hoạt động.
+
+:::caution
+Một số package dựa vào môi trường trình duyệt. Astro components chạy trên server, vì vậy việc import các package này trong frontmatter có thể [dẫn đến lỗi](/vi/guides/troubleshooting/#document-or-window-is-not-defined).
+:::
+
+### JSON
+
+```js
+// Tải đối tượng JSON thông qua default export
+import json from './data.json';
+```
+
+Astro hỗ trợ import tệp JSON trực tiếp vào ứng dụng của bạn. Tệp được import trả về đối tượng JSON đầy đủ trong default import.
+
+### CSS
+
+```js
+// Tải và inject 'style.css' vào trang
+import './style.css';
+```
+
+Astro hỗ trợ import tệp CSS trực tiếp vào ứng dụng của bạn. Style được import không có export nào, nhưng việc import sẽ tự động thêm các style đó vào trang. Điều này hoạt động cho tất cả tệp CSS theo mặc định, và có thể hỗ trợ các ngôn ngữ compile-to-CSS như Sass & Less thông qua plugin.
+
+<ReadMore>
+	Đọc thêm về các trường hợp sử dụng import CSS nâng cao như tham chiếu URL trực tiếp cho tệp CSS, hoặc import CSS dưới dạng chuỗi trong [hướng dẫn
+	Styling](/vi/guides/styling/#advanced).
+</ReadMore>
+
+### CSS Modules
+
+```jsx
+// 1. Chuyển đổi classname './style.module.css' thành giá trị duy nhất, có phạm vi.
+// 2. Trả về đối tượng ánh xạ classname gốc với giá trị cuối cùng có phạm vi.
+import styles from './style.module.css';
+
+// Ví dụ này sử dụng JSX, nhưng bạn có thể sử dụng CSS Modules với bất kỳ framework nào.
+return <div className={styles.error}>Your Error Message</div>;
+```
+
+Astro hỗ trợ CSS Modules sử dụng quy ước đặt tên `[name].module.css`. Giống như bất kỳ tệp CSS nào, việc import sẽ tự động áp dụng CSS đó vào trang. Tuy nhiên, CSS Modules export một đối tượng `styles` mặc định đặc biệt ánh xạ classname gốc của bạn thành identifier duy nhất.
+
+CSS Modules giúp bạn thực thi phạm vi component & cách ly trên frontend với tên class được tạo duy nhất cho stylesheet của bạn.
+
+### Tài sản khác
+
+```jsx
+import imgReference from './image.png'; // imgReference === '/src/image.png'
+import svgReference from './image.svg'; // svgReference === '/src/image.svg'
+import txtReference from './words.txt'; // txtReference === '/src/words.txt'
+
+// Ví dụ này sử dụng JSX, nhưng bạn có thể sử dụng tham chiếu import với bất kỳ framework nào.
+<img src={imgReference.src} alt='image description' />;
+```
+
+Tất cả tài sản khác không được đề cập rõ ràng ở trên có thể được import thông qua ESM `import` và sẽ trả về tham chiếu URL đến tài sản được xây dựng cuối cùng. Điều này có thể hữu ích để tham chiếu tài sản non-JS bằng URL, như tạo element hình ảnh với thuộc tính `src` trỏ đến hình ảnh đó.
+
+Cũng có thể hữu ích khi đặt hình ảnh trong thư mục `public/` như được giải thích trên [trang cấu trúc dự án](/vi/basics/project-structure/#public).
+
+<ReadMore>
+	Đọc thêm về việc thêm tham số import Vite (ví dụ: `?url`, `?raw`) trong [hướng dẫn xử lý tài sản tĩnh của Vite](https://vite.dev/guide/assets.html).
+</ReadMore>
+
+:::note
+Thêm **alt text** vào thẻ `<img>` được khuyến khích cho khả năng tiếp cận! Đừng quên thêm thuộc tính `alt="mô tả hữu ích"` vào element hình ảnh của bạn. Bạn có thể để trống thuộc tính nếu hình ảnh chỉ mang tính trang trí.
+:::
+
+## Aliases
+
+**Alias** là cách tạo shortcut cho import của bạn.
+
+Alias có thể giúp cải thiện trải nghiệm phát triển trong codebase có nhiều thư mục hoặc import tương đối.
+
+```astro title="src/pages/about/company.astro" del="../../components" del="../../assets"
+---
+import Button from '../../components/controls/Button.astro';
+import logoUrl from '../../assets/logo.png?url';
+---
+```
+
+Trong ví dụ này, developer cần hiểu mối quan hệ cây giữa `src/pages/about/company.astro`, `src/components/controls/Button.astro`, và `src/assets/logo.png`. Và sau đó, nếu tệp `company.astro` được di chuyển, các import này cũng cần được cập nhật.
+
+Bạn có thể thêm import alias trong `tsconfig.json`.
+
+```json title="tsconfig.json" ins={5-6}
+{
+	"compilerOptions": {
+		"baseUrl": ".",
+		"paths": {
+			"@components/*": ["src/components/*"],
+			"@assets/*": ["src/assets/*"]
+		}
+	}
+}
+```
+
+:::note
+Đảm bảo `compilerOptions.baseUrl` được đặt để các đường dẫn alias có thể được phân giải.
+:::
+
+Development server sẽ tự động khởi động lại sau thay đổi cấu hình này. Bây giờ bạn có thể import sử dụng alias ở bất kỳ đâu trong dự án:
+
+```astro title="src/pages/about/company.astro" ins="@components" ins="@assets"
+---
+import Button from '@components/controls/Button.astro';
+import logoUrl from '@assets/logo.png?url';
+---
+```
+
+Các alias này cũng được tích hợp tự động vào [VS Code](https://code.visualstudio.com/docs/languages/jsconfig) và các editor khác.
+
+## `import.meta.glob()`
+
+[`import.meta.glob()` của Vite](https://vite.dev/guide/features.html#glob-import) là cách import nhiều tệp cùng lúc sử dụng glob pattern để tìm đường dẫn tệp phù hợp.
+
+`import.meta.glob()` nhận [glob pattern](#glob-patterns) tương đối phù hợp với tệp local bạn muốn import làm tham số. Nó trả về mảng các export của mỗi tệp phù hợp. Để tải tất cả module phù hợp trước, truyền `{ eager: true }` làm tham số thứ hai:
+
+```astro title="src/components/my-component.astro" {3,4}
+---
+// import tất cả tệp kết thúc bằng `.md` trong `./src/pages/post/`
+const matches = import.meta.glob('../pages/post/*.md', { eager: true });
+const posts = Object.values(matches);
+---
+<!-- Render <article> cho 5 bài blog đầu tiên -->
+<div>
+{posts.slice(0, 4).map((post) => (
+  <article>
+    <h2>{post.frontmatter.title}</h2>
+    <p>{post.frontmatter.description}</p>
+    <a href={post.url}>Đọc thêm</a>
+  </article>
+))}
+</div>
+```
+
+Astro components được import sử dụng `import.meta.glob` có kiểu [`AstroInstance`](#astro-files). Bạn có thể render mỗi instance component sử dụng thuộc tính `default`:
+
+```astro title="src/pages/component-library.astro" {8}
+---
+// import tất cả tệp kết thúc bằng `.astro` trong `./src/components/`
+const components = Object.values(import.meta.glob('../components/*.astro', { eager: true }));
+---
+<!-- Hiển thị tất cả component của chúng ta -->
+{components.map((component) => (
+  <div>
+    <component.default size={24} />
+  </div>
+))}
+```
+
+### Giá trị được hỗ trợ
+
+Hàm `import.meta.glob()` của Vite chỉ hỗ trợ string literal tĩnh. Nó không hỗ trợ biến động và string interpolation.
+
+Một cách giải quyết phổ biến là thay vào đó import một tập hợp tệp lớn hơn bao gồm tất cả tệp bạn cần, sau đó lọc chúng:
+
+```astro {6-7}
+---
+// src/components/featured.astro
+const { postSlug } = Astro.props;
+const pathToMyFeaturedPost = `src/pages/blog/${postSlug}.md`;
+
+const posts = Object.values(import.meta.glob("../pages/blog/*.md", { eager: true }));
+const myFeaturedPost = posts.find(post => post.file.includes(pathToMyFeaturedPost));
+---
+
+<p>
+  Hãy xem bài viết yêu thích của tôi, <a href={myFeaturedPost.url}>{myFeaturedPost.frontmatter.title}</a>!
+</p>
+```
+
+### Utility kiểu Import
+
+#### Tệp Markdown
+
+Tệp Markdown được tải với `import.meta.glob()` trả về interface `MarkdownInstance` sau:
+
+```ts
+export interface MarkdownInstance<T extends Record<string, any>> {
+	/* Bất kỳ dữ liệu nào được chỉ định trong YAML/TOML frontmatter của tệp này */
+	frontmatter: T;
+	/* Đường dẫn tệp tuyệt đối của tệp này */
+	file: string;
+	/* Đường dẫn được render của tệp này */
+	url: string | undefined;
+	/* Astro Component render nội dung của tệp này */
+	Content: AstroComponentFactory;
+	/** (Chỉ Markdown) Nội dung tệp Markdown thô, loại trừ layout HTML và YAML/TOML frontmatter */
+	rawContent(): string;
+	/** (Chỉ Markdown) Tệp Markdown được compile thành HTML, loại trừ layout HTML */
+	compiledContent(): string;
+	/* Hàm trả về mảng các element h1...h6 trong tệp này */
+	getHeadings(): Promise<{ depth: number; slug: string; text: string }[]>;
+	default: AstroComponentFactory;
+}
+```
+
+Bạn có thể tùy chọn cung cấp kiểu cho biến `frontmatter` sử dụng TypeScript generic.
+
+```astro
+---
+import type { MarkdownInstance } from 'astro';
+interface Frontmatter {
+    title: string;
+    description?: string;
+}
+
+const posts = Object.values(import.meta.glob<MarkdownInstance<Frontmatter>>('./posts/**/*.md', { eager: true }));
+---
+
+<ul>
+  {posts.map(post => <li>{post.frontmatter.title}</li>)}
+</ul>
+```
+
+#### Tệp Astro
+
+Tệp Astro có interface sau:
+
+```ts
+export interface AstroInstance {
+	/* Đường dẫn tệp của tệp này */
+	file: string;
+	/* URL cho tệp này (nếu nó nằm trong thư mục pages) */
+	url: string | undefined;
+	default: AstroComponentFactory;
+}
+```
+
+#### Tệp khác
+
+Tệp khác có thể có các interface khác nhau, nhưng `import.meta.glob()` chấp nhận TypeScript generic nếu bạn biết chính xác loại tệp không được nhận dạng chứa gì.
+
+```ts
+---
+interface CustomDataFile {
+  default: Record<string, any>;
+}
+const data = import.meta.glob<CustomDataFile>('../data/**/*.js');
+---
+```
+
+### Glob Patterns
+
+Glob pattern là đường dẫn tệp hỗ trợ ký tự đại diện đặc biệt. Điều này được sử dụng để tham chiếu nhiều tệp trong dự án cùng lúc.
+
+Ví dụ, glob pattern `./pages/**/*.{md,mdx}` bắt đầu trong thư mục con pages, xem qua tất cả thư mục con của nó (`/**`), và khớp với bất kỳ tên tệp nào (`/*`) kết thúc bằng `.md` hoặc `.mdx` (`.{md,mdx}`).
+
+#### Glob Patterns trong Astro
+
+Để sử dụng với `import.meta.glob()`, glob pattern phải là string literal và không thể chứa biến nào.
+
+Ngoài ra, glob pattern phải bắt đầu bằng một trong những cái sau:
+
+- `./` (để bắt đầu trong thư mục hiện tại)
+- `../` (để bắt đầu trong thư mục cha)
+- `/` (để bắt đầu ở root của dự án)
+
+[Đọc thêm về cú pháp glob pattern](https://github.com/micromatch/picomatch#globbing-features).
+
+### `import.meta.glob()` so với `getCollection()`
+
+[Content collections](/vi/guides/content-collections/) cung cấp API [`getCollection()`](/vi/reference/modules/astro-content/#getcollection) để tải nhiều tệp thay vì `import.meta.glob()`. Nếu tệp nội dung của bạn (ví dụ: Markdown, MDX, Markdoc) nằm trong collection trong thư mục `src/content/`, sử dụng `getCollection()` để [truy vấn collection](/vi/guides/content-collections/#querying-collections) và trả về content entry.
+
+## WASM
+
+```js
+// Tải và khởi tạo tệp WASM được yêu cầu
+const wasm = await WebAssembly.instantiateStreaming(fetch('/example.wasm'));
+```
+
+Astro hỗ trợ tải tệp WASM trực tiếp vào ứng dụng của bạn sử dụng API [`WebAssembly`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/WebAssembly) của trình duyệt.
+
+## Node Builtins
+
+Astro hỗ trợ Node.js built-in, với một số hạn chế, sử dụng prefix `node:` mới hơn của Node. Có thể có sự khác biệt giữa development và production, và một số tính năng có thể không tương thích với rendering on-demand. Một số [adapter](/vi/guides/on-demand-rendering/) cũng có thể không tương thích với các module built-in này hoặc yêu cầu cấu hình để hỗ trợ một tập hợp con (ví dụ: [Cloudflare Workers](/vi/guides/integrations-guide/cloudflare/) hoặc [Deno](https://github.com/denoland/deno-astro-adapter)).
+
+Ví dụ sau import module `util` từ Node để phân tích media type (MIME):
+
+```astro title="src/components/MyComponent.astro"
+---
+// Ví dụ: import "util" built-in từ Node.js
+import util from 'node:util';
+
+export interface Props {
+  mimeType: string,
+}
+
+const mime = new util.MIMEType(Astro.props.mimeType)
+---
+
+<span>Type: {mime.type}</span>
+<span>SubType: {mime.subtype}</span>
+```
+
+## Mở rộng hỗ trợ loại tệp
+
+Với **Vite** và **Rollup** plugin tương thích, bạn có thể import loại tệp không được hỗ trợ nguyên bản bởi Astro. Tìm hiểu nơi tìm plugin bạn cần trong phần [Finding Plugins](https://vite.dev/guide/using-plugins.html#finding-plugins) của Vite Documentation.
+
+:::note[Cấu hình Plugin]
+Tham khảo tài liệu của plugin để biết tùy chọn cấu hình và cách cài đặt đúng.
+:::
+
+<RecipeLinks slugs={['en/recipes/add-yaml-support']} />

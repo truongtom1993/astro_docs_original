@@ -1,0 +1,211 @@
+---
+type: integration
+title: '@astrojs/react'
+description: Tìm hiểu cách sử dụng tích hợp framework @astrojs/react để mở rộng hỗ trợ component trong dự án Astro của bạn.
+sidebar:
+  label: React
+githubIntegrationURL: 'https://github.com/withastro/astro/tree/main/packages/integrations/react/'
+category: renderer
+i18nReady: true
+---
+import PackageManagerTabs from '~/components/tabs/PackageManagerTabs.astro'
+
+**[Tích hợp Astro][astro-integration]** này cho phép render và hydration phía client cho các component [React](https://react.dev/) của bạn.
+
+## Cài đặt
+
+Astro bao gồm lệnh `astro add` để tự động thiết lập các tích hợp chính thức. Nếu muốn, bạn có thể [cài đặt tích hợp thủ công](#cài-đặt-thủ-công) thay thế.
+
+Để cài đặt `@astrojs/react`, chạy lệnh sau từ thư mục dự án của bạn và làm theo hướng dẫn:
+
+<PackageManagerTabs>
+  <Fragment slot="npm">
+  ```sh
+  npx astro add react
+  ```
+  </Fragment>
+  <Fragment slot="pnpm">
+  ```sh
+  pnpm astro add react
+  ```
+  </Fragment>
+  <Fragment slot="yarn">
+  ```sh
+  yarn astro add react
+  ```
+  </Fragment>
+</PackageManagerTabs>
+
+Nếu gặp bất kỳ vấn đề nào, [hãy báo cáo cho chúng tôi trên GitHub](https://github.com/withastro/astro/issues) và thử các bước cài đặt thủ công bên dưới.
+
+### Cài đặt thủ công
+
+Đầu tiên, cài đặt gói `@astrojs/react`:
+
+<PackageManagerTabs>
+  <Fragment slot="npm">
+  ```sh
+  npm install @astrojs/react
+  ```
+  </Fragment>
+  <Fragment slot="pnpm">
+  ```sh
+  pnpm add @astrojs/react
+  ```
+  </Fragment>
+  <Fragment slot="yarn">
+  ```sh
+  yarn add @astrojs/react
+  ```
+  </Fragment>
+</PackageManagerTabs>
+
+Hầu hết các trình quản lý gói cũng sẽ cài đặt các dependency đồng cấp liên quan. Nếu bạn thấy cảnh báo `Cannot find package 'react'` (hoặc tương tự) khi khởi động Astro, bạn cần cài đặt `react` và `react-dom` với định nghĩa type:
+
+<PackageManagerTabs>
+  <Fragment slot="npm">
+  ```sh
+  npm install react react-dom @types/react @types/react-dom
+  ```
+  </Fragment>
+  <Fragment slot="pnpm">
+  ```sh
+  pnpm add react react-dom @types/react @types/react-dom
+  ```
+  </Fragment>
+  <Fragment slot="yarn">
+  ```sh
+  yarn add react react-dom @types/react @types/react-dom
+  ```
+  </Fragment>
+</PackageManagerTabs>
+
+Sau đó, áp dụng tích hợp vào file `astro.config.*` của bạn bằng thuộc tính `integrations`:
+
+```js ins="react()" ins={2} title="astro.config.mjs"
+import { defineConfig } from 'astro/config';
+import react from '@astrojs/react';
+
+export default defineConfig({
+  // ...
+  integrations: [react()],
+});
+```
+
+Và thêm code sau vào file `tsconfig.json`.
+
+```json title="tsconfig.json" ins={5-8}
+{
+  "extends": "astro/tsconfigs/strict",
+  "include": [".astro/types.d.ts", "**/*"],
+  "exclude": ["dist"],
+  "compilerOptions": {
+    "jsx": "react-jsx",
+    "jsxImportSource": "react"
+  }
+}
+```
+
+## Bắt đầu
+
+Để sử dụng component React đầu tiên trong Astro, hãy xem [tài liệu framework UI][astro-ui-frameworks]. Bạn sẽ khám phá:
+
+* 📦 cách các component framework được tải,
+* 💧 các tùy chọn hydration phía client, và
+* 🤝 cơ hội kết hợp và lồng các framework với nhau
+
+## Tùy chọn
+
+### Kết hợp nhiều JSX framework
+
+Khi sử dụng nhiều JSX framework (React, Preact, Solid) trong cùng dự án, Astro cần xác định biến đổi JSX framework-specific nào sẽ được sử dụng cho từng component. Nếu bạn chỉ thêm một tích hợp JSX framework vào dự án, không cần cấu hình thêm.
+
+Sử dụng tùy chọn cấu hình `include` (bắt buộc) và `exclude` (tùy chọn) để chỉ định file nào thuộc framework nào. Cung cấp mảng file và/hoặc thư mục cho `include` cho mỗi framework bạn sử dụng. Có thể sử dụng wildcard để bao gồm nhiều đường dẫn file.
+
+Chúng tôi khuyên bạn nên đặt các component framework chung trong cùng thư mục (ví dụ: `/components/react/` và `/components/solid/`) để việc chỉ định include dễ dàng hơn, nhưng điều này không bắt buộc:
+
+```js title="astro.config.mjs"
+import { defineConfig } from 'astro/config';
+import preact from '@astrojs/preact';
+import react from '@astrojs/react';
+import svelte from '@astrojs/svelte';
+import vue from '@astrojs/vue';
+import solid from '@astrojs/solid-js';
+
+export default defineConfig({
+  // Kích hoạt nhiều framework để hỗ trợ tất cả các loại component khác nhau.
+  // Không cần `include` nếu bạn chỉ sử dụng một JSX framework!
+  integrations: [
+    preact({
+      include: ['**/preact/*'],
+    }),
+    react({
+      include: ['**/react/*'],
+    }),
+    solid({
+      include: ['**/solid/*'],
+    }),
+  ],
+});
+```
+
+### Children parsing
+
+Children được truyền vào component React từ component Astro được phân tích thành chuỗi thuần túy, không phải React nodes.
+
+Ví dụ, `<ReactComponent />` bên dưới sẽ chỉ nhận một phần tử con:
+
+```astro
+---
+import ReactComponent from './ReactComponent';
+---
+
+<ReactComponent>
+  <div>one</div>
+  <div>two</div>
+</ReactComponent>
+```
+
+Nếu bạn đang sử dụng thư viện *mong đợi* nhiều hơn một phần tử con được truyền, ví dụ để có thể đặt các phần tử nhất định ở các vị trí khác nhau, bạn có thể thấy đây là một rào cản.
+
+Bạn có thể đặt flag thử nghiệm `experimentalReactChildren` để yêu cầu Astro luôn truyền children cho React dưới dạng React virtual DOM nodes. Có một chi phí runtime nhất định cho điều này, nhưng nó có thể giúp tương thích.
+
+Bạn có thể kích hoạt tùy chọn này trong cấu hình cho tích hợp React:
+
+```js title="astro.config.mjs" ins={8}
+import { defineConfig } from 'astro/config';
+import react from '@astrojs/react';
+
+export default defineConfig({
+  // ...
+  integrations: [
+    react({
+      experimentalReactChildren: true,
+    }),
+  ],
+});
+```
+
+### Tắt streaming (thử nghiệm)
+
+Astro stream output của React component theo mặc định. Tuy nhiên, bạn có thể tắt hành vi này bằng cách kích hoạt tùy chọn `experimentalDisableStreaming`. Điều này đặc biệt hữu ích để hỗ trợ các thư viện không hoạt động tốt với streaming, như một số giải pháp CSS-in-JS.
+
+Để tắt streaming cho tất cả React component trong dự án của bạn, cấu hình `@astrojs/react` với `experimentalDisableStreaming: true`:
+
+```js title="astro.config.mjs" ins={8}
+import { defineConfig } from 'astro/config';
+import react from '@astrojs/react';
+
+export default defineConfig({
+  // ...
+  integrations: [
+    react({
+      experimentalDisableStreaming: true,
+    }),
+  ],
+});
+```
+
+[astro-integration]: /vi/guides/integrations-guide/
+
+[astro-ui-frameworks]: /vi/guides/framework-components/#using-framework-components

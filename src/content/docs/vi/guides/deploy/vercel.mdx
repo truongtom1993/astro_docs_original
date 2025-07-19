@@ -1,0 +1,106 @@
+---
+title: Triển khai trang web Astro lên Vercel
+description: Cách triển khai trang web Astro lên web trên Vercel.
+sidebar:
+  label: Vercel
+type: deploy
+i18nReady: true
+---
+import PackageManagerTabs from '~/components/tabs/PackageManagerTabs.astro';
+import ReadMore from '~/components/ReadMore.astro';
+import { Steps } from '@astrojs/starlight/components';
+
+Bạn có thể sử dụng [Vercel](http://vercel.com/) để triển khai trang web Astro lên mạng edge toàn cầu với zero configuration.
+
+Hướng dẫn này bao gồm hướng dẫn triển khai lên Vercel thông qua website UI hoặc CLI của Vercel.
+
+## Cấu hình dự án
+
+Dự án Astro của bạn có thể được triển khai lên Vercel như một trang web tĩnh hoặc trang web render phía server.
+
+### Trang web tĩnh
+
+Dự án Astro của bạn là trang web tĩnh theo mặc định. Bạn không cần cấu hình thêm để triển khai trang web Astro tĩnh lên Vercel. 
+
+### Adapter cho render theo yêu cầu
+
+Thêm [adapter Vercel](/vi/guides/integrations-guide/vercel/) để kích hoạt [render theo yêu cầu](/vi/guides/on-demand-rendering/) trong dự án Astro bằng lệnh `astro add` sau. Điều này sẽ cài đặt adapter và thực hiện các thay đổi phù hợp với file `astro.config.mjs` trong một bước.
+
+<PackageManagerTabs>
+  <Fragment slot="npm">
+  ```shell
+  npx astro add vercel
+  ```
+  </Fragment>
+  <Fragment slot="pnpm">
+  ```shell
+  pnpm astro add vercel
+  ```
+  </Fragment>
+  <Fragment slot="yarn">
+  ```shell
+  yarn astro add vercel
+  ```
+  </Fragment>
+</PackageManagerTabs>
+
+<ReadMore>Xem [hướng dẫn adapter Vercel](/vi/guides/integrations-guide/vercel/) để cài đặt thủ công, hoặc để biết thêm tùy chọn cấu hình, như triển khai middleware Astro của dự án bằng Vercel Edge Functions.</ReadMore>
+
+## Cách triển khai
+
+Bạn có thể triển khai lên Vercel thông qua website UI hoặc CLI (command line interface) của Vercel. Quy trình giống nhau cho cả trang web Astro tĩnh và render theo yêu cầu.
+
+### Triển khai Website UI
+
+<Steps>
+1. Push code của bạn lên Git repository trực tuyến (GitHub, GitLab, BitBucket).
+
+2. [Import dự án](https://vercel.com/new) vào Vercel.
+
+3. Vercel sẽ tự động phát hiện Astro và cấu hình các cài đặt phù hợp.
+
+4. Ứng dụng của bạn đã được triển khai! (ví dụ: [astro.vercel.app](https://astro.vercel.app/))
+</Steps>
+
+Sau khi dự án được import và triển khai, tất cả các push tiếp theo lên nhánh sẽ tạo [Preview Deployments](https://vercel.com/docs/concepts/deployments/preview-deployments), và tất cả thay đổi trên Production Branch (thường là "main") sẽ tạo [Production Deployment](https://vercel.com/docs/concepts/deployments/environments#production).
+
+<ReadMore>Tìm hiểu thêm về [Git Integration](https://vercel.com/docs/concepts/git) của Vercel.</ReadMore>
+
+### Triển khai CLI
+
+<Steps>
+1. Cài đặt [Vercel CLI](https://vercel.com/cli) và chạy `vercel` để triển khai.
+
+    <PackageManagerTabs>
+      <Fragment slot="npm">
+      ```shell
+      npm install -g vercel
+      vercel
+      ```
+      </Fragment>
+      <Fragment slot="pnpm">
+      ```shell
+      pnpm add -g vercel
+      vercel
+      ```
+      </Fragment>
+      <Fragment slot="yarn">
+      ```shell
+      yarn global add vercel
+      vercel
+      ```
+      </Fragment>
+    </PackageManagerTabs>
+
+2. Vercel sẽ tự động phát hiện Astro và cấu hình các cài đặt phù hợp.
+
+3. Khi được hỏi `Want to override the settings? [y/N]`, chọn `N`.
+
+4. Ứng dụng của bạn đã được triển khai! (ví dụ: [astro.vercel.app](https://astro.vercel.app/))
+</Steps>
+
+### Cấu hình dự án với `vercel.json`
+
+Bạn có thể sử dụng `vercel.json` để ghi đè hành vi mặc định của Vercel và cấu hình các cài đặt bổ sung. Ví dụ, bạn có thể muốn đính kèm headers cho HTTP responses từ Deployments. 
+
+<ReadMore>Tìm hiểu thêm về [cấu hình dự án của Vercel](https://vercel.com/docs/project-configuration).</ReadMore>

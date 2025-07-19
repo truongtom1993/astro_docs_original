@@ -1,0 +1,349 @@
+---
+title: Tài liệu tham khảo Routing
+i18nReady: true
+tableOfContents:
+  minHeadingLevel: 2
+  maxHeadingLevel: 4
+---
+
+import Since from '~/components/Since.astro';
+import PackageManagerTabs from '~/components/tabs/PackageManagerTabs.astro';
+import ReadMore from '~/components/ReadMore.astro';
+
+Không có cấu hình routing riêng biệt trong Astro.
+
+Mỗi [file trang được hỗ trợ](/vi/basics/astro-pages/#supported-page-files) nằm trong thư mục đặc biệt `src/pages/` sẽ tạo ra một route. Khi tên file chứa một [tham số](#params), một route có thể tạo ra nhiều trang một cách động, ngược lại nó tạo ra một trang duy nhất.
+
+Mặc định, tất cả các route và endpoint của Astro đều được sinh ra và prerender tại thời điểm build. [Rendering trên máy chủ theo yêu cầu](/vi/guides/on-demand-rendering/) có thể được thiết lập cho từng route riêng lẻ, hoặc làm mặc định.
+
+## `prerender`
+
+<p>
+
+**Kiểu:** `boolean`<br />
+**Mặc định:** `true` trong chế độ static (mặc định); `false` với cấu hình `output: 'server'`<br />
+
+<Since v="1.0.0" />
+</p>
+
+Một giá trị được export từ mỗi route riêng lẻ để xác định xem nó có được prerender hay không.
+
+Mặc định, tất cả các trang và endpoint đều được prerender và sẽ được tạo tĩnh tại thời điểm build. Bạn có thể tắt prerendering trên một hoặc nhiều route, và bạn có thể có cả route tĩnh và route được render theo yêu cầu trong cùng một dự án.
+
+### Ghi đè từng trang
+
+Bạn có thể ghi đè giá trị mặc định để bật [rendering theo yêu cầu](/vi/guides/on-demand-rendering/) cho một route riêng lẻ bằng cách export `prerender` với giá trị `false` từ file đó:
+
+```astro title="src/pages/rendered-on-demand.astro" {2}
+---
+export const prerender = false
+---
+<!-- nội dung được render trên server -->
+<!-- phần còn lại của site là tĩnh -->
+```
+
+### Chuyển sang chế độ `server`
+
+Bạn có thể ghi đè giá trị mặc định cho tất cả route bằng cách cấu hình [`output: 'server'`](/vi/reference/configuration-reference/#output). Trong chế độ output này, tất cả các trang và endpoint sẽ được tạo trên server khi có yêu cầu thay vì được prerender.
+
+Trong chế độ `server`, bật prerendering cho một route riêng lẻ bằng cách export `prerender` với giá trị `true` từ file đó:
+
+```astro title="src/pages/static-about-page.astro" {3}
+---
+// với cấu hình `output: 'server'`
+export const prerender = true
+---
+<!-- Trang about tĩnh của tôi -->
+<!-- Tất cả trang khác được render theo yêu cầu -->
+```
+
+## `partial`
+
+<p>
+
+**Kiểu:** `boolean` <br />
+**Mặc định:** `false` <br />
+
+<Since v="3.4.0" />
+</p>
+
+Một giá trị được export từ một route riêng lẻ để xác định xem nó có nên được render như một trang HTML đầy đủ hay không.
+
+Mặc định, tất cả các file nằm trong thư mục `src/pages/` dành riêng sẽ tự động bao gồm khai báo `<!DOCTYPE html>` và nội dung `<head>` bổ sung như style và script có phạm vi của Astro.
+
+Bạn có thể ghi đè giá trị mặc định để chỉ định nội dung như một [phần của trang](/vi/basics/astro-pages/#page-partials) cho một route riêng lẻ bằng cách export một giá trị cho `partial` từ file đó:
+
+```astro title="src/pages/my-page-partial.astro" {2}
+---
+export const partial = true
+---
+<!-- HTML được tạo có sẵn tại một URL -->
+<!-- Có sẵn cho thư viện rendering -->
+```
+
+`export const partial` phải có thể nhận diện tĩnh. Nó có thể có giá trị:
+
+- Boolean **`true`**.
+- Một biến môi trường sử dụng import.meta.env như `import.meta.env.USE_PARTIALS`.
+
+## `getStaticPaths()`
+
+<p>
+**Kiểu:** `(options: GetStaticPathsOptions) => Promise<GetStaticPathsResult> | GetStaticPathsResult` <br />
+<Since v="1.0.0" />
+</p>
+
+Một hàm để tạo ra nhiều route trang được prerender từ một component trang `.astro` duy nhất với một hoặc nhiều [tham số](#params) trong đường dẫn file của nó. Sử dụng cho các route sẽ được tạo tại thời điểm build, còn được gọi là xây dựng site tĩnh.
+
+Hàm `getStaticPaths()` phải trả về một mảng các object để xác định những đường dẫn URL nào sẽ được prerender bởi Astro. Mỗi object phải bao gồm một object `params`, để chỉ định đường dẫn route. Object có thể tùy chọn chứa một object `props` với [dữ liệu được truyền](#data-passing-with-props) cho mỗi template trang.
+
+```astro title="src/pages/blog/[post].astro" "post"
+---
+// Trong chế độ 'server', opt in cho prerendering:
+// export const prerender = true
+
+export async function getStaticPaths() {
+  return [
+    // { params: { /* bắt buộc */ }, props: { /* tùy chọn */ } },
+    { params: { post: '1' } }, // [post] là tham số
+    { params: { post: '2' } }, // phải khớp với tên file
+    // ...
+  ];
+}
+---
+<!-- Template HTML của bạn ở đây. -->
+```
+
+`getStaticPaths()` cũng có thể được sử dụng trong static file endpoint cho [routing động](/vi/guides/endpoints/#params-and-dynamic-routing).
+
+:::tip
+Khi sử dụng TypeScript, hãy sử dụng tiện ích kiểu [`GetStaticPaths`](/vi/guides/typescript/#infer-getstaticpaths-types) để đảm bảo truy cập an toàn kiểu cho `params` và `props` của bạn.
+:::
+
+:::caution
+Hàm `getStaticPaths()` thực thi trong phạm vi riêng biệt của nó một lần, trước khi bất kỳ trang nào được tải. Do đó bạn không thể tham chiếu bất cứ thứ gì từ phạm vi cha của nó, ngoại trừ các file import. Compiler sẽ cảnh báo bạn nếu bạn vi phạm yêu cầu này.
+:::
+
+### `params`
+
+Khóa `params` của mỗi object trong mảng được trả về bởi `getStaticPaths()` cho Astro biết những route nào cần build.
+
+Các khóa trong `params` phải khớp với các tham số được định nghĩa trong đường dẫn file component của bạn. Giá trị cho mỗi object `params` phải khớp với các tham số được sử dụng trong tên trang. `params` được mã hóa vào URL, vì vậy chỉ string được hỗ trợ làm giá trị.
+
+Ví dụ, `src/pages/posts/[id].astro` có tham số `id` trong tên file của nó. Hàm `getStaticPaths()` sau trong component `.astro` này cho Astro biết cần tạo tĩnh `posts/1`, `posts/2`, và `posts/3` tại thời điểm build.
+
+```astro title="src/pages/posts/[id].astro"
+---
+export async function getStaticPaths() {
+  return [
+    { params: { id: '1' } },
+    { params: { id: '2' } },
+    { params: { id: '3' } }
+  ];
+}
+
+const { id } = Astro.params;
+---
+<h1>{id}</h1>
+```
+
+### Truyền dữ liệu với `props`
+
+Để truyền dữ liệu bổ sung cho mỗi trang được tạo, bạn có thể thiết lập giá trị `props` trên mỗi object trong mảng được trả về bởi `getStaticPaths()`. Khác với `params`, `props` không được mã hóa vào URL và do đó không bị giới hạn chỉ string.
+
+Ví dụ, nếu bạn tạo các trang với dữ liệu được lấy từ API từ xa, bạn có thể truyền object dữ liệu đầy đủ cho component trang bên trong `getStaticPaths()`. Template trang có thể tham chiếu dữ liệu từ mỗi bài viết bằng `Astro.props`.
+
+```astro title="src/pages/posts/[id].astro" {9}
+---
+export async function getStaticPaths() {
+  const response = await fetch('...');
+  const data = await response.json();
+
+  return data.map((post) => {
+    return {
+      params: { id: post.id },
+      props: { post },
+    };
+  });
+}
+
+const { id } = Astro.params;
+const { post } = Astro.props;
+---
+<h1>{id}: {post.name}</h1>
+```
+
+### `paginate()`
+
+<p>
+
+<Since v="1.0.0" />
+</p>
+
+Một hàm có thể được trả về từ [`getStaticPaths()`](#getstaticpaths) để chia một bộ sưu tập các item nội dung thành các trang riêng biệt.
+
+`paginate()` sẽ tự động tạo ra mảng cần thiết để trả về từ `getStaticPaths()` để tạo một URL cho mỗi trang của bộ sưu tập được phân trang của bạn. Số trang sẽ được truyền như một `param`, và dữ liệu trang sẽ được truyền như một `page` prop.
+
+Ví dụ sau lấy và truyền 150 item cho hàm `paginate`, và tạo các trang tĩnh, được prerender tại thời điểm build sẽ hiển thị 10 item mỗi trang:
+
+```astro title="src/pages/pokemon/[page].astro"
+---
+export async function getStaticPaths({ paginate }) {
+  // Tải dữ liệu của bạn với fetch(), getCollection(), v.v.
+  const response = await fetch(`https://pokeapi.co/api/v2/pokemon?limit=150`);
+  const result = await response.json();
+  const allPokemon = result.results;
+
+  // Trả về một bộ sưu tập đường dẫn được phân trang cho tất cả item
+  return paginate(allPokemon, { pageSize: 10 });
+}
+
+const { page } = Astro.props;
+---
+```
+
+`paginate()` có các tham số sau:
+
+- `data` - mảng chứa dữ liệu trang được truyền cho hàm `paginate()`
+- `options` - Object tùy chọn với các thuộc tính sau:
+  - `pageSize` - Số lượng item hiển thị mỗi trang (`10` mặc định)
+  - `params` - Gửi tham số bổ sung để tạo route động
+  - `props` - Gửi props bổ sung để có sẵn trên mỗi trang
+
+`paginate()` giả định tên file là `[page].astro` hoặc `[...page].astro`. Tham số `page` trở thành số trang trong URL của bạn:
+
+- `/posts/[page].astro` sẽ tạo URL `/posts/1`, `/posts/2`, `/posts/3`, v.v.
+- `/posts/[...page].astro` sẽ tạo URL `/posts`, `/posts/2`, `/posts/3`, v.v.
+
+#### Prop `page` của pagination
+
+<p>
+
+**Kiểu:** `Page<TData>`
+
+</p>
+
+Pagination sẽ truyền prop `page` cho mỗi trang được render đại diện cho một trang dữ liệu duy nhất trong bộ sưu tập được phân trang. Điều này bao gồm dữ liệu mà bạn đã phân trang (`page.data`) cũng như metadata cho trang (`page.url`, `page.start`, `page.end`, `page.total`, v.v.). Metadata này hữu ích cho những thứ như nút "Trang tiếp" hoặc thông báo "Hiển thị 1-10 trong 100".
+
+##### `page.data`
+
+<p>
+
+**Kiểu:** `Array<TData>`
+
+</p>
+
+Mảng dữ liệu được trả về từ hàm `paginate()` cho trang hiện tại.
+
+##### `page.start`
+
+<p>
+
+**Kiểu:** `number`
+
+</p>
+
+Chỉ số của item đầu tiên trên trang hiện tại, bắt đầu từ `0`. (ví dụ nếu `pageSize: 25`, điều này sẽ là `0` trên trang 1, `25` trên trang 2, v.v.)
+
+##### `page.end`
+
+<p>
+
+**Kiểu:** `number`
+
+</p>
+
+Chỉ số của item cuối cùng trên trang hiện tại.
+
+##### `page.size`
+
+<p>
+
+**Kiểu:** `number`<br />
+**Mặc định:** `10`
+
+</p>
+
+Tổng số item mỗi trang.
+
+##### `page.total`
+
+<p>
+
+**Kiểu:** `number`
+
+</p>
+
+Tổng số item trên tất cả các trang.
+
+##### `page.currentPage`
+
+<p>
+
+**Kiểu:** `number`
+
+</p>
+
+Số trang hiện tại, bắt đầu bằng `1`.
+
+##### `page.lastPage`
+
+<p>
+
+**Kiểu:** `number`
+
+</p>
+
+Tổng số trang.
+
+##### `page.url.current`
+
+<p>
+
+**Kiểu:** `string`
+
+</p>
+
+Lấy URL của trang hiện tại (hữu ích cho URL canonical). Nếu một giá trị được thiết lập cho [`base`](/vi/reference/configuration-reference/#base), URL bắt đầu với giá trị đó.
+
+##### `page.url.prev`
+
+<p>
+
+**Kiểu:** `string | undefined`
+
+</p>
+
+Lấy URL của trang trước (sẽ là `undefined` nếu ở trang 1). Nếu một giá trị được thiết lập cho [`base`](/vi/reference/configuration-reference/#base), thêm base path vào trước URL.
+
+##### `page.url.next`
+
+<p>
+
+**Kiểu:** `string | undefined`
+
+</p>
+
+Lấy URL của trang tiếp theo (sẽ là `undefined` nếu không có trang nào nữa). Nếu một giá trị được thiết lập cho [`base`](/vi/reference/configuration-reference/#base), thêm base path vào trước URL.
+
+##### `page.url.first`
+
+<p>
+
+**Kiểu:** `string | undefined`<br />
+
+<Since v="4.12.0" />
+</p>
+
+Lấy URL của trang đầu tiên (sẽ là `undefined` nếu ở trang 1). Nếu một giá trị được thiết lập cho [`base`](/vi/reference/configuration-reference/#base), thêm base path vào trước URL.
+
+##### `page.url.last`
+
+<p>
+
+**Kiểu:** `string | undefined`<br />
+
+<Since v="4.12.0" />
+</p>
+
+Lấy URL của trang cuối cùng (sẽ là `undefined` nếu không có trang nào nữa). Nếu một giá trị được thiết lập cho [`base`](/vi/reference/configuration-reference/#base), thêm base path vào trước URL.

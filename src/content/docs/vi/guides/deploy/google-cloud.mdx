@@ -1,0 +1,89 @@
+---
+title: Triển khai trang web Astro lên Google Cloud
+description: Cách triển khai trang web Astro lên web sử dụng Google Cloud.
+sidebar:
+  label: Google Cloud
+type: deploy
+i18nReady: true
+---
+import { Steps } from '@astrojs/starlight/components';
+
+[Google Cloud](https://cloud.google.com/) là nền tảng hosting ứng dụng web đầy đủ tính năng có thể được sử dụng để triển khai trang web Astro.
+
+## Cách triển khai
+
+### Cloud Storage (chỉ tĩnh)
+
+<Steps>
+1. [Tạo dự án GCP mới](https://console.cloud.google.com/projectcreate), hoặc chọn dự án bạn đã có.
+
+2. Tạo bucket mới trong [Cloud Storage](https://cloud.google.com/storage).
+
+3. Đặt tên và các cài đặt bắt buộc khác.
+
+4. Upload thư mục `dist` của bạn vào bucket hoặc upload bằng [Cloud Build](https://cloud.google.com/build).
+
+5. Kích hoạt truy cập công khai bằng cách thêm quyền mới cho `allUsers` có tên `Storage Object Viewer`.
+
+6. Chỉnh sửa cấu hình website và thêm `index.html` làm entrypoint và `404.html` làm trang lỗi.
+</Steps>
+
+### Cloud Run (SSR và tĩnh)
+
+Cloud Run là nền tảng serverless cho phép bạn chạy container mà không cần quản lý hạ tầng. Nó có thể được sử dụng để triển khai cả trang web tĩnh và SSR.
+
+#### Chuẩn bị dịch vụ
+
+<Steps>
+1. [Tạo dự án GCP mới](https://console.cloud.google.com/projectcreate), hoặc chọn dự án bạn đã có.
+
+2. Đảm bảo [Cloud Run API](https://console.cloud.google.com/apis/library/run.googleapis.com) được kích hoạt.
+
+3. Tạo dịch vụ mới.
+</Steps>
+
+#### Tạo Dockerfile & Build Container
+
+Trước khi triển khai trang web Astro lên Cloud Run, bạn cần tạo Dockerfile để build container. Tìm thêm thông tin về [cách sử dụng Docker với Astro](/vi/recipes/docker/#creating-a-dockerfile) trong phần recipes.
+
+Sau khi Dockerfile được tạo, build thành image và push lên Google Cloud. Có một số cách để thực hiện:
+
+**Build local bằng Docker**:
+
+Sử dụng lệnh `docker build` để build image, `docker tag` để đặt tag, sau đó `docker push` để push lên registry. Với Google Cloud, [`Artifact Registry`](https://cloud.google.com/artifact-registry/docs/docker/pushing-and-pulling) là lựa chọn dễ nhất, nhưng bạn cũng có thể sử dụng [Docker Hub](https://hub.docker.com/).
+
+```bash
+# build container
+docker build .
+
+docker tag SOURCE_IMAGE HOSTNAME/PROJECT-ID/TARGET-IMAGE:TAG
+
+# Push image lên registry
+docker push HOSTNAME/PROJECT-ID/IMAGE:TAG
+```
+
+Thay đổi các giá trị sau trong lệnh trên để phù hợp với dự án của bạn:
+
+- `SOURCE_IMAGE`: tên image local hoặc image ID.
+- `HOSTNAME`: registry host (`gcr.io`, `eu.gcr.io`, `asia.gcr.io`, `us.gcr.io`, `docker.io`).
+- `PROJECT`: ID dự án Google Cloud của bạn.
+- `TARGET-IMAGE`: tên image khi được lưu trong registry.
+- `TAG` là phiên bản gắn với image.
+
+[Đọc thêm trong tài liệu Google Cloud.](https://cloud.google.com/artifact-registry/docs/docker/pushing-and-pulling)
+
+**Sử dụng công cụ khác**:
+
+Bạn có thể sử dụng công cụ CI/CD hỗ trợ Docker, như [GitHub Actions](https://github.com/marketplace/actions/push-to-gcr-github-action).
+
+**Build bằng [Cloud Build](https://cloud.google.com/build)**:
+
+Thay vì build Dockerfile local, bạn có thể hướng dẫn Google Cloud build image từ xa. Xem [tài liệu Google Cloud Build tại đây](https://cloud.google.com/build/docs/build-push-docker-image).
+
+#### Triển khai container
+
+Triển khai có thể được xử lý thủ công trong terminal [sử dụng `gcloud`](https://cloud.google.com/run/docs/deploying#service) hoặc tự động sử dụng [Cloud Build](https://cloud.google.com/build) hoặc bất kỳ hệ thống CI/CD nào khác.
+
+:::note[Cần truy cập công khai?]
+Đừng quên thêm quyền `Cloud Run Invoker` cho nhóm `allUsers` trong cài đặt quyền Cloud Run!
+:::

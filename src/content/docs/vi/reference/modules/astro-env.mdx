@@ -1,0 +1,47 @@
+---
+title: Tham chiếu API Biến Môi trường
+sidebar:
+  label: 'astro:env'
+i18nReady: true
+tableOfContents:
+  minHeadingLevel: 2
+  maxHeadingLevel: 6
+---
+
+import Since from '~/components/Since.astro';
+import ReadMore from '~/components/ReadMore.astro';
+
+<p>
+	<Since v='5.0.0' />
+</p>
+
+API `astro:env` cho phép bạn cấu hình một schema an toàn kiểu cho các biến môi trường mà bạn đã thiết lập. Điều này cho phép bạn chỉ định liệu chúng nên khả dụng trên server hay client, và xác định kiểu dữ liệu cùng các thuộc tính bổ sung. Để xem ví dụ và hướng dẫn sử dụng, [xem hướng dẫn về `astro:env`](/vi/guides/environment-variables/#type-safe-environment-variables).
+
+## Import từ `astro:env`
+
+```js
+import { getSecret } from 'astro:env/server';
+```
+
+### `getSecret()`
+
+<p>
+	<Since v='5.0.0' />
+</p>
+
+Hàm trợ giúp `getSecret()` cho phép lấy giá trị thô của một biến môi trường dựa trên key của nó.
+
+Ví dụ, bạn có thể lấy một giá trị boolean dưới dạng chuỗi:
+
+```js
+import {
+	FEATURE_FLAG, // boolean
+	getSecret,
+} from 'astro:env/server';
+
+getSecret('FEATURE_FLAG'); // string | undefined
+```
+
+Điều này cũng hữu ích khi bạn muốn lấy một biến bí mật không được định nghĩa trong schema của bạn, chẳng hạn như một biến phụ thuộc vào dữ liệu động từ cơ sở dữ liệu hoặc API.
+
+Nếu bạn cần lấy biến môi trường bằng cách lập trình, chúng tôi khuyến nghị sử dụng `getSecret()` thay vì `process.env` (hoặc tương đương). Vì việc triển khai được cung cấp bởi adapter của bạn, bạn sẽ không cần cập nhật tất cả các lời gọi nếu chuyển đổi adapter. Mặc định sẽ sử dụng `process.env` trong chế độ phát triển và build.

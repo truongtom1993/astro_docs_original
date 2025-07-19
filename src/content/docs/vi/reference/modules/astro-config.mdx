@@ -1,0 +1,102 @@
+---
+title: Tham chiếu API nhập cấu hình
+sidebar:
+  label: 'astro:config'
+i18nReady: true
+tableOfContents:
+  minHeadingLevel: 2
+  maxHeadingLevel: 6
+---
+
+import Since from '~/components/Since.astro';
+
+<p>
+	<Since v='5.7.0' />
+</p>
+
+Module ảo `astro:config` này cung cấp một phiên bản cấu hình Astro có thể tuần tự hóa, an toàn về kiểu dữ liệu, nhưng không đầy đủ. Có hai mô-đun con để truy cập các tập con khác nhau của giá trị cấu hình của bạn: [`/client`](#imports-from-astroconfigclient) và [`/server`](#imports-from-astroconfigserver).
+
+Tất cả các giá trị cấu hình có thể được truy cập từ `astro:config/server`. Tuy nhiên, đối với mã chạy phía client, chỉ những giá trị được cung cấp bởi `astro:config/client` mới khả dụng. Điều này giúp bảo vệ thông tin của bạn bằng cách chỉ cung cấp một số dữ liệu nhất định cho phía client.
+
+## Nhập từ `astro:config/client`
+
+```js
+import { i18n, trailingSlash, base, build, site } from 'astro:config/client';
+```
+
+Sử dụng mô-đun con này cho mã phía client:
+
+```js title="src/utils.js" ins={1} ins="trailingSlash"
+import { trailingSlash } from 'astro:config/client';
+
+function addForwardSlash(path) {
+	if (trailingSlash === 'always') {
+		return path.endsWith('/') ? path : path + '/';
+	} else {
+		return path;
+	}
+}
+```
+
+Xem thêm về các cấu hình có thể nhập từ `astro:config/client`:
+
+- [`i18n`](/vi/reference/configuration-reference/#i18n)
+- [`trailingSlash`](/vi/reference/configuration-reference/#trailingslash)
+- [`base`](/vi/reference/configuration-reference/#base)
+- [`build.format`](/vi/reference/configuration-reference/#buildformat)
+- [`site`](/vi/reference/configuration-reference/#site)
+
+## Nhập từ `astro:config/server`
+
+```js
+import { i18n, trailingSlash, base, build, site, srcDir, cacheDir, outDir, publicDir, root } from 'astro:config/server';
+```
+
+Những giá trị nhập này bao gồm tất cả những gì có từ `astro:config/client` cũng như các thông tin nhạy cảm bổ sung về cấu hình hệ thống tệp của bạn mà không an toàn khi tiết lộ cho phía client.
+
+Sử dụng mô-đun con này cho mã phía server:
+
+```js title="astro.config.mjs"
+import { integration } from './integration.mjs';
+
+export default defineConfig({
+	integrations: [integration()],
+});
+```
+
+```js title="integration.mjs" ins={1} ins="outDir"
+import { outDir } from 'astro:config/server';
+import { writeFileSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
+
+export default function () {
+	return {
+		name: 'internal-integration',
+		hooks: {
+			'astro:build:done': () => {
+				let file = new URL('result.json', outDir);
+				// sinh dữ liệu từ một thao tác nào đó
+				let data = JSON.stringify([]);
+				writeFileSync(fileURLToPath(file), data, 'utf-8');
+			},
+		},
+	};
+}
+```
+
+Xem thêm về các cấu hình có thể nhập từ `astro:config/server`:
+
+- [`i18n`](/vi/reference/configuration-reference/#i18n)
+- [`trailingSlash`](/vi/reference/configuration-reference/#trailingslash)
+- [`base`](/vi/reference/configuration-reference/#base)
+- [`build.format`](/vi/reference/configuration-reference/#buildformat)
+- [`build.client`](/vi/reference/configuration-reference/#buildclient)
+- [`build.server`](/vi/reference/configuration-reference/#buildserver)
+- [`build.serverEntry`](/vi/reference/configuration-reference/#buildserverentry)
+- [`build.assetsPrefix`](/vi/reference/configuration-reference/#buildassetsprefix)
+- [`site`](/vi/reference/configuration-reference/#site)
+- [`srcDir`](/vi/reference/configuration-reference/#srcdir)
+- [`cacheDir`](/vi/reference/configuration-reference/#cachedir)
+- [`outDir`](/vi/reference/configuration-reference/#outdir)
+- [`publicDir`](/vi/reference/configuration-reference/#publicdir)
+- [`root`](/vi/reference/configuration-reference/#root)

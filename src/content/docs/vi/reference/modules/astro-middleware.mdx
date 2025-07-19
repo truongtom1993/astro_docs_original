@@ -1,0 +1,125 @@
+---
+title: Tham chiếu API Middleware
+sidebar:
+  label: 'astro:middleware'
+i18nReady: true
+tableOfContents:
+  minHeadingLevel: 2
+  maxHeadingLevel: 6
+---
+
+import Since from '~/components/Since.astro';
+import ReadMore from '~/components/ReadMore.astro';
+
+<p>
+	<Since v='2.6.0' />
+</p>
+
+Middleware cho phép bạn chặn các request và response cũng như chèn các hành vi động mỗi khi một trang hoặc endpoint sắp được render. Để biết các tính năng và ví dụ sử dụng, [xem hướng dẫn về middleware của chúng tôi](/vi/guides/middleware/).
+
+## Import từ `astro:middleware`
+
+```js
+import { sequence, createContext, trySerializeLocals, defineMiddleware } from 'astro:middleware';
+```
+
+### `defineMiddleware()`
+
+Bạn có thể import và sử dụng hàm tiện ích `defineMiddleware()` để tận dụng tính an toàn kiểu dữ liệu:
+
+```ts
+// src/middleware.ts
+import { defineMiddleware } from 'astro:middleware';
+
+// `context` và `next` sẽ được tự động gán kiểu dữ liệu
+export const onRequest = defineMiddleware((context, next) => {});
+```
+
+### `sequence()`
+
+<p>
+
+**Kiểu:** `(...handlers: MiddlewareHandler[]) => MiddlewareHandler`
+
+</p>
+
+Một hàm nhận các hàm middleware làm tham số và sẽ thực thi chúng theo thứ tự được truyền vào.
+
+```js title="src/middleware.js"
+import { sequence } from "astro:middleware";
+
+async function validation(_, next) {...}
+async function auth(_, next) {...}
+async function greeting(_, next) {...}
+
+export const onRequest = sequence(validation, auth, greeting);
+```
+
+### `createContext()`
+
+<p>
+
+**Kiểu:** `(context: CreateContext) => APIContext`<br />
+
+<Since v="2.8.0" />
+</p>
+
+Một API cấp thấp để tạo một [`APIContext`](/vi/reference/api-reference/)được truyền vào hàm `onRequest()` của middleware Astro.
+
+Hàm này có thể được sử dụng bởi các tích hợp/adapters để thực thi middleware Astro một cách lập trình.
+
+### `trySerializeLocals()`
+
+<p>
+
+**Kiểu:** `(value: unknown) => string`<br />
+
+<Since v="2.8.0" />
+</p>
+
+Một API cấp thấp nhận vào bất kỳ giá trị nào và cố gắng trả về phiên bản được tuần tự hóa (chuỗi) của nó. Nếu giá trị không thể tuần tự hóa, hàm sẽ ném ra lỗi runtime.
+
+## Xuất middleware
+
+Khi định nghĩa middleware của dự án trong `src/middleware.js`, hãy export các hàm do người dùng định nghĩa sau:
+
+### `onRequest()`
+
+**Kiểu:** `(context: APIContext, next: MiddlewareNext) => Promise<Response> | Response | Promise<void> | void`
+
+Một hàm bắt buộc phải export từ `src/middleware.js` sẽ được gọi trước khi render mỗi trang hoặc route API. Nó nhận hai tham số: [context](#context) và [next()](#next). `onRequest()` phải trả về một `Response`: hoặc trực tiếp, hoặc bằng cách gọi `next()`.
+
+```js title="src/middleware.js"
+export function onRequest(context, next) {
+	// chặn dữ liệu response từ một request
+	// tùy chọn, chuyển đổi response
+	// trả về một Response trực tiếp, hoặc kết quả của việc gọi `next()`
+	return next();
+}
+```
+
+Hàm `onRequest()` của bạn sẽ được gọi với các tham số sau:
+
+#### `context`
+
+<p>
+
+**Kiểu:** `APIContext`
+
+</p>
+
+Tham số đầu tiên của `onRequest()` là một đối tượng context. Nó phản chiếu nhiều thuộc tính toàn cục của `Astro`.
+
+<ReadMore>Xem thêm [Context của endpoint](/vi/reference/api-reference/) để biết thêm thông tin về đối tượng context.</ReadMore>
+
+#### `next()`
+
+<p>
+
+**Kiểu:** `(rewritePayload?: string | URL | Request) => Promise<Response>`<br />
+
+</p>
+
+Tham số thứ hai của `onRequest()` là một hàm gọi tất cả middleware tiếp theo trong chuỗi và trả về một `Response`. Ví dụ, middleware khác có thể sửa đổi nội dung HTML của response và khi await kết quả của `next()` sẽ cho phép middleware của bạn phản hồi các thay đổi đó.
+
+Từ phiên bản Astro v4.13.0, `next()` chấp nhận một tham số đường dẫn URL tùy chọn dưới dạng chuỗi, `URL`, hoặc `Request` để [ghi đè](/vi/guides/routing/#rewrites) request hiện tại mà không kích hoạt lại một giai đoạn render mới.

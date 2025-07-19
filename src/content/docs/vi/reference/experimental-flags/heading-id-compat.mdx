@@ -1,0 +1,72 @@
+---
+title: Tính tương thích ID tiêu đề Markdown thử nghiệm
+sidebar:
+  label: Tương thích ID tiêu đề Markdown
+i18nReady: true
+---
+
+import Since from '~/components/Since.astro';
+
+<p>
+
+**Loại:** `boolean`<br />
+**Mặc định:** `false`<br />
+
+<Since v="5.5.0" />
+</p>
+
+Cờ `experimental.headingIdCompat` giúp các ID được tạo ra bởi Astro cho tiêu đề Markdown tương thích với các nền tảng phổ biến như GitHub và npm.
+
+Để bật tính năng tương thích ID tiêu đề, hãy đặt cờ này thành `true` trong cấu hình Astro của bạn:
+
+```js title="astro.config.mjs" ins={4-6}
+import { defineConfig } from 'astro/config';
+
+export default defineConfig({
+	experimental: {
+		headingIdCompat: true,
+	},
+});
+```
+
+## Sử dụng
+
+Cờ thử nghiệm này cho phép bạn giữ lại dấu gạch ngang ở cuối ID cho các tiêu đề Markdown kết thúc bằng ký tự đặc biệt, tạo ra các ID tương thích với những gì các nền tảng phổ biến khác sinh ra. Bạn không cần sử dụng gì đặc biệt, nó chỉ ảnh hưởng đến cách Astro tạo thuộc tính `id` cho các tiêu đề viết bằng cú pháp Markdown.
+
+Astro, giống như nhiều nền tảng khác, sử dụng gói [`github-slugger`](https://github.com/Flet/github-slugger) phổ biến để chuyển đổi nội dung văn bản của tiêu đề Markdown thành slug dùng trong ID. Cờ thử nghiệm này cho phép bạn bỏ qua bước xử lý bổ sung mặc định của Astro, vốn loại bỏ dấu gạch ngang ở cuối ID đối với các tiêu đề kết thúc bằng ký tự đặc biệt.
+
+Ví dụ, tiêu đề Markdown sau:
+
+```md
+## `<Picture />`
+```
+
+sẽ tạo ra HTML như sau trong Astro mặc định:
+
+```html "picture"
+<h2 id="picture"><code>&lt;Picture /&gt;</h2>
+```
+
+Khi sử dụng `experimental.headingIdCompat`, cùng Markdown đó sẽ tạo ra HTML như sau, giống hệt các nền tảng như GitHub:
+
+```html "picture-"
+<h2 id="picture-"><code>&lt;Picture /&gt;</h2>
+```
+
+Trong một phiên bản lớn tương lai, Astro sẽ chuyển sang dùng kiểu ID tương thích này theo mặc định, nhưng bạn có thể chủ động sử dụng hành vi tương lai này sớm bằng cách bật cờ `experimental.headingIdCompat`.
+
+## Sử dụng với plugin `rehypeHeadingIds`
+
+Nếu bạn [đang sử dụng plugin `rehypeHeadingIds`](/vi/guides/markdown-content/#heading-ids-and-plugins) trực tiếp, hãy bật chế độ tương thích khi truyền plugin này vào cấu hình Astro:
+
+```js title="astro.config.mjs" {8}
+import { defineConfig } from 'astro/config';
+import { rehypeHeadingIds } from '@astrojs/markdown-remark';
+import { otherPluginThatReliesOnHeadingIDs } from 'some/plugin/source';
+
+export default defineConfig({
+	markdown: {
+		rehypePlugins: [[rehypeHeadingIds, { headingIdCompat: true }], otherPluginThatReliesOnHeadingIDs],
+	},
+});
+```

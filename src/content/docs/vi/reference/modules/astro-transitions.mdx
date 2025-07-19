@@ -1,0 +1,501 @@
+---
+title: Tham chiếu API Bộ định tuyến View Transitions
+sidebar:
+  label: 'astro:transitions'
+i18nReady: true
+tableOfContents:
+  minHeadingLevel: 2
+  maxHeadingLevel: 6
+---
+
+import Since from '~/components/Since.astro';
+import ReadMore from '~/components/ReadMore.astro';
+
+<p>
+	<Since v='3.0.0' />
+</p>
+
+Các module này cung cấp các hàm để điều khiển và tương tác với View Transitions API và bộ định tuyến phía client.
+
+:::note
+API này tương thích với `<ClientRouter />` được bao gồm trong `astro:transitions`, nhưng không thể sử dụng với định tuyến MPA gốc của trình duyệt.
+:::
+
+Để xem các tính năng và ví dụ sử dụng, [xem hướng dẫn View Transitions của chúng tôi](/vi/guides/view-transitions/).
+
+## Import từ `astro:transitions`
+
+```ts
+import { ClientRouter, fade, slide } from 'astro:transitions';
+```
+
+### `<ClientRouter />`
+
+<p>
+	<Since v='3.0.0' />
+</p>
+
+Chọn sử dụng view transitions trên từng trang riêng lẻ bằng cách import và thêm component định tuyến `<ClientRouter />` vào `<head>` của mỗi trang mong muốn.
+
+```astro title="src/pages/index.astro" ins={2,7}
+---
+import { ClientRouter } from 'astro:transitions';
+---
+<html lang="en">
+  <head>
+    <title>My Homepage</title>
+    <ClientRouter />
+  </head>
+  <body>
+    <h1>Welcome to my website!</h1>
+  </body>
+</html>
+```
+
+Xem thêm về cách [điều khiển bộ định tuyến](/vi/guides/view-transitions/#router-control) và [thêm chỉ thị chuyển tiếp](/vi/guides/view-transitions/#transition-directives) cho các phần tử và component của trang.
+
+### `fade`
+
+<p>
+
+**Kiểu:** `(opts: { duration?: string | number }) => TransitionDirectionalAnimations`
+
+<Since v="3.0.0" />
+</p>
+
+Hàm tiện ích hỗ trợ tuỳ chỉnh thời lượng của hiệu ứng `fade` tích hợp sẵn.
+
+```astro {2} /fade$.+$/
+---
+import { fade } from 'astro:transitions';
+---
+
+<!-- Hiệu ứng fade với thời lượng mặc định -->
+<div transition:animate="fade" />
+
+<!-- Hiệu ứng fade với thời lượng 400 mili giây -->
+<div transition:animate={fade({ duration: '0.4s' })} />
+```
+
+### `slide`
+
+<p>
+
+**Kiểu:** `(opts: { duration?: string | number }) => TransitionDirectionalAnimations`
+
+<Since v="3.0.0" />
+</p>
+
+Hàm tiện ích hỗ trợ tuỳ chỉnh thời lượng của hiệu ứng `slide` tích hợp sẵn.
+
+```astro {2} /slide$.+$/
+---
+import { slide } from 'astro:transitions';
+---
+
+<!-- Hiệu ứng slide với thời lượng mặc định -->
+<div transition:animate="slide" />
+
+<!-- Hiệu ứng slide với thời lượng 400 mili giây -->
+<div transition:animate={slide({ duration: '0.4s' })} />
+```
+
+## Import từ `astro:transitions/client`
+
+```astro
+<script>
+  import {
+    navigate,
+    supportsViewTransitions,
+    transitionEnabledOnThisPage,
+    getFallback,
+    swapFunctions,
+  } from 'astro:transitions/client';
+</script>
+```
+
+### `navigate()`
+
+<p>
+
+**Kiểu:** `(href: string, options?: Options) => void`<br />
+
+<Since v="3.2.0" />
+</p>
+
+Hàm thực hiện điều hướng tới `href` sử dụng View Transitions API.
+
+Chữ ký hàm này dựa trên [`navigate` function từ Navigation API của trình duyệt](https://developer.mozilla.org/en-US/docs/Web/API/Navigation/navigate). Mặc dù dựa trên Navigation API, hàm này được triển khai trên [History API](https://developer.mozilla.org/en-US/docs/Web/API/History_API) để cho phép điều hướng mà không cần tải lại trang.
+
+#### Tuỳ chọn `history`
+
+<p>
+
+**Kiểu:** `'auto' | 'push' | 'replace'`<br />
+**Mặc định:** `'auto'`<br />
+
+<Since v="3.2.0" />
+</p>
+
+Xác định cách điều hướng này sẽ được thêm vào lịch sử trình duyệt.
+
+- `'push'`: bộ định tuyến sẽ sử dụng `history.pushState` để tạo một mục mới trong lịch sử trình duyệt.
+- `'replace'`: bộ định tuyến sẽ sử dụng `history.replaceState` để cập nhật URL mà không thêm mục mới vào lịch sử.
+- `'auto'` (mặc định): bộ định tuyến sẽ thử `history.pushState`, nhưng nếu không thể chuyển sang URL mới, URL hiện tại sẽ giữ nguyên và không thay đổi lịch sử trình duyệt.
+
+Tùy chọn này theo [`history` option](https://developer.mozilla.org/en-US/docs/Web/API/Navigation/navigate#history) từ Navigation API của trình duyệt nhưng đã được đơn giản hóa cho các trường hợp sử dụng trong dự án Astro.
+
+#### Tuỳ chọn `formData`
+
+<p>
+
+**Kiểu:** `FormData`<br />
+
+<Since v="3.5.0" />
+</p>
+
+Một đối tượng `FormData` dành cho các yêu cầu `POST`.
+
+Khi tuỳ chọn này được cung cấp, yêu cầu tới trang đích sẽ được gửi dưới dạng yêu cầu `POST` với nội dung là đối tượng form data.
+
+Gửi form HTML với view transitions được bật sẽ sử dụng phương pháp này thay vì điều hướng mặc định có tải lại trang. Gọi phương thức này cho phép kích hoạt hành vi tương tự một cách lập trình.
+
+#### Tuỳ chọn `info`
+
+<p>
+
+**Kiểu:** `any`<br />
+
+<Since v="3.6.0" />
+</p>
+
+Dữ liệu tuỳ ý được gửi kèm trong các sự kiện `astro:before-preparation` và `astro:before-swap` được tạo bởi thao tác điều hướng này.
+
+Tuỳ chọn này mô phỏng [`info` option](https://developer.mozilla.org/en-US/docs/Web/API/Navigation/navigate#info) từ Navigation API của trình duyệt.
+
+#### Tuỳ chọn `state`
+
+<p>
+
+**Kiểu:** `any`<br />
+
+<Since v="3.6.0" />
+</p>
+
+Dữ liệu tuỳ ý được liên kết với đối tượng `NavitationHistoryEntry` được tạo bởi thao tác điều hướng này. Dữ liệu này có thể được truy xuất bằng [`history.getState` function](https://developer.mozilla.org/en-US/docs/Web/API/NavigationHistoryEntry/getState) từ History API.
+
+Tuỳ chọn này mô phỏng [`state` option](https://developer.mozilla.org/en-US/docs/Web/API/Navigation/navigate#state) từ Navigation API của trình duyệt.
+
+#### Tuỳ chọn `sourceElement`
+
+<p>
+
+**Kiểu:** `Element`<br />
+
+<Since v="3.6.0" />
+</p>
+
+Phần tử đã kích hoạt điều hướng này, nếu có. Phần tử này sẽ có sẵn trong các sự kiện sau:
+
+- `astro:before-preparation`
+- `astro:before-swap`
+
+### `supportsViewTransitions`
+
+<p>
+
+**Kiểu:** `boolean`<br />
+
+<Since v="3.2.0" />
+</p>
+
+Kiểm tra xem trình duyệt hiện tại có hỗ trợ và bật view transitions hay không.
+
+### `transitionEnabledOnThisPage`
+
+<p>
+
+**Kiểu:** `boolean`<br />
+
+<Since v="3.2.0" />
+</p>
+
+Kiểm tra xem trang hiện tại có bật view transitions cho điều hướng phía client hay không. Có thể dùng để tạo các component có hành vi khác nhau khi sử dụng trên trang bật view transitions.
+
+### `getFallback()`
+
+<p>
+
+**Kiểu:** `() => 'none' | 'animate' | 'swap'`<br />
+
+<Since v="3.6.0" />
+</p>
+
+Trả về chiến lược thay thế được sử dụng trên các trình duyệt không hỗ trợ view transitions.
+
+Xem hướng dẫn về [Kiểm soát fallback](/vi/guides/view-transitions/#fallback-control) để biết cách lựa chọn và cấu hình hành vi fallback.
+
+### `swapFunctions`
+
+<p>
+
+<Since v="4.15.0" />
+</p>
+
+Một đối tượng chứa các hàm tiện ích dùng để xây dựng hàm swap mặc định của Astro.
+Các hàm này hữu ích khi [tự xây dựng hàm swap tuỳ chỉnh](/vi/guides/view-transitions/#building-a-custom-swap-function).
+
+`swapFunctions` cung cấp các phương thức sau:
+
+#### `deselectScripts()`
+
+<p>
+
+**Kiểu:** `(newDocument: Document) => void`
+
+</p>
+
+Đánh dấu các script trong tài liệu mới không nên thực thi. Những script này đã có trong tài liệu hiện tại và không được đánh dấu tái thực thi bằng [`data-astro-rerun`](/vi/guides/view-transitions/#data-astro-rerun).
+
+#### `swapRootAttributes()`
+
+<p>
+
+**Kiểu:** `(newDocument: Document) => void`
+
+</p>
+
+Hoán đổi các thuộc tính giữa các root của tài liệu, như thuộc tính `lang`. Bao gồm cả các thuộc tính nội bộ do Astro chèn như `data-astro-transition`, giúp cung cấp hướng chuyển tiếp cho các quy tắc CSS do Astro sinh ra.
+
+Khi xây dựng hàm swap tuỳ chỉnh, quan trọng là phải gọi hàm này để không làm vỡ các hiệu ứng chuyển tiếp.
+
+#### `swapHeadElements()`
+
+<p>
+
+**Kiểu:** `(newDocument: Document) => void`
+
+</p>
+
+Xoá mọi phần tử trong `<head>` của tài liệu hiện tại mà không còn trong tài liệu mới. Sau đó, thêm tất cả phần tử mới từ `<head>` của tài liệu mới vào `<head>` của tài liệu hiện tại.
+
+#### `saveFocus()`
+
+<p>
+
+**Kiểu:** `() => () => void`
+
+</p>
+
+Lưu trữ phần tử đang được focus trên trang hiện tại và trả về một hàm, khi gọi sẽ trả lại focus cho phần tử nếu nó vẫn còn tồn tại.
+
+#### `swapBodyElement()`
+
+<p>
+
+**Kiểu:** `(newBody: Element, oldBody: Element) => void`
+
+</p>
+
+Thay thế body cũ bằng body mới. Sau đó, duyệt qua từng phần tử trong body cũ cần được giữ lại và có phần tử tương ứng trong body mới, rồi hoán đổi phần tử cũ về đúng vị trí.
+
+## Các sự kiện vòng đời (Lifecycle events)
+
+### Sự kiện `astro:before-preparation`
+
+Một sự kiện được phát ra vào đầu quá trình điều hướng sử dụng bộ định tuyến View Transitions. Sự kiện này xảy ra trước khi bất kỳ request nào được gửi đi và trước khi trạng thái trình duyệt thay đổi.
+
+Sự kiện này có các thuộc tính:
+
+- [`info`](#info)
+- [`sourceElement`](#sourceelement)
+- [`navigationType`](#navigationtype)
+- [`direction`](#direction)
+- [`from`](#from)
+- [`to`](#to)
+- [`formData`](#formdata)
+- [`loader()`](#loader)
+
+Đọc thêm về cách sử dụng sự kiện này tại [hướng dẫn View Transitions](/vi/guides/view-transitions/#astrobefore-preparation).
+
+### Sự kiện `astro:after-preparation`
+
+Một sự kiện được phát ra sau khi trang tiếp theo trong quá trình điều hướng bằng View Transitions router được tải xong.
+
+Sự kiện này không có thuộc tính.
+
+Đọc thêm về cách sử dụng sự kiện này tại [hướng dẫn View Transitions](/vi/guides/view-transitions/#astroafter-preparation).
+
+### Sự kiện `astro:before-swap`
+
+Một sự kiện được phát ra sau khi trang tiếp theo đã được phân tích, chuẩn bị và liên kết vào tài liệu để chuẩn bị chuyển tiếp, nhưng trước khi bất kỳ nội dung nào được hoán đổi giữa các tài liệu.
+
+Sự kiện này không thể bị huỷ. Gọi `preventDefault()` sẽ không có tác dụng.
+
+Sự kiện này có các thuộc tính:
+
+- [`info`](#info)
+- [`sourceElement`](#sourceelement)
+- [`navigationType`](#navigationtype)
+- [`direction`](#direction)
+- [`from`](#from)
+- [`to`](#to)
+- [`viewTransition`](#viewtransition)
+- [`swap()`](#swap)
+
+Đọc thêm về cách sử dụng sự kiện này tại [hướng dẫn View Transitions](/vi/guides/view-transitions/#astrobefore-swap).
+
+### Sự kiện `astro:after-swap`
+
+Một sự kiện được phát ra sau khi nội dung trang đã được hoán đổi nhưng trước khi hiệu ứng chuyển tiếp kết thúc.
+
+Lúc này, mục lịch sử và vị trí cuộn đã được cập nhật.
+
+### Sự kiện `astro:page-load`
+
+Một sự kiện được phát ra sau khi một trang hoàn tất tải, dù là điều hướng sử dụng view transitions hay điều hướng gốc của trình duyệt.
+
+Khi view transitions được bật trên trang, mã lẽ ra chạy ở `DOMContentLoaded` nên được chuyển sang chạy ở sự kiện này.
+
+### Thuộc tính của các sự kiện vòng đời
+
+<p>
+	<Since v='3.6.0' />
+</p>
+
+#### `info`
+
+<p>
+
+**Kiểu:** `URL`
+
+</p>
+
+Dữ liệu tuỳ ý được định nghĩa trong quá trình điều hướng.
+
+Đây là giá trị literal được truyền vào [`info` option](#info-option) của [hàm `navigate()`](#navigate).
+
+#### `sourceElement`
+
+<p>
+
+**Kiểu:** `Element | undefined`
+
+</p>
+
+Phần tử đã kích hoạt điều hướng. Ví dụ, có thể là một thẻ `<a>` được click vào.
+
+Khi sử dụng [hàm `navigate()`](#navigate), đây sẽ là phần tử được truyền vào khi gọi hàm.
+
+#### `newDocument`
+
+<p>
+
+**Kiểu:** `Document`
+
+</p>
+
+Tài liệu của trang tiếp theo trong quá trình điều hướng. Nội dung của tài liệu này sẽ thay thế nội dung của tài liệu hiện tại.
+
+#### `navigationType`
+
+<p>
+
+**Kiểu:** `'push' | 'replace' | 'traverse'`
+
+</p>
+
+Loại điều hướng lịch sử đang diễn ra.
+
+- `push`: một `NavigationHistoryEntry` mới được tạo cho trang mới.
+- `replace`: `NavigationHistoryEntry` hiện tại được thay thế bằng một entry cho trang mới.
+- `traverse`: không tạo `NavigationHistoryEntry` mới. Vị trí trong lịch sử được thay đổi.
+  Hướng của quá trình duyệt lịch sử được cung cấp bởi thuộc tính [`direction`](#direction)
+
+#### `direction`
+
+<p>
+
+**Kiểu:** `Direction`
+
+</p>
+
+Hướng của chuyển tiếp.
+
+- `forward`: điều hướng tới trang tiếp theo trong lịch sử hoặc sang một trang mới.
+- `back`: điều hướng về trang trước trong lịch sử.
+- Giá trị khác do một listener khác thiết lập.
+
+#### `from`
+
+<p>
+
+**Kiểu:** `URL`
+
+</p>
+
+URL của trang bắt đầu điều hướng.
+
+#### `to`
+
+<p>
+
+**Kiểu:** `URL`
+
+</p>
+
+URL của trang được điều hướng tới. Thuộc tính này có thể được sửa đổi, giá trị cuối cùng sẽ được sử dụng trong `NavigationHistoryEntry` cho trang tiếp theo.
+
+#### `formData`
+
+<p>
+
+**Kiểu:** `FormData | undefined`
+
+</p>
+
+Đối tượng `FormData` dành cho các yêu cầu `POST`.
+
+Khi thuộc tính này được thiết lập, một yêu cầu `POST` sẽ được gửi tới [`to` URL](#to) kèm theo form data thay vì yêu cầu `GET` mặc định.
+
+Khi gửi form HTML với view transitions được bật, trường này sẽ tự động lấy dữ liệu từ form. Khi sử dụng [hàm `navigate()`](#navigate), giá trị này sẽ là giá trị được truyền vào trong options.
+
+#### `loader()`
+
+<p>
+
+**Kiểu:** `() => Promise<void>`
+
+</p>
+
+Triển khai giai đoạn tiếp theo trong quá trình điều hướng (tải trang tiếp theo). Có thể ghi đè để thêm hành vi bổ sung.
+
+#### `viewTransition`
+
+<p>
+
+**Kiểu:** [`ViewTransition`](https://developer.mozilla.org/en-US/docs/Web/API/ViewTransition)
+
+</p>
+
+Đối tượng view transition được sử dụng trong quá trình điều hướng. Trên các trình duyệt không hỗ trợ [View Transitions API](https://developer.mozilla.org/en-US/docs/Web/API/View_Transitions_API), đây là một đối tượng giả có cùng API để tiện sử dụng nhưng không tích hợp với DOM.
+
+#### `swap()`
+
+<p>
+
+**Kiểu:** `() => void`
+
+</p>
+
+Triển khai logic hoán đổi tài liệu.
+
+Đọc thêm về [xây dựng hàm swap tuỳ chỉnh](/vi/guides/view-transitions/#building-a-custom-swap-function) trong hướng dẫn View Transitions.
+
+Theo mặc định, hàm này sẽ gọi các hàm sau theo thứ tự:
+
+1. [`deselectScripts()`](#deselectscripts)
+2. [`swapRootAttributes()`](#swaprootattributes)
+3. [`swapHeadElements()`](#swapheadelements)
+4. [`saveFocus()`](#savefocus)
+5. [`swapBodyElement()`](#swapbodyelement)

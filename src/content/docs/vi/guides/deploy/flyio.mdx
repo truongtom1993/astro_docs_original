@@ -1,0 +1,50 @@
+---
+title: Triển khai trang web Astro của bạn lên Fly.io
+description: Cách triển khai trang web Astro của bạn lên web bằng Fly.io.
+sidebar:
+  label: Fly.io
+type: deploy
+i18nReady: true
+stub: true
+---
+import { Steps } from '@astrojs/starlight/components';
+
+Bạn có thể triển khai dự án Astro của mình lên [Fly.io](https://fly.io/), một nền tảng chạy các ứng dụng full stack và cơ sở dữ liệu gần với người dùng của bạn.
+
+## Cấu hình dự án
+
+Dự án Astro của bạn có thể được triển khai lên Fly.io dưới dạng trang tĩnh hoặc trang được render phía máy chủ (SSR).
+
+### Trang tĩnh
+
+Dự án Astro của bạn mặc định là một trang tĩnh. Bạn không cần cấu hình thêm để triển khai trang tĩnh Astro lên Fly.io.
+
+### Adapter cho SSR
+
+Để kích hoạt render theo yêu cầu trong dự án Astro của bạn và triển khai lên Fly.io, hãy thêm [Node.js adapter](/vi/guides/integrations-guide/node/).
+
+## Cách triển khai
+
+<Steps>
+1. [Đăng ký tài khoản Fly.io](https://fly.io/docs/getting-started/log-in-to-fly/#first-time-or-no-fly-account-sign-up-for-fly) nếu bạn chưa có.
+
+2. [Cài đặt `flyctl`](https://fly.io/docs/hands-on/install-flyctl/), trung tâm lệnh ứng dụng Fly.io của bạn.
+
+3. Chạy lệnh sau trong terminal của bạn.
+
+    ```bash
+    fly launch
+    ```
+
+	`flyctl` sẽ tự động phát hiện Astro, cấu hình các thiết lập đúng, xây dựng image và triển khai nó lên nền tảng Fly.io.
+</Steps>
+
+## Tạo Dockerfile cho Astro
+
+Nếu bạn chưa có Dockerfile, `fly launch` sẽ tự động tạo cho bạn, đồng thời chuẩn bị file `fly.toml`. Đối với các trang được render theo yêu cầu, Dockerfile này sẽ bao gồm lệnh khởi động và các biến môi trường phù hợp.
+
+Bạn cũng có thể tự tạo Dockerfile bằng cách sử dụng [Dockerfile generator](https://www.npmjs.com/package/@flydotio/dockerfile) và sau đó chạy bằng lệnh `npx dockerfile` cho ứng dụng Node hoặc `bunx dockerfile` cho ứng dụng Bun.
+
+## Tài nguyên chính thức
+
+- Xem thêm [tài liệu chính thức của Fly.io](https://fly.io/docs/js/frameworks/astro/)

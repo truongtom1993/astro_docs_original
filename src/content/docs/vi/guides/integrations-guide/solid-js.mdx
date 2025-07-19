@@ -1,0 +1,234 @@
+---
+type: integration
+title: '@astrojs/solid-js'
+description: Tìm hiểu cách sử dụng tích hợp framework @astrojs/solid-js để mở rộng hỗ trợ component trong dự án Astro của bạn.
+sidebar:
+  label: SolidJS
+githubIntegrationURL: 'https://github.com/withastro/astro/tree/main/packages/integrations/solid/'
+category: renderer
+i18nReady: true
+---
+import PackageManagerTabs from '~/components/tabs/PackageManagerTabs.astro';
+import Since from '~/components/Since.astro';
+
+Tích hợp **[Astro integration][astro-integration]** này cho phép render và hydratation phía client cho các component [SolidJS](https://www.solidjs.com/) của bạn.
+
+## Cài đặt
+
+Astro bao gồm lệnh `astro add` để tự động thiết lập các tích hợp chính thức. Nếu muốn, bạn có thể [cài đặt thủ công](#manual-install) các tích hợp này.
+
+Để cài đặt `@astrojs/solid-js`, hãy chạy lệnh sau trong thư mục dự án và làm theo hướng dẫn:
+
+<PackageManagerTabs>
+  <Fragment slot="npm">
+  ```sh
+  npx astro add solid
+  ```
+  </Fragment>
+  <Fragment slot="pnpm">
+  ```sh
+  pnpm astro add solid
+  ```
+  </Fragment>
+  <Fragment slot="yarn">
+  ```sh
+  yarn astro add solid
+  ```
+  </Fragment>
+</PackageManagerTabs>
+
+Nếu gặp bất kỳ vấn đề nào, [hãy gửi báo cáo cho chúng tôi trên GitHub](https://github.com/withastro/astro/issues) và thử các bước cài đặt thủ công bên dưới.
+
+### Cài đặt thủ công
+
+Đầu tiên, cài đặt gói `@astrojs/solid-js`:
+
+<PackageManagerTabs>
+  <Fragment slot="npm">
+  ```sh
+  npm install @astrojs/solid-js
+  ```
+  </Fragment>
+  <Fragment slot="pnpm">
+  ```sh
+  pnpm add @astrojs/solid-js
+  ```
+  </Fragment>
+  <Fragment slot="yarn">
+  ```sh
+  yarn add @astrojs/solid-js
+  ```
+  </Fragment>
+</PackageManagerTabs>
+
+Hầu hết các trình quản lý gói sẽ cài đặt cả các peer dependencies liên quan. Nếu bạn thấy cảnh báo `Cannot find package 'solid-js'` (hoặc tương tự) khi khởi động Astro, bạn cần cài đặt SolidJS:
+
+<PackageManagerTabs>
+  <Fragment slot="npm">
+  ```sh
+  npm install solid-js
+  ```
+  </Fragment>
+  <Fragment slot="pnpm">
+  ```sh
+  pnpm add solid-js
+  ```
+  </Fragment>
+  <Fragment slot="yarn">
+  ```sh
+  yarn add solid-js
+  ```
+  </Fragment>
+</PackageManagerTabs>
+
+Sau đó, thêm tích hợp vào file `astro.config.*` của bạn bằng thuộc tính `integrations`:
+
+```js title="astro.config.mjs" ins={2} ins="solidJs()"
+import { defineConfig } from 'astro/config';
+import solidJs from '@astrojs/solid-js';
+
+export default defineConfig({
+  // ...
+  integrations: [solidJs()],
+});
+```
+
+Và thêm đoạn mã sau vào file `tsconfig.json`.
+
+```json title="tsconfig.json" ins={5-8}
+{
+  "extends": "astro/tsconfigs/strict",
+  "include": [".astro/types.d.ts", "**/*"],
+  "exclude": ["dist"],
+  "compilerOptions": {
+    "jsx": "preserve",
+    "jsxImportSource": "solid-js"
+  }
+}
+```
+
+## Bắt đầu
+
+Để sử dụng component SolidJS đầu tiên trong Astro, hãy xem tài liệu về [UI framework của chúng tôi][astro-ui-frameworks]. Bạn sẽ tìm hiểu:
+
+* 📦 cách tải các component framework,
+* 💧 các tùy chọn hydratation phía client, và
+* 🤝 cơ hội kết hợp và lồng ghép các framework với nhau
+
+## Cấu hình
+
+### devtools
+
+<p><Since pkg="@astrojs/solid-js" v="4.2.0" /></p>
+
+Bạn có thể bật [Solid DevTools](https://github.com/thetarnav/solid-devtools) trong quá trình phát triển bằng cách truyền một object với `devtools: true` vào cấu hình tích hợp `solid()` và thêm `solid-devtools` vào dependencies của dự án:
+
+<PackageManagerTabs>
+  <Fragment slot="npm">
+  ```sh
+  npm install solid-devtools
+  ```
+  </Fragment>
+  <Fragment slot="pnpm">
+  ```sh
+  pnpm add solid-devtools
+  ```
+  </Fragment>
+  <Fragment slot="yarn">
+  ```sh
+  yarn add solid-devtools
+  ```
+  </Fragment>
+</PackageManagerTabs>
+
+```js title="astro.config.mjs"
+import { defineConfig } from 'astro/config';
+import solid from '@astrojs/solid-js';
+
+export default defineConfig({
+  // ...
+  integrations: [solid({ devtools: true })],
+});
+```
+
+## Tùy chọn
+
+### Kết hợp nhiều framework JSX
+
+Khi bạn sử dụng nhiều framework JSX (React, Preact, Solid) trong cùng một dự án, Astro cần xác định nên áp dụng chuyển đổi cụ thể của framework JSX nào cho từng component. Nếu bạn chỉ thêm một tích hợp framework JSX vào dự án, không cần cấu hình thêm.
+
+Hãy sử dụng các tùy chọn cấu hình `include` (bắt buộc) và `exclude` (tùy chọn) để chỉ định file nào thuộc về framework nào. Cung cấp một mảng file và/hoặc thư mục cho `include` của mỗi framework mà bạn sử dụng. Có thể sử dụng wildcard để bao gồm nhiều đường dẫn file.
+
+Chúng tôi khuyến nghị đặt các component framework chung vào cùng một thư mục (vd: `/components/react/` và `/components/solid/`) để dễ dàng chỉ định trong `include`, nhưng điều này không bắt buộc:
+
+```js title="astro.config.mjs"
+import { defineConfig } from 'astro/config';
+import preact from '@astrojs/preact';
+import react from '@astrojs/react';
+import svelte from '@astrojs/svelte';
+import vue from '@astrojs/vue';
+import solid from '@astrojs/solid-js';
+
+export default defineConfig({
+  // Kích hoạt nhiều framework để hỗ trợ các loại component khác nhau.
+  // Không cần `include` nếu bạn chỉ sử dụng một framework JSX!
+  integrations: [
+    preact({
+      include: ['**/preact/*'],
+    }),
+    react({
+      include: ['**/react/*'],
+    }),
+    solid({
+      include: ['**/solid/*', '**/node_modules/@suid/material/**'],
+    }),
+  ],
+});
+```
+
+## Sử dụng
+
+Sử dụng component SolidJS giống như các [component framework UI khác](/vi/guides/framework-components/).
+
+### Suspense Boundaries
+
+Để hỗ trợ Solid Resources và Lazy Components mà không cần cấu hình phức tạp, các component chỉ chạy trên server và component hydrating sẽ tự động được bao bọc trong các Suspense boundary cấp cao nhất và render trên server bằng hàm [`renderToStringAsync`][solid-render-to-string-async]. Do đó, bạn không cần phải thêm Suspense boundary cấp cao nhất quanh các component bất đồng bộ.
+
+Ví dụ, bạn có thể sử dụng [`createResource`][solid-create-resource] của Solid để lấy dữ liệu bất đồng bộ từ xa trên server. Dữ liệu sẽ được bao gồm trong HTML được render phía server ban đầu từ Astro:
+
+```tsx
+// CharacterName.tsx
+function CharacterName() {
+  const [name] = createResource(() =>
+    fetch('https://swapi.dev/api/people/1')
+      .then((result) => result.json())
+      .then((data) => data.name)
+  );
+
+  return (
+    <>
+      <h2>Tên:</h2>
+      {/* Luke Skywalker */}
+      <div>{name()}</div>
+    </>
+  );
+}
+```
+
+Tương tự, các [Lazy Components][solid-lazy-components] của Solid cũng sẽ được resolve và HTML của chúng sẽ được bao gồm trong trang render phía server ban đầu.
+
+Các component [`client:only` không hydrating][astro-client-only] sẽ không tự động được bao bọc trong Suspense boundary.
+
+Bạn có thể thêm các Suspense boundary bổ sung tùy theo nhu cầu của mình.
+
+[astro-integration]: /vi/guides/integrations-guide/
+
+[astro-ui-frameworks]: /vi/guides/framework-components/#using-framework-components
+
+[astro-client-only]: /vi/reference/directives-reference/#clientonly
+
+[solid-render-to-string-async]: https://www.solidjs.com/docs/latest/api#rendertostringasync
+
+[solid-create-resource]: https://www.solidjs.com/docs/latest/api#createresource
+
+[solid-lazy-components]: https://www.solidjs.com/docs/latest/api#lazy

@@ -1,0 +1,153 @@
+---
+type: integration
+title: '@astrojs/svelte'
+description: Tìm hiểu cách sử dụng tích hợp framework @astrojs/svelte để mở rộng hỗ trợ component trong dự án Astro của bạn.
+sidebar:
+  label: Svelte
+githubIntegrationURL: 'https://github.com/withastro/astro/tree/main/packages/integrations/svelte/'
+category: renderer
+i18nReady: true
+---
+import PackageManagerTabs from '~/components/tabs/PackageManagerTabs.astro';
+import Since from '~/components/Since.astro';
+
+**[Tích hợp Astro][astro-integration]** này cho phép render và hydration phía client cho các component [Svelte](https://svelte.dev/) 5 của bạn. Đối với hỗ trợ Svelte 3 và 4, hãy cài đặt `@astrojs/svelte@5` thay thế.
+
+## Cài đặt
+
+Astro bao gồm lệnh `astro add` để tự động thiết lập các tích hợp chính thức. Nếu muốn, bạn có thể [cài đặt tích hợp thủ công](#cài-đặt-thủ-công) thay thế.
+
+Để cài đặt `@astrojs/svelte`, chạy lệnh sau từ thư mục dự án của bạn và làm theo hướng dẫn:
+
+<PackageManagerTabs>
+  <Fragment slot="npm">
+  ```sh
+  npx astro add svelte
+  ```
+  </Fragment>
+  <Fragment slot="pnpm">
+  ```sh
+  pnpm astro add svelte
+  ```
+  </Fragment>
+  <Fragment slot="yarn">
+  ```sh
+  yarn astro add svelte
+  ```
+  </Fragment>
+</PackageManagerTabs>
+
+Nếu gặp bất kỳ vấn đề nào, [hãy báo cáo cho chúng tôi trên GitHub](https://github.com/withastro/astro/issues) và thử các bước cài đặt thủ công bên dưới.
+
+### Cài đặt thủ công
+
+Đầu tiên, cài đặt gói `@astrojs/svelte`:
+
+<PackageManagerTabs>
+  <Fragment slot="npm">
+  ```sh
+  npm install @astrojs/svelte
+  ```
+  </Fragment>
+  <Fragment slot="pnpm">
+  ```sh
+  pnpm add @astrojs/svelte
+  ```
+  </Fragment>
+  <Fragment slot="yarn">
+  ```sh
+  yarn add @astrojs/svelte
+  ```
+  </Fragment>
+</PackageManagerTabs>
+
+Hầu hết các trình quản lý gói cũng sẽ cài đặt các dependency đồng cấp liên quan. Nếu bạn thấy cảnh báo `Cannot find package 'svelte'` (hoặc tương tự) khi khởi động Astro, bạn cần cài đặt Svelte và TypeScript:
+
+<PackageManagerTabs>
+  <Fragment slot="npm">
+  ```sh
+  npm install svelte typescript
+  ```
+  </Fragment>
+  <Fragment slot="pnpm">
+  ```sh
+  pnpm add svelte typescript
+  ```
+  </Fragment>
+  <Fragment slot="yarn">
+  ```sh
+  yarn add svelte typescript
+  ```
+  </Fragment>
+</PackageManagerTabs>
+
+Sau đó, áp dụng tích hợp vào file `astro.config.*` của bạn bằng thuộc tính `integrations`:
+
+```js title="astro.config.mjs" ins={2} ins="svelte()"
+import { defineConfig } from 'astro/config';
+import svelte from '@astrojs/svelte';
+
+export default defineConfig({
+  // ...
+  integrations: [svelte()],
+});
+```
+
+Và tạo file mới tên `svelte.config.js` trong thư mục gốc dự án của bạn và thêm code sau:
+
+```js title="svelte.config.js"
+import { vitePreprocess } from '@astrojs/svelte';
+
+export default {
+  preprocess: vitePreprocess(),
+}
+```
+
+## Bắt đầu
+
+Để sử dụng component Svelte đầu tiên trong Astro, hãy xem [tài liệu framework UI][astro-ui-frameworks]. Bạn sẽ khám phá:
+
+* 📦 cách các component framework được tải,
+* 💧 các tùy chọn hydration phía client, và
+* 🤝 cơ hội kết hợp và lồng các framework với nhau
+
+## Tùy chọn
+
+Tích hợp này được hỗ trợ bởi `@sveltejs/vite-plugin-svelte`. Để tùy chỉnh trình biên dịch Svelte, có thể cung cấp các tùy chọn cho tích hợp. Xem [tài liệu `@sveltejs/vite-plugin-svelte`](https://github.com/sveltejs/vite-plugin-svelte/blob/HEAD/docs/config.md) để biết thêm chi tiết.
+
+Bạn có thể đặt tùy chọn bằng cách truyền chúng vào tích hợp `svelte` trong `astro.config.mjs` hoặc trong `svelte.config.js`. Các tùy chọn trong `astro.config.mjs` sẽ được ưu tiên hơn các tùy chọn trong `svelte.config.js` nếu cả hai đều có:
+
+```js title="astro.config.mjs" "extensions: ['.svelte']"
+import { defineConfig } from 'astro/config';
+import svelte from '@astrojs/svelte';
+
+export default defineConfig({
+  integrations: [svelte({ extensions: ['.svelte'] })],
+});
+```
+
+```js title="svelte.config.js"
+export default {
+  extensions: ['.svelte'],
+};
+```
+
+## Preprocessors
+
+<Since v="2.0.0" pkg="@astrojs/svelte" />
+
+Nếu bạn đang sử dụng SCSS hoặc Stylus trong các file Svelte, bạn có thể tạo file `svelte.config.js` để chúng được tiền xử lý bởi Svelte, và extension Svelte IDE có thể phân tích đúng các file Svelte.
+
+```js title="svelte.config.js"
+import { vitePreprocess } from '@astrojs/svelte';
+
+export default {
+  preprocess: vitePreprocess(),
+};
+```
+
+File cấu hình này sẽ được tự động thêm cho bạn khi chạy `astro add svelte`. Xem [tài liệu `@sveltejs/vite-plugin-svelte`](https://github.com/sveltejs/vite-plugin-svelte/blob/HEAD/docs/preprocess.md) để biết thêm chi tiết về `vitePreprocess`.
+
+[astro-integration]: /vi/guides/integrations-guide/
+
+[astro-ui-frameworks]: /vi/guides/framework-components/#using-framework-components

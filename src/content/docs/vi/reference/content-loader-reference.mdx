@@ -1,0 +1,709 @@
+---
+title: Astro Content Loader API
+sidebar:
+  label: Content Loader API
+i18nReady: true
+---
+
+import Since from '~/components/Since.astro';
+
+API Content Loader của Astro cho phép bạn tải dữ liệu từ bất kỳ nguồn nào, cục bộ hoặc từ xa, và tương tác với lớp nội dung của Astro để quản lý [content collections](/vi/guides/content-collections/) của bạn.
+
+## Content Loader là gì?
+
+Astro loaders cho phép bạn tải dữ liệu vào [content collections](/vi/guides/content-collections/), sau đó có thể được sử dụng trong các trang và component. Các [loader `glob()` và `file()` tích hợp sẵn](/vi/guides/content-collections/#built-in-loaders) được sử dụng để tải nội dung từ hệ thống tập tin, và bạn có thể tạo các loader riêng để tải nội dung từ các nguồn khác.
+
+Mỗi collection cần [một loader được định nghĩa trong schema của nó](/vi/guides/content-collections/#defining-the-collection-loader). Bạn có thể định nghĩa một loader inline trong tệp `src/content.config.ts` của dự án, chia sẻ một loader giữa nhiều collection, hoặc thậm chí [xuất bản loader của bạn lên NPM dưới dạng package](/vi/reference/publish-to-npm/) để chia sẻ với người khác và được bao gồm trong thư viện integrations của chúng tôi.
+
+## Loaders tích hợp sẵn
+
+Astro cung cấp hai loaders tích hợp sẵn để giúp bạn fetch collections của mình. Cả hai đều cung cấp các tùy chọn phù hợp với nhiều trường hợp sử dụng.
+
+### Loader `glob()`
+
+<p>
+
+**Type:** <code>(options: GlobOptions) => <a href="#the-loader-object">Loader</a></code><br />
+
+<Since v="5.0.0" />
+</p>
+
+Loader `glob()` tạo các entry từ các thư mục tệp từ bất kỳ đâu trên hệ thống tập tin. Các loại tệp được hỗ trợ là Markdown, MDX, Markdoc, JSON và YAML.
+
+Loader này chấp nhận một object với các thuộc tính sau: `pattern`, `base` (tùy chọn), và `generateId` (tùy chọn).
+
+```ts title="src/content.config.ts" {2,6,11,17-21}
+import { defineCollection } from 'astro:content';
+import { glob } from 'astro/loaders';
+
+const pages = defineCollection({
+  /* Lấy tất cả tệp Markdown trong thư mục pages của bạn. */
+  loader: glob({ pattern: "**/*.md", base: "./src/data/pages" }),
+  schema: /* ... */
+});
+const blog = defineCollection({
+  /* Lấy tất cả tệp Markdown và MDX trong thư mục blog của bạn. */
+  loader: glob({ pattern: "**/*.(md|mdx)", base: "./src/data/blog" }),
+  schema: /* ... */
+});
+const authors = defineCollection({
+  /* Lấy tất cả tệp JSON trong thư mục authors của bạn trong khi giữ lại
+   * các chữ cái viết hoa trong ID. */
+  loader: glob({
+    pattern: '**/*.json',
+    base: "./src/data/authors",
+    generateId: ({ entry }) => entry.replace(/\.json$/, ''),
+  }),
+  schema: /* ... */
+});
+```
+
+#### `pattern`
+
+<p>
+
+**Type:** `string | string[]`
+
+</p>
+
+Thuộc tính `pattern` chấp nhận một string hoặc một mảng string sử dụng glob matching (ví dụ: wildcards, globstars). Các pattern phải tương đối với thư mục cơ sở của các tệp entry để khớp.
+
+Bạn có thể tìm hiểu thêm về cú pháp sử dụng trong [tài liệu micromatch](https://github.com/micromatch/micromatch#matching-features). Bạn cũng có thể xác minh tính hợp lệ của pattern bằng công cụ trực tuyến như [DigitalOcean Glob Tool](https://www.digitalocean.com/community/tools/glob).
+
+#### `base`
+
+<p>
+
+**Type:** `string | URL`<br />
+**Default:** `"."`
+
+</p>
+
+Một đường dẫn tương đối hoặc [URL](https://developer.mozilla.org/en-US/docs/Web/API/URL) đến thư mục để giải quyết `pattern`.
+
+#### `generateId()`
+
+<p>
+
+**Type:** `(options: GenerateIdOptions) => string`
+
+</p>
+
+Một callback function trả về một string duy nhất cho mỗi entry trong collection. Nó chấp nhận một object làm tham số với các thuộc tính sau:
+
+- `entry` - đường dẫn đến tệp entry, tương đối với thư mục cơ sở
+- `base` - thư mục cơ sở [URL](https://developer.mozilla.org/en-US/docs/Web/API/URL)
+- `data` - dữ liệu đã được phân tích, chưa được xác thực của entry
+
+Mặc định nó sử dụng [`github-slugger`](https://github.com/Flet/github-slugger) để tạo một slug với các từ [kebab-cased](https://developer.mozilla.org/en-US/docs/Glossary/Kebab_case).
+
+### Loader `file()`
+
+<p>
+
+**Type:** <code>(fileName: string, options?: FileOptions) => <a href="#the-loader-object">Loader</a></code><br />
+
+<Since v="5.0.0" />
+</p>
+
+Loader `file()` tạo các entry từ một tệp duy nhất chứa một mảng các object với trường `id` duy nhất, hoặc một object với các ID làm key và các entry làm value. Nó hỗ trợ JSON hoặc YAML, và bạn có thể cung cấp một `parser` tùy chỉnh cho các tệp dữ liệu mà nó không thể phân tích mặc định.
+
+Loader này chấp nhận một thuộc tính `fileName` và một object tùy chọn làm tham số thứ hai:
+
+```ts title="src/content.config.ts" {2,6,11-13}
+import { defineCollection } from 'astro:content';
+import { file } from 'astro/loaders';
+
+const authors = defineCollection({
+  /* Lấy tất cả entry từ một tệp JSON. */
+  loader: file("src/data/authors.json"),
+  schema: /* ... */
+});
+const products = defineCollection({
+  /* Lấy tất cả entry từ một tệp CSV sử dụng parser tùy chỉnh. */
+  loader: file("src/data/products.csv", {
+    parser: (fileContent) => { /* logic parser của bạn */ },
+  }),
+  schema: /* ... */
+});
+```
+
+#### `fileName`
+
+<p>
+
+**Type:** `string`
+
+</p>
+
+Đặt đường dẫn đến tệp cần tải, tương đối với thư mục root.
+
+#### Options
+
+<p>
+
+**Type:** `FileOptions`
+
+</p>
+
+Một object tùy chọn với các thuộc tính sau:
+
+##### `parser()`
+
+<p>
+
+**Type:** `(text: string) => Record<string, Record<string, unknown>> | Array<Record<string, unknown>>`
+
+</p>
+
+Một callback function để tạo collection từ nội dung của tệp. Sử dụng khi bạn cần xử lý tệp không được hỗ trợ mặc định (ví dụ: `.csv`) hoặc khi sử dụng [nested `.json` documents](/vi/guides/content-collections/#nested-json-documents).
+
+## Các loại Loader
+
+Loaders có thể được định nghĩa như một function đơn giản trả về mảng entries hoặc với Content Loader API object mạnh mẽ hơn để kiểm soát nhiều hơn quá trình loading.
+
+### Inline loaders
+
+Inline loader là một async function trả về một mảng hoặc object chứa các entry. Sử dụng cho các loader đơn giản, đặc biệt là những loader được định nghĩa inline trong tệp `src/content.config.ts`.
+
+Function có thể là async và phải trả về hoặc một mảng các entry mà mỗi entry chứa trường `id` duy nhất, hoặc một object trong đó mỗi key là một ID duy nhất và mỗi value là entry. Bất cứ khi nào loader được gọi, nó sẽ xóa store và reload tất cả các entry.
+
+```ts title="src/content.config.ts"
+const countries = defineCollection({
+  loader: async () => {
+    const response = await fetch("https://restcountries.com/v3.1/all");
+    const data = await response.json();
+    // Phải trả về một mảng các entry với thuộc tính id
+    // hoặc một object với các ID làm key và các entry làm value
+    return data.map((country) => ({
+      id: country.cca3,
+      ...country,
+    }));
+  },
+  schema: /* ... */
+});
+```
+
+### Object loaders
+
+Một loader là một object với phương thức `load()` được gọi tại thời điểm build để fetch dữ liệu và cập nhật data store. Nó cho phép các entry được cập nhật từng phần, hoặc để store chỉ được xóa khi cần thiết. Nó cũng có thể định nghĩa schema cho các entry, có thể được sử dụng để xác thực dữ liệu và tạo static types.
+
+Pattern được khuyến nghị là định nghĩa một function chấp nhận các tùy chọn cấu hình và trả về loader object, theo cách tương tự như bạn thường định nghĩa một Astro integration hoặc Vite plugin.
+
+```ts title=loader.ts
+import type { Loader, LoaderContext } from 'astro/loaders';
+import { z } from 'astro:content';
+import { loadFeedData } from './feed.js';
+
+// Định nghĩa bất kỳ tùy chọn nào mà loader cần
+export function myLoader(options: { url: string; apiKey: string }): Loader {
+	// Cấu hình loader
+	const feedUrl = new URL(options.url);
+	// Trả về một loader object
+	return {
+		name: 'my-loader',
+		// Được gọi khi cập nhật collection.
+		load: async (context: LoaderContext): Promise<void> => {
+			// Tải dữ liệu và cập nhật store
+			const response = await loadFeedData(feedUrl, options.apiKey);
+		},
+		// Tùy chọn, định nghĩa schema của một entry.
+		// Nó sẽ bị ghi đè bởi schema do người dùng định nghĩa.
+		schema: async () =>
+			z.object({
+				// ...
+			}),
+	};
+}
+```
+
+Các tùy chọn cấu hình này sau đó có thể được đặt khi định nghĩa collection:
+
+```ts title="src/content.config.ts"  {2,5-8}
+import { defineCollection, z } from 'astro:content';
+import myLoader from '../../loader.ts';
+
+const blog = defineCollection({
+  loader: myLoader({
+    url: "https://api.example.com/posts",
+    apiKey: "my-secret",
+  }),
+  schema: /* ... */
+});
+```
+
+## Object loader API
+
+API cho [inline loaders](#inline-loaders) rất đơn giản và được hiển thị ở trên. Phần này hiển thị API để định nghĩa object loader.
+
+### Object `Loader`
+
+Object loader có các thuộc tính sau:
+
+#### `name`
+
+<p>
+
+**Type**: `string`
+
+</p>
+
+Tên duy nhất cho loader, được sử dụng trong logs và [cho conditional loading](/vi/reference/integrations-reference/#refreshcontent-option).
+
+#### `load`
+
+<p>
+
+**Type**: <code>(context: <a href="#loadercontext">LoaderContext</a>) => Promise&lt;void&gt;</code>
+
+</p>
+
+Một async function được gọi tại thời điểm build để tải dữ liệu và cập nhật store. Xem [`LoaderContext`](#loadercontext) để biết thêm thông tin.
+
+#### `schema`
+
+<p>
+
+**Type**: `ZodSchema | Promise<ZodSchema> | (() => ZodSchema | Promise<ZodSchema>)`
+
+</p>
+
+Một [Zod schema](/vi/guides/content-collections/#defining-datatypes-with-zod) tùy chọn định nghĩa hình dạng của các entry. Nó được sử dụng để cả xác thực dữ liệu và cũng để tạo TypeScript types cho collection.
+
+Nếu một function được cung cấp, nó sẽ được gọi tại thời điểm build trước `load()` để tạo schema. Bạn có thể sử dụng điều này để tạo schema một cách động dựa trên các tùy chọn cấu hình hoặc bằng cách introspecting một API.
+
+### `LoaderContext`
+
+Object này được truyền cho phương thức `load()` của loader, và chứa các thuộc tính sau:
+
+#### `collection`
+
+<p>
+
+**Type**: `string`
+
+</p>
+
+Tên duy nhất của collection. Đây là key trong object `collections` trong tệp `src/content.config.ts`.
+
+#### `store`
+
+<p>
+
+**Type**: [`DataStore`](#datastore)
+
+</p>
+
+Một database để lưu trữ dữ liệu thực tế. Sử dụng để cập nhật store với các entry mới. Xem [`DataStore`](#datastore) để biết thêm thông tin.
+
+#### `meta`
+
+<p>
+
+**Type**: `MetaStore`
+
+</p>
+
+Một key-value store được giới hạn trong collection, được thiết kế cho những thứ như sync tokens và last-modified times. Metadata này được duy trì giữa các builds cùng với dữ liệu collection nhưng chỉ có sẵn bên trong loader.
+
+```ts
+const lastModified = meta.get('lastModified');
+// ...
+meta.set('lastModified', new Date().toISOString());
+```
+
+#### `logger`
+
+<p>
+
+**Type**: [`AstroIntegrationLogger`](/vi/reference/integrations-reference/#astrointegrationlogger)
+
+</p>
+
+Một logger có thể được sử dụng để log messages ra console. Sử dụng thay vì `console.log` để có logs hữu ích hơn bao gồm tên loader trong log message. Xem [`AstroIntegrationLogger`](/vi/reference/integrations-reference/#astrointegrationlogger) để biết thêm thông tin.
+
+#### `config`
+
+<p>
+
+**Type**: `AstroConfig`
+
+</p>
+
+Object cấu hình Astro đầy đủ, đã được giải quyết với tất cả defaults được áp dụng. Xem [tài liệu cấu hình](/vi/reference/configuration-reference/) để biết thêm thông tin.
+
+#### `parseData`
+
+<p>
+
+**Type**: `(props: ParseDataOptions<TData>) => Promise<TData>`
+
+</p>
+
+Xác thực và phân tích dữ liệu theo schema collection. Truyền dữ liệu cho function này để xác thực và phân tích trước khi lưu trữ trong data store.
+
+```ts title=loader.ts {14-17}
+import type { Loader } from 'astro/loaders';
+import { loadFeed } from './feed.js';
+
+export function feedLoader({ url }): Loader {
+	const feedUrl = new URL(url);
+	return {
+		name: 'feed-loader',
+		load: async ({ store, logger, parseData, meta, generateDigest }) => {
+			logger.info('Loading posts');
+			const feed = loadFeed(feedUrl);
+			store.clear();
+
+			for (const item of feed.items) {
+				const data = await parseData({
+					id: item.guid,
+					data: item,
+				});
+				store.set({
+					id,
+					data,
+				});
+			}
+		},
+	};
+}
+```
+
+#### `renderMarkdown`
+
+<p>
+
+**Type**: `(markdown: string) => Promise<RenderedContent>`
+
+<Since v="5.9.0" />
+</p>
+
+Render một Markdown string thành HTML, trả về một object `RenderedContent`.
+
+Điều này cho phép bạn render nội dung Markdown trực tiếp trong loaders của bạn bằng cách sử dụng cùng xử lý Markdown như loader `glob` tích hợp sẵn của Astro và cung cấp quyền truy cập vào function `render()` và component `<Content />` để [render body content](/vi/guides/content-collections/#rendering-body-content).
+
+Gán object này cho trường [rendered](#rendered) của object [DataEntry](#dataentry) để cho phép người dùng [render nội dung trong trang](/vi/guides/content-collections/#rendering-body-content).
+
+```ts title=loader.ts {16-17}
+import type { Loader } from 'astro/loaders';
+import { loadFromCMS } from './cms.js';
+
+export function myLoader(settings): Loader {
+	return {
+		name: 'cms-loader',
+		async load({ renderMarkdown, store }) {
+			const entries = await loadFromCMS();
+
+			store.clear();
+
+			for (const entry of entries) {
+				store.set(entry.id, {
+					id: entry.id,
+					data: entry,
+					// Giả sử mỗi entry có trường 'content' với nội dung markdown
+					rendered: await renderMarkdown(entry.content),
+				});
+			}
+		},
+	};
+}
+```
+
+#### `generateDigest`
+
+<p>
+
+**Type**: `(data: Record<string, unknown> | string) => string`
+
+</p>
+
+Tạo một content digest không mã hóa của một object hoặc string. Điều này có thể được sử dụng để theo dõi xem dữ liệu có thay đổi hay không bằng cách đặt [trường `digest`](#digest) của một entry.
+
+```ts title=loader.ts {19,24}
+import type { Loader } from 'astro/loaders';
+import { loadFeed } from './feed.js';
+
+export function feedLoader({ url }): Loader {
+	const feedUrl = new URL(url);
+	return {
+		name: 'feed-loader',
+		load: async ({ store, logger, parseData, meta, generateDigest }) => {
+			logger.info('Loading posts');
+			const feed = loadFeed(feedUrl);
+			store.clear();
+
+			for (const item of feed.items) {
+				const data = await parseData({
+					id: item.guid,
+					data: item,
+				});
+
+				const digest = generateDigest(data);
+
+				store.set({
+					id,
+					data,
+					digest,
+				});
+			}
+		},
+	};
+}
+```
+
+#### `watcher`
+
+<p>
+
+**Type**: `FSWatcher`
+
+</p>
+
+Khi chạy trong dev mode, đây là một filesystem watcher có thể được sử dụng để kích hoạt cập nhật. Xem [`ViteDevServer`](https://vite.dev/guide/api-javascript.html#vitedevserver) để biết thêm thông tin.
+
+```ts title="Extract from the file() loader" {8-13}
+return {
+	name: 'file-loader',
+	load: async ({ config, store, watcher }) => {
+		const url = new URL(fileName, config.root);
+		const filePath = fileURLToPath(url);
+		await syncData(filePath, store);
+
+		watcher?.on('change', async changedPath => {
+			if (changedPath === filePath) {
+				logger.info(`Reloading data from ${fileName}`);
+				await syncData(filePath, store);
+			}
+		});
+	},
+};
+```
+
+#### `refreshContextData`
+
+<p>
+
+**Type**: `Record<string, unknown>`
+
+</p>
+
+Nếu loader đã được kích hoạt bởi một integration, điều này có thể tùy chọn chứa dữ liệu bổ sung được đặt bởi integration đó. Nó chỉ được đặt khi loader được kích hoạt bởi một integration. Xem tài liệu hook [`astro:server:setup`](/vi/reference/integrations-reference/#refreshcontent-option) để biết thêm thông tin.
+
+```ts title=loader.ts {5-8}
+export function myLoader(options: { url: string }): Loader {
+	return {
+		name: 'my-loader',
+		load: async ({ refreshContextData, store, logger }) => {
+			if (refreshContextData?.webhookBody) {
+				logger.info('Webhook triggered with body');
+				processWebhook(store, refreshContextData.webhookBody);
+			}
+			// ...
+		},
+	};
+}
+```
+
+### `DataStore`
+
+Data store là giao diện của loader với dữ liệu content collection. Nó là một key-value (KV) store, được giới hạn trong collection, và do đó một loader chỉ có thể truy cập dữ liệu cho collection riêng của nó.
+
+#### `get`
+
+<p>
+
+**Type**: <code>(key: string) => <a href="#dataentry">DataEntry</a> | undefined</code>
+
+</p>
+
+Lấy một entry từ store bằng ID của nó. Trả về `undefined` nếu entry không tồn tại.
+
+```ts
+const existingEntry = store.get('my-entry');
+```
+
+Object được trả về là một object [`DataEntry`](#dataentry).
+
+#### `set`
+
+<p>
+
+**Type**: <code>(entry: <a href="#dataentry">DataEntry</a>) => boolean</code>
+
+</p>
+
+Được sử dụng sau khi dữ liệu đã được [xác thực và phân tích](#parsedata) để thêm một entry vào store, trả về `true` nếu entry được đặt. Điều này trả về `false` khi thuộc tính [`digest`](#digest) xác định rằng một entry chưa thay đổi và không nên được cập nhật.
+
+```ts title=loader.ts {7-14}
+for (const item of feed.items) {
+	const data = await parseData({
+		id: item.guid,
+		data: item,
+	});
+	const digest = generateDigest(data);
+	store.set({
+		id,
+		data,
+		rendered: {
+			html: data.description ?? '',
+		},
+		digest,
+	});
+}
+```
+
+#### `entries`
+
+<p>
+
+**Type**: `() => Array<[id: string, DataEntry]>`
+
+</p>
+
+Lấy tất cả entry trong collection dưới dạng một mảng các key-value pairs.
+
+#### `keys`
+
+<p>
+
+**Type**: `() => Array<string>`
+
+</p>
+
+Lấy tất cả các key của entry trong collection.
+
+#### `values`
+
+<p>
+
+**Type**: `() => Array<DataEntry>`
+
+</p>
+
+Lấy tất cả entry trong collection dưới dạng một mảng.
+
+#### `delete`
+
+<p>
+
+**Type**: `(key: string) => void`
+
+</p>
+
+Xóa một entry từ store bằng ID của nó.
+
+#### `clear`
+
+<p>
+
+**Type**: `() => void`
+
+</p>
+
+Xóa tất cả entry từ collection.
+
+#### `has`
+
+<p>
+
+**Type**: `(key: string) => boolean`
+
+</p>
+
+Kiểm tra xem một entry có tồn tại trong store bằng ID của nó hay không.
+
+### `DataEntry`
+
+Đây là type của object được lưu trữ trong data store. Nó có các thuộc tính sau:
+
+#### `id`
+
+<p>
+
+**Type**: `string`
+
+</p>
+
+Một identifier cho entry, phải là duy nhất trong collection. Điều này được sử dụng để tìm kiếm entry trong store và là key được sử dụng với `getEntry` cho collection đó.
+
+#### `data`
+
+<p>
+
+**Type**: `Record<string, unknown>`
+
+</p>
+
+Dữ liệu thực tế cho entry. Khi người dùng truy cập collection, điều này sẽ có TypeScript types được tạo theo schema collection.
+
+Loader có trách nhiệm sử dụng [`parseData`](#parsedata) để xác thực và phân tích dữ liệu trước khi lưu trữ trong data store: không có xác thực nào được thực hiện khi get hoặc set dữ liệu.
+
+#### `filePath`
+
+<p>
+
+**Type**: `string | undefined`
+
+</p>
+
+Đường dẫn đến tệp là nguồn của entry này, tương đối với root của site. Điều này chỉ áp dụng cho file-based loaders và được sử dụng để giải quyết đường dẫn như hình ảnh hoặc các assets khác.
+
+Nếu không được đặt, thì bất kỳ trường nào trong schema sử dụng [helper `image()`](/vi/guides/images/#images-in-content-collections) sẽ được xử lý như [public paths](/vi/guides/images/#where-to-store-images) và không được transform.
+
+#### `body`
+
+<p>
+
+**Type**: `string | undefined`
+
+</p>
+
+Body thô của entry, nếu có. Nếu entry bao gồm [rendered content](#rendered), thì trường này có thể được sử dụng để lưu trữ raw source. Điều này là tùy chọn và không được sử dụng nội bộ.
+
+#### `digest`
+
+<p>
+
+**Type**: `string | undefined`
+
+</p>
+
+Một content digest tùy chọn cho entry. Điều này có thể được sử dụng để kiểm tra xem dữ liệu có thay đổi hay không.
+
+Khi [đặt một entry](#set), entry chỉ sẽ cập nhật nếu digest không khớp với một entry hiện có có cùng ID.
+
+Định dạng của digest tùy thuộc vào loader, nhưng nó phải là một string thay đổi khi dữ liệu thay đổi. Điều này có thể được thực hiện với function [`generateDigest`](#generatedigest).
+
+#### `rendered`
+
+<p>
+
+**Type**: `RenderedContent | undefined`
+
+</p>
+
+Lưu trữ một object với nội dung đã được render và metadata của entry nếu nó đã được render thành HTML. Ví dụ, điều này có thể được sử dụng để lưu trữ nội dung đã được render của một Markdown entry, hoặc HTML từ một CMS.
+
+Nếu trường này được cung cấp, thì [function `render()` và component `<Content />`](/vi/guides/content-collections/#rendering-body-content) có sẵn để render entry trong một trang.
+
+Định dạng của object `RenderedContent` là:
+
+```ts
+{
+	/** Rendered HTML string. Nếu có thì `render(entry)` sẽ trả về một component render HTML này. */
+	html: string;
+	metadata?: {
+		/** Bất kỳ hình ảnh nào có trong entry này. Tương đối với DataEntry filePath. */
+		imagePaths?: Array<string>;
+		/** Bất kỳ heading nào có trong tệp này. Được trả về như `headings` từ `render()` */
+		headings?: MarkdownHeading[];
+		/** Raw frontmatter, được phân tích từ tệp. Điều này có thể bao gồm dữ liệu từ remark plugins. */
+		frontmatter?: Record<string, any>;
+		/** Bất kỳ metadata nào khác có trong tệp này. */
+		[key: string]: unknown;
+	};
+}
+```
+
+Nếu entry có nội dung Markdown thì bạn có thể sử dụng function [`renderMarkdown()`](#rendermarkdown) để tạo object này từ Markdown string.

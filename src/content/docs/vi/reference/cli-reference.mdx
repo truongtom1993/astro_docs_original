@@ -1,0 +1,443 @@
+---
+title: Lệnh CLI
+i18nReady: true
+---
+
+import Since from '~/components/Since.astro';
+import PackageManagerTabs from '~/components/tabs/PackageManagerTabs.astro';
+import ReadMore from '~/components/ReadMore.astro';
+
+Bạn có thể sử dụng Command-Line Interface (CLI) do Astro cung cấp để phát triển, build và preview dự án của mình từ cửa sổ terminal.
+
+### Các lệnh `astro`
+
+Sử dụng CLI bằng cách chạy một trong các **lệnh** được mô tả trong trang này với package manager ưa thích của bạn, có thể theo sau bởi bất kỳ **flags** nào. Flags tùy chỉnh hành vi của lệnh.
+
+Một trong những lệnh bạn sẽ sử dụng thường xuyên nhất là `astro dev`. Lệnh này khởi động development server và cung cấp bản preview trực tiếp, cập nhật của trang web trong trình duyệt khi bạn làm việc:
+
+<PackageManagerTabs>
+	<Fragment slot='npm'>```shell # khởi động development server npx astro dev ```</Fragment>
+	<Fragment slot='pnpm'>```shell # khởi động development server pnpm astro dev ```</Fragment>
+	<Fragment slot='yarn'>```shell # khởi động development server yarn astro dev ```</Fragment>
+</PackageManagerTabs>
+
+Bạn có thể gõ `astro --help` trong terminal để hiển thị danh sách tất cả các lệnh có sẵn:
+
+<PackageManagerTabs>
+	<Fragment slot='npm'>```shell npx astro --help ```</Fragment>
+	<Fragment slot='pnpm'>```shell pnpm astro --help ```</Fragment>
+	<Fragment slot='yarn'>```shell yarn astro --help ```</Fragment>
+</PackageManagerTabs>
+
+Thông báo sau sẽ hiển thị trong terminal của bạn:
+
+```bash
+astro [command] [...flags]
+
+Commands
+              add  Thêm một integration.
+            build  Build dự án của bạn và ghi vào đĩa.
+            check  Kiểm tra dự án của bạn để tìm lỗi.
+       create-key  Tạo một khóa mật mã
+              dev  Khởi động development server.
+             docs  Mở tài liệu trong trình duyệt web của bạn.
+             info  Liệt kê thông tin về thiết lập Astro hiện tại của bạn.
+          preview  Preview bản build cục bộ của bạn.
+             sync  Tạo TypeScript types cho tất cả các module Astro.
+      preferences  Cấu hình preferences của người dùng.
+        telemetry  Cấu hình cài đặt telemetry.
+
+Global Flags
+  --config <path>  Chỉ định file config của bạn.
+    --root <path>  Chỉ định thư mục gốc của dự án.
+     --site <url>  Chỉ định site của dự án.
+--base <pathname>  Chỉ định base của dự án.
+        --verbose  Bật verbose logging.
+         --silent  Tắt tất cả logging.
+        --version  Hiển thị số phiên bản và thoát.
+           --help  Hiển thị thông báo trợ giúp này.
+```
+
+Bạn có thể thêm flag `--help` sau bất kỳ lệnh nào để xem danh sách tất cả các flags cho lệnh đó.
+
+<PackageManagerTabs>
+	<Fragment slot='npm'>```shell # xem danh sách tất cả flags cho lệnh `dev` npm run dev -- --help ```</Fragment>
+	<Fragment slot='pnpm'>```shell # xem danh sách tất cả flags cho lệnh `dev` pnpm dev --help ```</Fragment>
+	<Fragment slot='yarn'>```shell # xem danh sách tất cả flags cho lệnh `dev` yarn dev --help ```</Fragment>
+</PackageManagerTabs>
+
+Thông báo sau sẽ hiển thị trong terminal của bạn:
+
+```bash
+astro dev [...flags]
+
+Flags
+                 --port  Chỉ định port để chạy. Mặc định là 4321.
+                 --host  Lắng nghe trên tất cả addresses, bao gồm LAN và public addresses.
+--host <custom-address>  Expose trên network IP address tại <custom-address>
+                 --open  Tự động mở app trong trình duyệt khi server khởi động
+                --force  Xóa content layer cache, buộc rebuild hoàn toàn.
+            --help (-h)  Xem tất cả flags có sẵn.
+```
+
+:::note
+Dấu `--` bổ sung trước bất kỳ flag nào là cần thiết để `npm` truyền flags của bạn đến lệnh `astro`.
+:::
+
+### Scripts `package.json`
+
+Bạn cũng có thể sử dụng scripts trong `package.json` cho các phiên bản ngắn hơn của những lệnh này. Sử dụng script cho phép bạn sử dụng các lệnh tương tự mà bạn có thể quen thuộc từ các dự án khác, chẳng hạn như `npm run build`.
+
+Các scripts sau cho các lệnh `astro` phổ biến nhất (`astro dev`, `astro build`, và `astro preview`) được thêm tự động khi bạn tạo dự án bằng [wizard `create astro`](/vi/install-and-setup/).
+
+Khi bạn làm theo hướng dẫn để [cài đặt Astro thủ công](/vi/install-and-setup/#manual-setup), bạn được hướng dẫn tự thêm các scripts này. Bạn cũng có thể thêm nhiều scripts vào danh sách này cho bất kỳ lệnh nào bạn sử dụng thường xuyên.
+
+```json title="package.json"
+{
+	"scripts": {
+		"dev": "astro dev",
+		"build": "astro build",
+		"preview": "astro preview"
+	}
+}
+```
+
+Bạn sẽ thường sử dụng các lệnh `astro` này, hoặc các scripts chạy chúng, mà không có flags nào. Thêm flags vào lệnh khi bạn muốn tùy chỉnh hành vi của lệnh. Ví dụ, bạn có thể muốn khởi động development server trên một port khác, hoặc build trang web với verbose logs để debug.
+
+<PackageManagerTabs>
+  <Fragment slot="npm">
+  ```shell
+  # chạy dev server trên port 8080 sử dụng script `dev` trong `package.json`
+  npm run dev -- --port 8080
+
+# build trang web với verbose logs sử dụng script `build` trong `package.json`
+
+npm run build -- --verbose
+
+````
+</Fragment>
+<Fragment slot="pnpm">
+```shell
+# chạy dev server trên port 8080 sử dụng script `dev` trong `package.json`
+pnpm dev --port 8080
+
+# build trang web với verbose logs sử dụng script `build` trong `package.json`
+pnpm build --verbose
+````
+
+  </Fragment>
+  <Fragment slot="yarn">
+  ```shell
+  # chạy dev server trên port 8080 sử dụng script `dev` trong `package.json`
+  yarn dev --port 8080
+
+# build trang web với verbose logs sử dụng script `build` trong `package.json`
+
+yarn build --verbose
+
+````
+</Fragment>
+</PackageManagerTabs>
+
+## `astro dev`
+
+Chạy development server của Astro. Đây là một HTTP server cục bộ không bundle assets. Nó sử dụng Hot Module Replacement (HMR) để cập nhật trình duyệt khi bạn lưu thay đổi trong editor.
+
+Các phím tắt sau có thể được sử dụng trong terminal nơi Astro development server đang chạy:
+
+- `s + enter` để sync dữ liệu content layer (content và types).
+- `o + enter` để mở trang Astro trong trình duyệt.
+- `q + enter` để thoát development server.
+
+## `astro build`
+
+Build trang web để triển khai. Mặc định, điều này sẽ tạo các file tĩnh và đặt chúng trong thư mục `dist/`. Nếu có bất kỳ routes nào được [render theo yêu cầu](/vi/guides/on-demand-rendering/), điều này sẽ tạo các file server cần thiết để phục vụ trang web.
+
+### Flags
+
+Lệnh chấp nhận [common flags](#common-flags) và các flags bổ sung sau:
+
+#### `--devOutput`
+
+<p><Since v="5.0.0" /></p>
+
+Xuất ra bản build dựa trên development tương tự như code được transform trong `astro dev`. Điều này có thể hữu ích để test các vấn đề chỉ xảy ra trong build với thông tin debug bổ sung.
+
+## `astro preview`
+
+Khởi động một server cục bộ để phục vụ nội dung của thư mục tĩnh (`dist/` theo mặc định) được tạo bằng cách chạy `astro build`.
+
+Lệnh này cho phép bạn preview trang web cục bộ [sau khi build](#astro-build) để bắt bất kỳ lỗi nào trong output build trước khi triển khai. Nó không được thiết kế để chạy trong production. Để được trợ giúp với production hosting, hãy xem hướng dẫn [Triển khai Website Astro](/vi/guides/deploy/).
+
+Từ Astro 1.5.0, [Node adapter](/vi/guides/integrations-guide/node/) hỗ trợ `astro preview` cho các build được tạo với on-demand rendering.
+
+Có thể được kết hợp với [common flags](#common-flags) được mô tả bên dưới.
+
+## `astro check`
+
+Chạy chẩn đoán (như type-checking trong file `.astro`) đối với dự án và báo cáo lỗi ra console. Nếu có bất kỳ lỗi nào được tìm thấy, quá trình sẽ thoát với code **1**.
+
+Lệnh này được thiết kế để sử dụng trong CI workflows.
+
+<h3>Flags</h3>
+
+Sử dụng các flags này để tùy chỉnh hành vi của lệnh.
+
+#### `--watch`
+
+Lệnh sẽ theo dõi bất kỳ thay đổi nào trong dự án và sẽ báo cáo bất kỳ lỗi nào.
+
+#### `--root <path-to-dir>`
+
+Chỉ định thư mục gốc khác để kiểm tra. Sử dụng thư mục làm việc hiện tại theo mặc định.
+
+#### `--tsconfig <path-to-file>`
+
+Chỉ định file `tsconfig.json` để sử dụng thủ công. Nếu không được cung cấp, Astro sẽ cố gắng tìm config, hoặc suy ra config của dự án tự động.
+
+#### `--minimumFailingSeverity <error|warning|hint>`
+
+Chỉ định mức độ nghiêm trọng tối thiểu cần thiết để thoát với error code. Mặc định là `error`.
+
+Ví dụ, chạy `astro check --minimumFailingSeverity warning` sẽ khiến lệnh thoát với lỗi nếu có bất kỳ cảnh báo nào được phát hiện.
+
+#### `--minimumSeverity <error|warning|hint>`
+
+Chỉ định mức độ nghiêm trọng tối thiểu để xuất ra. Mặc định là `hint`.
+
+Ví dụ, chạy `astro check --minimumSeverity warning` sẽ hiển thị lỗi và cảnh báo, nhưng không hiển thị gợi ý.
+
+#### `--preserveWatchOutput`
+
+Chỉ định không xóa output giữa các lần check khi ở watch mode.
+
+#### `--noSync`
+
+Chỉ định không chạy `astro sync` trước khi check dự án.
+
+<ReadMore>Đọc thêm về [type checking trong Astro](/vi/guides/typescript/#type-checking).</ReadMore>
+
+## `astro sync`
+
+<p><Since v="2.0.0" /></p>
+
+:::tip
+Chạy `astro dev`, `astro build` hoặc `astro check` cũng sẽ chạy lệnh `sync`.
+:::
+
+Tạo TypeScript types cho tất cả các module Astro. Điều này thiết lập file [`.astro/types.d.ts`](/vi/guides/typescript/#setup) để suy ra type, và định nghĩa modules cho các tính năng dựa vào generated types:
+- Module `astro:content` cho [Content Collections API](/vi/guides/content-collections/).
+- Module `astro:db` cho [Astro DB](/vi/guides/astro-db/).
+- Module `astro:env` cho [Astro Env](/vi/guides/environment-variables/).
+- Module `astro:actions` cho [Astro Actions](/vi/guides/actions/)
+
+## `astro add`
+
+Thêm integration vào cấu hình của bạn. Đọc thêm trong [hướng dẫn integrations](/vi/guides/integrations-guide/#automatic-integration-setup).
+
+## `astro docs`
+
+Khởi chạy website Astro Docs trực tiếp từ terminal.
+
+## `astro info`
+
+Báo cáo thông tin hữu ích về môi trường Astro hiện tại. Hữu ích để cung cấp thông tin khi mở issue.
+
+```shell
+astro info
+````
+
+Ví dụ output:
+
+```
+Astro                    v3.0.12
+Node                     v20.5.1
+System                   macOS (arm64)
+Package Manager          pnpm
+Output                   server
+Adapter                  @astrojs/vercel/serverless
+Integrations             none
+```
+
+## `astro preferences`
+
+Quản lý user preferences với lệnh `astro preferences`. User preferences dành riêng cho từng người dùng Astro, không giống như file `astro.config.mjs` thay đổi hành vi cho mọi người làm việc trên dự án.
+
+User preferences theo phạm vi dự án hiện tại theo mặc định, được lưu trong file `.astro/settings.json` cục bộ.
+
+Sử dụng flag `--global`, user preferences cũng có thể được áp dụng cho mọi dự án Astro trên máy hiện tại. Global user preferences được lưu ở vị trí cụ thể theo hệ điều hành.
+
+<h3> Preferences có sẵn </h3>
+
+- `devToolbar` — Bật hoặc tắt development toolbar trong trình duyệt. (Mặc định: `true`)
+- `checkUpdates` — Bật hoặc tắt automatic update checks cho Astro CLI. (Mặc định: `true`)
+
+Lệnh `list` in ra cài đặt hiện tại của tất cả user preferences có thể cấu hình. Nó cũng hỗ trợ output `--json` có thể đọc bằng máy.
+
+```shell
+astro preferences list
+```
+
+Ví dụ output terminal:
+
+| Preference           | Value          |
+| -------------------- | -------------- |
+| devToolbar.enabled   | true <tr></tr> |
+| checkUpdates.enabled | true           |
+
+Bạn có thể `enable`, `disable`, hoặc `reset` preferences về mặc định.
+
+Ví dụ, để tắt devToolbar trong một dự án Astro cụ thể:
+
+```shell
+astro preferences disable devToolbar
+```
+
+Để tắt devToolbar trong tất cả dự án Astro trên máy hiện tại:
+
+```shell
+astro preferences disable --global devToolbar
+```
+
+devToolbar có thể được bật lại sau với:
+
+```shell
+astro preferences enable devToolbar
+```
+
+Lệnh `reset` đặt lại preference về giá trị mặc định:
+
+```shell
+astro preferences reset devToolbar
+```
+
+## `astro telemetry`
+
+Thiết lập cấu hình telemetry cho người dùng CLI hiện tại. Telemetry là dữ liệu ẩn danh cung cấp cho team Astro thông tin về các tính năng Astro nào được sử dụng thường xuyên nhất. Để biết thêm thông tin, xem [trang telemetry của Astro](https://astro.build/telemetry/).
+
+Telemetry có thể được tắt với lệnh CLI này:
+
+```shell
+astro telemetry disable
+```
+
+Telemetry có thể được bật lại sau với:
+
+```shell
+astro telemetry enable
+```
+
+Lệnh `reset` đặt lại dữ liệu telemetry:
+
+```shell
+astro telemetry reset
+```
+
+:::tip[Muốn tắt telemetry trong môi trường CI?]
+Thêm lệnh `astro telemetry disable` vào CI scripts hoặc thiết lập biến môi trường `ASTRO_TELEMETRY_DISABLED`.
+:::
+
+## Common flags
+
+### `--root <path>`
+
+Chỉ định đường dẫn đến project root. Nếu không được chỉ định, thư mục làm việc hiện tại được giả định là root.
+
+Root được sử dụng để tìm file cấu hình Astro.
+
+```shell
+astro --root myRootFolder/myProjectFolder dev
+```
+
+### `--config <path>`
+
+Chỉ định đường dẫn đến file config tương đối với project root. Mặc định là `astro.config.mjs`. Sử dụng nếu bạn sử dụng tên khác cho file cấu hình hoặc có file config trong thư mục khác.
+
+```shell
+astro --config config/astro.config.mjs dev
+```
+
+### `--force <string>`
+
+<p>
+	<Since v='5.0.0' />
+</p>
+
+Xóa [content layer cache](/vi/guides/content-collections/#defining-the-collection-loader), buộc rebuild hoàn toàn.
+
+### `--mode <string>`
+
+<p>
+	<Since v='5.0.0' />
+</p>
+
+Cấu hình [`mode`](/vi/reference/programmatic-reference/#mode) inline config cho dự án.
+
+### `--outDir <path>`
+
+<p>
+	<Since v='3.3.0' />
+</p>
+
+Cấu hình [`outDir`](/vi/reference/configuration-reference/#outdir) cho dự án. Truyền flag này sẽ ghi đè giá trị `outDir` trong file `astro.config.mjs`, nếu có.
+
+### `--site <url>`
+
+Cấu hình [`site`](/vi/reference/configuration-reference/#site) cho dự án. Truyền flag này sẽ ghi đè giá trị `site` trong file `astro.config.mjs`, nếu có.
+
+### `--base <pathname>`
+
+<p>
+	<Since v='1.4.1' />
+</p>
+
+Cấu hình [`base`](/vi/reference/configuration-reference/#base) cho dự án. Truyền flag này sẽ ghi đè giá trị `base` trong file `astro.config.mjs`, nếu có.
+
+### `--port <number>`
+
+Chỉ định port để chạy dev server và preview server. Mặc định là `4321`.
+
+### `--host [optional host address]`
+
+Thiết lập network IP addresses mà dev server và preview server nên lắng nghe (tức là non-localhost IPs). Điều này có thể hữu ích để test dự án trên thiết bị cục bộ như điện thoại di động trong quá trình phát triển.
+
+- `--host` — lắng nghe trên tất cả addresses, bao gồm LAN và public addresses
+- `--host <custom-address>` — expose trên network IP address tại `<custom-address>`
+
+:::caution
+Không sử dụng flag `--host` để expose dev server và preview server trong môi trường production. Các server được thiết kế chỉ để sử dụng cục bộ khi phát triển trang web.
+:::
+
+### `--allowed-hosts`
+
+<p>
+	<Since v='5.4.0' />
+</p>
+
+Chỉ định hostnames mà Astro được phép phản hồi trong chế độ `dev` hoặc `preview`. Có thể được truyền danh sách hostnames phân cách bằng dấu phẩy hoặc `true` để cho phép bất kỳ hostname nào.
+
+Tham khảo [tính năng `allowedHosts` của Vite](https://vite.dev/config/server-options.html#server-allowedhosts) để biết thêm thông tin, bao gồm tác động bảo mật của việc cho phép hostnames.
+
+### `--verbose`
+
+Bật verbose logging, hữu ích khi debug vấn đề.
+
+### `--silent`
+
+Bật silent logging, sẽ chạy server mà không có output console nào.
+
+### `--open`
+
+Tự động mở app trong trình duyệt khi server khởi động. Có thể được truyền URL string đầy đủ (ví dụ `--open http://example.com`) hoặc pathname (ví dụ `--open /about`) để chỉ định URL cần mở.
+
+## Global flags
+
+Sử dụng các flags này để nhận thông tin về `astro` CLI.
+
+### `--version`
+
+In ra số phiên bản Astro và thoát.
+
+### `--help`
+
+In ra thông báo trợ giúp và thoát.

@@ -1,0 +1,292 @@
+---
+title: Thêm Integrations
+description: Tìm hiểu cách thêm Integrations vào dự án Astro của bạn.
+sidebar:
+  label: Tổng quan Integrations
+i18nReady: true
+---
+
+import IntegrationsNav from '~/components/IntegrationsNav.astro';
+import PackageManagerTabs from '~/components/tabs/PackageManagerTabs.astro';
+import { Steps } from '@astrojs/starlight/components';
+
+**Integrations Astro** thêm chức năng và hành vi mới cho dự án của bạn chỉ với vài dòng code. Bạn có thể sử dụng Integrations chính thức, [Integrations được xây dựng bởi cộng đồng](#tìm-thêm-tích-hợp) hoặc thậm chí [tự xây dựng Integrations tùy chỉnh](#xây-dựng-tích-hợp-riêng).
+
+Integrations có thể…
+
+- Mở khóa React, Vue, Svelte, Solid và các UI framework phổ biến khác với [renderer](/vi/guides/framework-components/).
+- Bật rendering theo yêu cầu với [SSR adapter](/vi/guides/on-demand-rendering/).
+- Integrations các công cụ như MDX và Partytown chỉ với vài dòng code.
+- Thêm tính năng mới cho dự án của bạn, như tự động tạo sitemap.
+- Viết code tùy chỉnh kết nối vào quá trình build, dev server và nhiều hơn nữa.
+
+:::tip[Thư mục Integrations]
+Duyệt hoặc tìm kiếm bộ sưu tập đầy đủ hàng trăm Integrations chính thức và cộng đồng trong [thư mục Integrations](https://astro.build/integrations/) của chúng tôi. Tìm packages để thêm vào dự án Astro của bạn cho xác thực, phân tích, hiệu suất, SEO, accessibility, UI, công cụ phát triển và nhiều hơn nữa.
+:::
+
+## Integrations Chính Thức
+
+Các Integrations sau được duy trì bởi Astro.
+
+<IntegrationsNav />
+
+## Thiết Lập Integrations Tự Động
+
+Astro bao gồm lệnh `astro add` để tự động hóa việc thiết lập các Integrations chính thức. Một số plugin cộng đồng cũng có thể được thêm bằng lệnh này. Vui lòng kiểm tra tài liệu riêng của từng Integrations để xem `astro add` có được hỗ trợ hay không, hoặc bạn phải [cài đặt thủ công](#cài-đặt-thủ-công).
+
+Chạy lệnh `astro add` bằng package manager mà bạn chọn và wizard Integrations tự động của chúng tôi sẽ cập nhật file cấu hình và cài đặt các dependencies cần thiết.
+
+<PackageManagerTabs>
+  <Fragment slot="npm">
+  ```shell
+  npx astro add react
+  ```
+  </Fragment>
+  <Fragment slot="pnpm">
+  ```shell
+  pnpm astro add react
+  ```
+  </Fragment>
+  <Fragment slot="yarn">
+  ```shell
+  yarn astro add react
+  ```
+  </Fragment>
+</PackageManagerTabs>
+
+Thậm chí có thể thêm nhiều Integrations cùng một lúc!
+
+<PackageManagerTabs>
+  <Fragment slot="npm">
+  ```shell
+  npx astro add react sitemap partytown
+  ```
+  </Fragment>
+  <Fragment slot="pnpm">
+  ```shell
+  pnpm astro add react sitemap partytown
+  ```
+  </Fragment>
+  <Fragment slot="yarn">
+  ```shell
+  yarn astro add react sitemap partytown
+  ```
+  </Fragment>
+</PackageManagerTabs>
+
+:::note[Xử lý dependencies của Integrations]
+Nếu bạn thấy cảnh báo như `Cannot find package '[package-name]'` sau khi thêm Integrations, package manager của bạn có thể chưa cài đặt [peer dependencies](https://nodejs.org/vi/blog/npm/peer-dependencies/) cho bạn. Để cài đặt các packages bị thiếu này, chạy lệnh sau:
+
+<PackageManagerTabs>
+  <Fragment slot="npm">
+  ```shell
+  npm install [package-name]
+  ```
+  </Fragment>
+  <Fragment slot="pnpm">
+  ```shell
+  pnpm add [package-name]
+  ```
+  </Fragment>
+  <Fragment slot="yarn">
+  ```shell
+  yarn add [package-name]
+  ```
+  </Fragment>
+</PackageManagerTabs>
+:::
+
+### Cài Đặt Thủ Công
+
+Integrations Astro luôn được thêm thông qua thuộc tính `integrations` trong file `astro.config.mjs` của bạn.
+
+Có ba cách phổ biến để import Integrations vào dự án Astro của bạn:
+
+1. [Cài đặt Integrations npm package](#cài-đặt-npm-package).
+2. Import Integrations riêng của bạn từ file local bên trong dự án.
+3. Viết Integrations inline, trực tiếp trong file config của bạn.
+
+    ```js
+    // astro.config.mjs
+    import { defineConfig } from 'astro/config';
+    import installedIntegration from '@astrojs/vue';
+    import localIntegration from './my-integration.js';
+
+    export default defineConfig({
+      integrations: [
+        // 1. Import từ npm package đã cài đặt
+        installedIntegration(),
+        // 2. Import từ file JS local
+        localIntegration(),
+        // 3. Một object inline
+        {name: 'namespace:id', hooks: { /* ... */ }},
+      ]
+    });
+    ```
+
+Xem tài liệu tham khảo [Integration API](/vi/reference/integrations-reference/) để tìm hiểu tất cả các cách khác nhau mà bạn có thể viết Integrations.
+
+#### Cài Đặt NPM Package
+
+Cài đặt Integrations NPM package bằng package manager, sau đó cập nhật `astro.config.mjs` thủ công.
+
+Ví dụ, để cài đặt Integrations `@astrojs/sitemap`:
+
+<Steps>
+1. Cài đặt Integrations vào dependencies dự án của bạn bằng package manager ưa thích:
+
+   <PackageManagerTabs>
+     <Fragment slot="npm">
+     ```shell
+     npm install @astrojs/sitemap
+     ```
+     </Fragment>
+     <Fragment slot="pnpm">
+     ```shell
+     pnpm add @astrojs/sitemap
+     ```
+     </Fragment>
+     <Fragment slot="yarn">
+     ```shell
+     yarn add @astrojs/sitemap
+     ```
+     </Fragment>
+   </PackageManagerTabs>
+
+2. Import Integrations vào file `astro.config.mjs` của bạn, và thêm nó vào mảng `integrations[]`, cùng với bất kỳ tùy chọn cấu hình nào:
+
+    ```js title="astro.config.mjs" ins={2} ins="sitemap()"
+    import { defineConfig } from 'astro/config';
+    import sitemap from '@astrojs/sitemap';
+
+    export default defineConfig({
+      // ...
+      integrations: [sitemap()],
+      // ...
+    });
+    ```
+
+    Lưu ý rằng các Integrations khác nhau có thể có cài đặt cấu hình khác nhau. Đọc tài liệu của từng Integrations, và áp dụng bất kỳ tùy chọn config cần thiết nào cho Integrations bạn chọn trong `astro.config.mjs`.
+</Steps>
+
+### Tùy Chọn Tùy Chỉnh
+
+Integrations hầu như luôn được tạo dưới dạng factory functions trả về object Integrations thực tế. Điều này cho phép bạn truyền arguments và options cho factory function để tùy chỉnh Integrations cho dự án của mình.
+
+```js
+integrations: [
+  // Ví dụ: Tùy chỉnh Integrations của bạn với function arguments
+  sitemap({filter: true})
+]
+```
+
+### Bật/Tắt Integrations
+
+Integrations falsy được bỏ qua, vì vậy bạn có thể bật/tắt Integrations mà không cần lo lắng về các giá trị `undefined` và boolean còn sót lại.
+
+```js
+integrations: [
+  // Ví dụ: Bỏ qua xây dựng sitemap trên Windows
+  process.platform !== 'win32' && sitemap()
+]
+```
+
+## Nâng Cấp Integrations
+
+Để nâng cấp tất cả Integrations chính thức cùng một lúc, chạy lệnh `@astrojs/upgrade`. Điều này sẽ nâng cấp cả Astro và tất cả Integrations chính thức lên phiên bản mới nhất.
+
+### Nâng Cấp Tự Động
+
+<PackageManagerTabs>
+  <Fragment slot="npm">
+  ```shell
+  # Nâng cấp Astro và Integrations chính thức cùng nhau lên mới nhất
+  npx @astrojs/upgrade
+  ```
+  </Fragment>
+  <Fragment slot="pnpm">
+  ```shell
+  # Nâng cấp Astro và Integrations chính thức cùng nhau lên mới nhất
+  pnpm dlx @astrojs/upgrade
+  ```
+  </Fragment>
+  <Fragment slot="yarn">
+  ```shell
+  # Nâng cấp Astro và Integrations chính thức cùng nhau lên mới nhất
+  yarn dlx @astrojs/upgrade
+  ```
+  </Fragment>
+</PackageManagerTabs>
+
+### Nâng Cấp Thủ Công
+
+Để nâng cấp một hoặc nhiều Integrations thủ công, sử dụng lệnh thích hợp cho package manager của bạn.
+
+<PackageManagerTabs>
+  <Fragment slot="npm">
+  ```shell
+  # Ví dụ: nâng cấp Integrations React và Partytown
+  npm install @astrojs/react@latest @astrojs/partytown@latest
+  ```
+  </Fragment>
+  <Fragment slot="pnpm">
+  ```shell
+  # Ví dụ: nâng cấp Integrations React và Partytown
+  pnpm add @astrojs/react@latest @astrojs/partytown@latest
+  ```
+  </Fragment>
+  <Fragment slot="yarn">
+  ```shell
+  # Ví dụ: nâng cấp Integrations React và Partytown
+  yarn add @astrojs/react@latest @astrojs/partytown@latest
+  ```
+  </Fragment>
+</PackageManagerTabs>
+
+## Gỡ Bỏ Integrations
+
+<Steps>
+1. Để gỏ bỏ Integrations, trước tiên hãy gỡ cài đặt Integrations khỏi dự án của bạn.
+
+    <PackageManagerTabs>
+      <Fragment slot="npm">
+      ```shell
+      npm uninstall @astrojs/react
+      ```
+      </Fragment>
+      <Fragment slot="pnpm">
+      ```shell
+      pnpm remove @astrojs/react
+      ```
+      </Fragment>
+      <Fragment slot="yarn">
+      ```shell
+      yarn remove @astrojs/react
+      ```
+      </Fragment>
+    </PackageManagerTabs>
+
+2. Tiếp theo, gỡ bỏ Integrations khỏi file `astro.config.*` của bạn:
+
+    ```js title="astro.config.mjs" del={3,7}
+    import { defineConfig } from 'astro/config';
+
+    import react from '@astrojs/react';
+
+    export default defineConfig({
+      integrations: [
+        react()
+      ]
+    });
+    ```
+</Steps>
+
+## Tìm Thêm Integrations
+
+Bạn có thể tìm thấy nhiều Integrations được phát triển bởi cộng đồng trong [Thư Mục Integrations Astro](https://astro.build/integrations/). Theo dõi các liên kết ở đó để biết hướng dẫn sử dụng và cấu hình chi tiết.
+
+## Xây Dựng Integrations Riêng
+
+Integration API của Astro được lấy cảm hứng từ Rollup và Vite, và được thiết kế để cảm thấy quen thuộc với bất kỳ ai đã từng viết Rollup hoặc Vite plugin trước đây.
+
+Xem tài liệu tham khảo [Integration API](/vi/reference/integrations-reference/) để tìm hiểu Integrations có thể làm gì và cách tự viết một Integrations.

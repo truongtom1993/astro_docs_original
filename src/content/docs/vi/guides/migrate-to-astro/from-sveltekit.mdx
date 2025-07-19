@@ -1,0 +1,82 @@
+---
+title: Di chuyển từ SvelteKit
+description: Mẹo để di chuyển dự án SvelteKit hiện có sang Astro
+sidebar:
+  label: SvelteKit
+type: migration
+stub: true
+framework: SvelteKit
+i18nReady: true
+---
+
+import PackageManagerTabs from '~/components/tabs/PackageManagerTabs.astro';
+import { CardGrid, LinkCard } from '@astrojs/starlight/components';
+
+[SvelteKit](https://kit.svelte.dev) là một framework để xây dựng các ứng dụng web dựa trên Svelte.
+
+## Những điểm tương đồng chính giữa SvelteKit và Astro
+
+SvelteKit và Astro có một số điểm tương đồng sẽ giúp bạn dễ dàng di chuyển dự án:
+
+- Cả SvelteKit và Astro đều là các trình tạo trang tĩnh (static-site generators) hiện đại dựa trên JavaScript và hỗ trợ kết xuất phía máy chủ (server-side rendering).
+
+- Cả SvelteKit và Astro đều sử dụng [thư mục `src/` cho các tệp dự án của bạn](/vi/basics/project-structure/#src) và một [thư mục đặc biệt cho định tuyến dựa trên tệp tin](/vi/basics/astro-pages/). Việc tạo và quản lý các trang cho website sẽ rất quen thuộc.
+
+- Astro có [tích hợp chính thức để sử dụng các component Svelte](/vi/guides/integrations-guide/svelte/) và hỗ trợ [cài đặt các gói NPM](/vi/guides/imports/#npm-packages), bao gồm nhiều gói dành cho Svelte. Bạn có thể viết các component giao diện Svelte, và có thể giữ lại một phần hoặc toàn bộ các component, dependencies hiện có.
+
+- Cả Astro và SvelteKit đều cho phép bạn sử dụng [headless CMS, API hoặc các tệp Markdown làm dữ liệu](/vi/guides/data-fetching/). Bạn có thể tiếp tục sử dụng hệ thống tạo nội dung yêu thích, cũng như giữ lại nội dung hiện có.
+
+## Những điểm khác biệt chính giữa SvelteKit và Astro
+
+Khi bạn xây dựng lại website SvelteKit bằng Astro, bạn sẽ nhận thấy một số khác biệt quan trọng:
+
+- Website Astro là các ứng dụng nhiều trang (MPA), trong khi SvelteKit mặc định là SPA (single-page application) với kết xuất phía máy chủ, nhưng cũng có thể tạo MPA, SPA truyền thống, hoặc kết hợp các kỹ thuật này trong một ứng dụng.
+
+- [Components](/vi/basics/astro-components/): SvelteKit sử dụng [Svelte](https://svelte.dev). Các trang Astro được xây dựng bằng [các component `.astro`](/vi/basics/astro-components/), nhưng cũng hỗ trợ [React, Preact, Vue.js, Svelte, SolidJS, AlpineJS](/vi/guides/framework-components/) và các mẫu HTML thuần.
+
+- [hướng đến nội dung](/vi/concepts/why-astro/#content-driven): Astro được thiết kế để trình bày nội dung của bạn và cho phép bạn chỉ bật tính năng tương tác khi cần thiết. Một ứng dụng SvelteKit hiện tại có thể được xây dựng để có mức độ tương tác phía client cao. Astro có sẵn các khả năng làm việc với nội dung như tạo trang, nhưng có thể cần các kỹ thuật nâng cao để tích hợp những phần khó thực hiện với các component `.astro`, ví dụ như dashboard.
+
+- [Hỗ trợ Markdown sẵn sàng](/vi/guides/markdown-content/): Astro tích hợp sẵn hỗ trợ Markdown, và bao gồm [thuộc tính frontmatter YAML `layout` đặc biệt](/vi/basics/layouts/#markdown-layouts) sử dụng cho từng tệp để xây dựng mẫu trang. Nếu bạn chuyển đổi blog dựa trên Markdown từ SvelteKit, bạn không cần cài đặt thêm tích hợp Markdown và cũng không cần đặt layout qua tệp cấu hình. Bạn có thể sử dụng lại các tệp Markdown hiện có, nhưng có thể cần sắp xếp lại do hệ thống định tuyến dựa trên tệp của Astro không yêu cầu một thư mục riêng cho mỗi route trang.
+
+
+## Chuyển đổi từ SvelteKit sang Astro
+
+Để chuyển một blog SvelteKit sang Astro, hãy bắt đầu với mẫu giao diện blog starter của chúng tôi, hoặc khám phá thêm các chủ đề blog cộng đồng trong [bộ sưu tập theme](https://astro.build/themes/).
+
+Bạn có thể truyền tham số `--template` cho lệnh `create astro` để bắt đầu một dự án Astro mới với một starter chính thức. Hoặc, bạn có thể [tạo dự án mới từ bất kỳ kho lưu trữ Astro nào trên GitHub](/vi/install-and-setup/#install-from-the-cli-wizard).
+
+  <PackageManagerTabs>
+    <Fragment slot="npm">
+    ```shell
+    npm create astro@latest -- --template blog
+    ```
+    </Fragment>
+    <Fragment slot="pnpm">
+    ```shell
+    pnpm create astro@latest --template blog
+    ```
+    </Fragment>
+    <Fragment slot="yarn">
+    ```shell
+    yarn create astro --template blog
+    ```
+    </Fragment>
+  </PackageManagerTabs>
+
+Mang các tệp Markdown (hoặc MDX, với tích hợp tùy chọn) hiện có vào làm nội dung để [tạo các trang Markdown hoặc MDX](/vi/guides/markdown-content/).
+
+Mặc dù định tuyến dựa trên tệp và các component layout khá giống nhau trong Astro, bạn nên đọc thêm về [cấu trúc dự án của Astro](/vi/basics/project-structure/) để biết vị trí nên đặt các tệp.
+
+Để chuyển đổi các loại website khác như portfolio hay tài liệu, hãy xem thêm các mẫu starter chính thức tại [astro.new](https://astro.new). Bạn sẽ tìm thấy liên kết đến kho GitHub của từng dự án, cũng như các liên kết một chạm để mở dự án trực tiếp trên IDX, StackBlitz, CodeSandbox và Gitpod.
+
+## Tài nguyên cộng đồng
+
+<CardGrid>
+
+  <LinkCard title="Viết lại blog của tôi từ SvelteKit sang Astro" href="https://kharann.com/blog/rewriting-my-blog/"/>
+
+</CardGrid>
+
+:::note[Muốn chia sẻ tài nguyên?]
+Nếu bạn tìm thấy (hoặc tự làm ra!) một video hoặc bài viết hữu ích về việc chuyển đổi website SvelteKit sang Astro, [hãy thêm vào danh sách này](https://github.com/withastro/docs/edit/main/src/content/docs/vi/guides/migrate-to-astro/from-sveltekit.mdx)!
+:::

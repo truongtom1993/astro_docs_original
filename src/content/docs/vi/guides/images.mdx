@@ -1,0 +1,540 @@
+---
+title: Hình ảnh
+description: Tìm hiểu cách sử dụng hình ảnh trong Astro.
+i18nReady: true
+---
+import Since from '~/components/Since.astro';
+import PackageManagerTabs from '~/components/tabs/PackageManagerTabs.astro';
+import RecipeLinks from "~/components/RecipeLinks.astro";
+import { Steps } from '@astrojs/starlight/components'
+import ReadMore from '~/components/ReadMore.astro';
+
+Astro cung cấp nhiều cách để bạn sử dụng hình ảnh trên trang web, dù chúng được lưu trữ cục bộ trong dự án, liên kết từ URL bên ngoài, hay được quản lý trong CMS hoặc CDN.
+
+Astro cung cấp các component [image](#hiển-thị-hình-ảnh-tối-ưu-với-component-image) và [picture](#tạo-hình-ảnh-responsive-với-component-picture), xử lý [cú pháp hình ảnh Markdown](#hình-ảnh-trong-file-markdown), [component SVG](#component-svg), và [hàm tạo hình ảnh](#tạo-hình-ảnh-với-getimage) để tối ưu và/hoặc biến đổi hình ảnh của bạn.
+
+Bạn luôn có thể chọn sử dụng hình ảnh và file SVG bằng các phần tử HTML gốc trong file `.astro` hoặc Markdown, hoặc theo cách tiêu chuẩn cho loại file của bạn (ví dụ `<img />` trong MDX và JSX). Tuy nhiên, Astro không thực hiện bất kỳ xử lý hoặc tối ưu hóa nào cho những hình ảnh này.
+
+<ReadMore>Xem tài liệu tham khảo API đầy đủ cho các component [`<Image />`](/vi/reference/modules/astro-assets/#image-) và [`<Picture />`](/vi/reference/modules/astro-assets/#picture-).</ReadMore>
+
+## Nơi lưu trữ hình ảnh
+
+### `src/` so với `public/`
+
+Chúng tôi khuyến nghị các hình ảnh cục bộ được lưu trong `src/` khi có thể để Astro có thể biến đổi, tối ưu và gộp chúng. Các file trong thư mục `/public` luôn được phục vụ hoặc sao chép vào thư mục build nguyên trạng, không có bất kỳ xử lý nào.
+
+Hình ảnh cục bộ được lưu trong `src/` có thể được sử dụng bởi tất cả file trong dự án: `.astro`, `.md`, `.mdx`, `.mdoc`, và các UI framework khác. Hình ảnh có thể được lưu trong bất kỳ thư mục nào, kể cả bên cạnh nội dung của bạn.
+
+Lưu hình ảnh trong thư mục `public/` nếu bạn muốn tránh bất kỳ xử lý nào hoặc có liên kết công khai trực tiếp đến chúng.
+
+### Hình ảnh từ xa
+
+Bạn cũng có thể chọn lưu trữ hình ảnh từ xa, trong [hệ thống quản lý nội dung (CMS)](/vi/guides/cms/) hoặc nền tảng [quản lý tài sản kỹ thuật số (DAM)](/vi/guides/media/).
+Astro có thể lấy dữ liệu từ xa bằng API hoặc hiển thị hình ảnh từ đường dẫn URL đầy đủ.
+
+Để bảo vệ thêm khi xử lý nguồn bên ngoài, các component hình ảnh và hàm trợ giúp của Astro sẽ chỉ xử lý (ví dụ tối ưu, biến đổi) hình ảnh từ [các nguồn hình ảnh được ủy quyền được chỉ định trong cấu hình](#ủy-quyền-hình-ảnh-từ-xa). Hình ảnh từ xa từ các nguồn khác sẽ được hiển thị mà không có xử lý.
+
+## Hình ảnh trong file `.astro`
+
+Trong file `.astro`, một hình ảnh cục bộ phải được import từ đường dẫn tương đối. Import này cung cấp giá trị `src` cho hình ảnh.
+
+Hình ảnh từ xa và `public/` không cần import, thay vào đó cần URL (đầy đủ hoặc đường dẫn tương đối trên trang web) cho `src`.
+
+Import và sử dụng các component [`<Image />`](#hiển-thị-hình-ảnh-tối-ưu-với-component-image) và [`<Picture />`](#tạo-hình-ảnh-responsive-với-component-picture) gốc của Astro cho hình ảnh tối ưu. Cú pháp Astro cũng hỗ trợ [viết thẻ HTML `<img>` trực tiếp](#hiển-thị-hình-ảnh-chưa-xử-lý-với-thẻ-html-img), bỏ qua xử lý hình ảnh.
+
+```astro title="src/pages/blog/my-images.astro"
+---
+import { Image } from 'astro:assets';
+import localBirdImage from '../../images/subfolder/localBirdImage.png';
+---
+<Image src={localBirdImage} alt="Một con chim đậu trên tổ trứng." />
+<Image src="/images/bird-in-public-folder.jpg" alt="Một con chim." width="50" height="50" />
+<Image src="https://example.com/remote-bird.jpg" alt="Một con chim." width="50" height="50" />
+
+<img src={localBirdImage.src} alt="Một con chim đậu trên tổ trứng.">
+<img src="/images/bird-in-public-folder.jpg" alt="Một con chim.">
+<img src="https://example.com/remote-bird.jpg" alt="Một con chim.">
+```
+
+<ReadMore>Xem tài liệu tham khảo API đầy đủ cho các component [`<Image />`](/vi/reference/modules/astro-assets/#image-) và [`<Picture />`](/vi/reference/modules/astro-assets/#picture-).</ReadMore>
+
+<RecipeLinks slugs={["en/recipes/dynamically-importing-images" ]}/>
+
+### Hiển thị hình ảnh tối ưu với component `<Image />`
+
+Sử dụng component `<Image />` có sẵn của Astro để hiển thị phiên bản tối ưu của:
+
+- hình ảnh cục bộ nằm trong thư mục `src/`
+- [hình ảnh từ xa đã cấu hình](#ủy-quyền-hình-ảnh-từ-xa) từ các nguồn được ủy quyền
+
+`<Image />` có thể biến đổi kích thước, loại file và chất lượng của hình ảnh cục bộ hoặc từ xa được ủy quyền để kiểm soát hình ảnh hiển thị. Việc biến đổi này xảy ra tại thời điểm build cho các trang được render trước. Khi trang được render theo yêu cầu, việc biến đổi này sẽ diễn ra ngay lập tức khi trang được xem. Thẻ `<img>` kết quả bao gồm các thuộc tính `alt`, `loading`, và `decoding` và suy ra kích thước hình ảnh để tránh Cumulative Layout Shift (CLS).
+
+:::note[Cumulative Layout Shift là gì?]
+[Cumulative Layout Shift (CLS)](https://web.dev/cls/) là một chỉ số Core Web Vital để đo lường mức độ nội dung dịch chuyển trên trang trong quá trình tải. Component `<Image />` tối ưu cho CLS bằng cách tự động đặt `width` và `height` chính xác cho hình ảnh.
+:::
+
+```astro title="src/components/MyComponent.astro"
+---
+// import component Image và hình ảnh
+import { Image } from 'astro:assets';
+import myImage from '../assets/my_image.png'; // Hình ảnh là 1600x900
+---
+
+<!-- `alt` là bắt buộc trên component Image -->
+<Image src={myImage} alt="Mô tả hình ảnh của tôi." />
+```
+
+```html
+<!-- Output được render trước -->
+<!-- Hình ảnh được tối ưu, các thuộc tính phù hợp được thêm vào -->
+<img
+  src="/_astro/my_image.hash.webp"
+  width="1600"
+  height="900"
+  decoding="async"
+  loading="lazy"
+  alt="Mô tả hình ảnh của tôi."
+/>
+
+<!-- Output được render theo yêu cầu-->
+<!-- src sẽ sử dụng endpoint được tạo theo yêu cầu-->
+<img
+  src="/_image?href=%2F_astro%2Fmy_image.hash.webp&amp;w=1600&amp;h=900&amp;f=webp"
+  <!-- ... -->
+/>
+```
+
+Component `<Image />` chấp nhận [nhiều thuộc tính component](/vi/reference/modules/astro-assets/#image-properties) cũng như bất kỳ thuộc tính nào được chấp nhận bởi thẻ HTML `<img>`.
+
+Ví dụ sau cung cấp `class` cho component hình ảnh sẽ áp dụng cho phần tử `<img>` cuối cùng.
+
+```astro title="src/pages/index.astro" 'class="my-class"'
+---
+import { Image } from 'astro:assets';
+import myImage from '../assets/my_image.png';
+---
+
+<!-- `alt` là bắt buộc trên component Image -->
+<Image src={myImage} alt="" class="my-class" />
+```
+
+```html 'class="my-class"'
+<!-- Output được render trước -->
+<img
+  src="/_astro/my_image.hash.webp"
+  width="1600"
+  height="900"
+  decoding="async"
+  loading="lazy"
+  class="my-class"
+  alt=""
+/>
+
+```
+
+:::tip
+Bạn cũng có thể sử dụng component `<Image />` cho hình ảnh trong thư mục `public/` hoặc hình ảnh từ xa không được cấu hình cụ thể trong dự án, mặc dù những hình ảnh này sẽ không được tối ưu hoặc xử lý. Hình ảnh kết quả sẽ giống như sử dụng HTML `<img>`.
+
+Tuy nhiên, sử dụng component hình ảnh cho tất cả hình ảnh cung cấp trải nghiệm viết code nhất quán và ngăn chặn Cumulative Layout Shift (CLS) ngay cả cho hình ảnh chưa tối ưu.
+:::
+
+### Tạo hình ảnh responsive với component `<Picture />`
+
+<p><Since v="3.3.0" /></p>
+
+Sử dụng component `<Picture />` có sẵn của Astro để hiển thị hình ảnh responsive với nhiều định dạng và/hoặc kích thước. Giống như [`<Image />` component](#hiển-thị-hình-ảnh-tối-ưu-với-component-image), hình ảnh sẽ được xử lý tại thời điểm build cho các trang được render trước. Khi trang được render theo yêu cầu, việc xử lý sẽ diễn ra ngay lập tức khi trang được xem.
+
+```astro title="src/pages/index.astro"
+---
+import { Picture } from 'astro:assets';
+import myImage from '../assets/my_image.png'; // Hình ảnh là 1600x900
+---
+
+<!-- `alt` là bắt buộc trên component Picture -->
+<Picture src={myImage} formats={['avif', 'webp']} alt="Mô tả hình ảnh của tôi." />
+```
+
+```html
+<!-- Output được render trước -->
+<picture>
+  <source srcset="/_astro/my_image.hash.avif" type="image/avif" />
+  <source srcset="/_astro/my_image.hash.webp" type="image/webp" />
+  <img
+    src="/_astro/my_image.hash.png"
+    width="1600"
+    height="900"
+    decoding="async"
+    loading="lazy"
+    alt="Mô tả hình ảnh của tôi."
+  />
+</picture>
+```
+
+<ReadMore>Xem chi tiết về [thuộc tính component `<Picture />`](/vi/reference/modules/astro-assets/#picture-properties) trong tài liệu tham khảo `astro:assets`.</ReadMore>
+
+### Hiển thị hình ảnh chưa xử lý với thẻ HTML `<img>`
+
+[Cú pháp template Astro](/vi/reference/astro-syntax/) cũng hỗ trợ viết thẻ `<img>` trực tiếp, với toàn quyền kiểm soát output cuối cùng. Những hình ảnh này sẽ không được xử lý và tối ưu. Nó chấp nhận tất cả thuộc tính thẻ HTML `<img>`, và thuộc tính duy nhất bắt buộc là `src`.
+
+Hình ảnh cục bộ phải được import từ đường dẫn tương đối từ file `.astro` hiện tại, hoặc bạn có thể cấu hình và sử dụng [alias import](/vi/guides/imports/#aliases). Sau đó, bạn có thể truy cập `src` và các thuộc tính khác của hình ảnh để sử dụng trong thẻ `<img>`.
+
+Tài sản hình ảnh được import khớp với chữ ký sau:
+
+```ts
+interface ImageMetadata {
+  src: string;
+  width: number;
+  height: number;
+  format: string;
+}
+```
+
+Ví dụ sau sử dụng thuộc tính `height` và `width` của chính hình ảnh để tránh Cumulative Layout Shift (CLS) và cải thiện Core Web Vitals:
+
+```astro title="src/pages/posts/post-1.astro" "myDog.width" "myDog.height"
+---
+// import hình ảnh cục bộ
+import myDog from '../../images/pets/local-dog.jpg';
+---
+// truy cập thuộc tính hình ảnh
+<img src={myDog.src} width={myDog.width} height={myDog.height} alt="Một con chó đang sủa." />
+```
+
+#### Hình ảnh trong `public/`
+Đối với hình ảnh nằm trong `public/`, sử dụng đường dẫn file tương đối đến thư mục public làm giá trị `src`:
+
+```astro '"/images/public-cat.jpg"'
+<img src="/images/public-cat.jpg" alt="Một con mèo đang ngủ." >
+```
+
+#### Hình ảnh từ xa
+
+Đối với hình ảnh từ xa, sử dụng URL đầy đủ của hình ảnh làm giá trị `src`:
+
+```astro '"https://example.com/remote-cat.jpg"'
+<img src="https://example.com/remote-cat.jpg" alt="Một con mèo đang ngủ." >
+```
+
+### Chọn `<Image />` hay `<img>`
+
+Component `<Image />` tối ưu hình ảnh và suy ra width và height (cho hình ảnh nó có thể xử lý) dựa trên tỷ lệ khung hình gốc để tránh CLS. Đây là cách ưa thích để sử dụng hình ảnh trong file `.astro` bất cứ khi nào có thể.
+
+Sử dụng phần tử HTML `<img>` khi bạn không thể sử dụng component `<Image />`, ví dụ:
+  - cho các định dạng hình ảnh không được hỗ trợ
+  - khi bạn không muốn hình ảnh được tối ưu bởi Astro
+  - để truy cập và thay đổi thuộc tính `src` động từ phía client
+
+### Đặt giá trị mặc định
+
+Hiện tại, không có cách nào để chỉ định giá trị mặc định cho tất cả component `<Image />` hoặc `<Picture/>`. Các thuộc tính bắt buộc phải được đặt trên từng component riêng lẻ.
+
+Thay thế, bạn có thể bọc những component này vào một component Astro khác để tái sử dụng. Ví dụ, bạn có thể tạo một component cho hình ảnh blog post nhận thuộc tính làm props và áp dụng style nhất quán cho mỗi hình ảnh:
+
+```astro title="src/components/BlogPostImage.astro"
+---
+import { Image } from 'astro:assets';
+
+const { src, ...attrs } = Astro.props;
+---
+<Image src={src} {...attrs} />
+
+<style>
+  img {
+    margin-block: 2.5rem;
+    border-radius: 0.75rem;
+  }
+</style>
+```
+
+### Ủy quyền hình ảnh từ xa
+
+Bạn có thể cấu hình danh sách các domain và pattern URL nguồn hình ảnh được ủy quyền cho tối ưu hình ảnh sử dụng [`image.domains`](/vi/reference/configuration-reference/#imagedomains) và [`image.remotePatterns`](/vi/reference/configuration-reference/#imageremotepatterns). Cấu hình này là một lớp bảo mật bổ sung để bảo vệ trang web khi hiển thị hình ảnh từ nguồn bên ngoài.
+
+Hình ảnh từ xa từ các nguồn khác sẽ không được tối ưu, nhưng sử dụng component `<Image />` cho những hình ảnh này sẽ ngăn chặn Cumulative Layout Shift (CLS).
+
+Ví dụ, cấu hình sau sẽ chỉ cho phép hình ảnh từ xa từ `astro.build` được tối ưu:
+
+```ts
+// astro.config.mjs
+export default defineConfig({
+  image: {
+    domains: ["astro.build"],
+  }
+});
+```
+
+Cấu hình sau sẽ chỉ cho phép hình ảnh từ xa từ host HTTPS:
+
+```ts
+// astro.config.mjs
+export default defineConfig({
+  image: {
+    remotePatterns: [{ protocol: "https" }],
+  }
+});
+```
+
+## Component SVG
+<p><Since v="5.7.0" /></p>
+
+Astro cho phép bạn import file SVG và sử dụng chúng như component Astro. Astro sẽ nhúng nội dung SVG vào HTML output.
+
+Tham chiếu default import của bất kỳ file `.svg` cục bộ nào. Vì import này được coi như một component Astro, bạn phải sử dụng các quy ước tương tự (ví dụ viết hoa) như khi [sử dụng dynamic tags](/vi/reference/astro-syntax/#dynamic-tags).
+
+```astro title="src/components/MyAstroComponent.astro"
+---
+import Logo from './path/to/svg/file.svg';
+---
+
+<Logo />
+```
+
+Component SVG của bạn, giống như `<Image />` hoặc bất kỳ component Astro nào khác, không khả dụng bên trong các component UI framework, nhưng có thể [được truyền đến component framework](#hình-ảnh-trong-component-ui-framework) bên trong component `.astro`.
+
+### Thuộc tính component SVG
+
+Bạn có thể truyền props như `width`, `height`, `fill`, `stroke`, và bất kỳ thuộc tính nào khác được chấp nhận bởi [phần tử `<svg>` gốc](https://developer.mozilla.org/en-US/docs/Web/SVG/Element/svg). Các thuộc tính này sẽ tự động được áp dụng cho phần tử `<svg>` bên dưới. Nếu một thuộc tính có mặt trong file `.svg` gốc và được truyền cho component, giá trị được truyền cho component sẽ ghi đè giá trị gốc.
+
+```astro title="src/components/MyAstroComponent.astro"
+---
+import Logo from '../assets/logo.svg';
+---
+
+<Logo width={64} height={64} fill="currentColor" />
+```
+
+## Sử dụng hình ảnh từ CMS hoặc CDN
+
+Image CDN hoạt động với [tất cả tùy chọn hình ảnh Astro](#hình-ảnh-trong-file-astro). Sử dụng URL đầy đủ của hình ảnh làm thuộc tính `src` trong component `<Image />`, thẻ `<img>`, hoặc trong ký hiệu Markdown. Để tối ưu hình ảnh với hình ảnh từ xa, cũng [cấu hình domain hoặc URL pattern được ủy quyền](#ủy-quyền-hình-ảnh-từ-xa).
+
+Ngoài ra, CDN có thể cung cấp SDK riêng để tích hợp dễ dàng hơn trong dự án Astro. Ví dụ, Cloudinary cung cấp [Astro SDK](https://astro.cloudinary.dev/) cho phép bạn dễ dàng chèn hình ảnh với component `CldImage` hoặc [Node.js SDK](https://cloudinary.com/documentation/node_integration) có thể tạo URL để sử dụng với thẻ `<img>` trong môi trường Node.js.
+
+<ReadMore>Xem tài liệu tham khảo API đầy đủ cho các component [`<Image />`](/vi/reference/modules/astro-assets/#image-) và [`<Picture />`](/vi/reference/modules/astro-assets/#picture-).</ReadMore>
+
+## Hình ảnh trong file Markdown
+
+Sử dụng cú pháp Markdown tiêu chuẩn `![alt](src)` trong file `.md`. Cú pháp này hoạt động với [Image Service API](/vi/reference/image-service-reference/) của Astro để tối ưu hình ảnh cục bộ được lưu trong `src/` và hình ảnh từ xa. Hình ảnh được lưu trong thư mục `public/` không bao giờ được tối ưu.
+
+```md
+<!-- src/pages/post-1.md -->
+
+# Trang Markdown của tôi
+
+<!-- Hình ảnh cục bộ được lưu trong src/assets/ -->
+<!-- Sử dụng đường dẫn file tương đối hoặc alias import -->
+![Bầu trời đêm đầy sao.](../assets/stars.png)
+
+<!-- Hình ảnh được lưu trong public/images/ -->
+<!-- Sử dụng đường dẫn file tương đối đến public/ -->
+![Bầu trời đêm đầy sao.](/images/stars.png)
+
+<!-- Hình ảnh từ xa trên server khác -->
+<!-- Sử dụng URL đầy đủ của hình ảnh -->
+![Astro](https://example.com/images/remote-image.png)
+```
+
+Thẻ HTML `<img>` cũng có thể được sử dụng để hiển thị hình ảnh được lưu trong `public/` hoặc hình ảnh từ xa mà không có bất kỳ tối ưu hoặc xử lý hình ảnh nào. Tuy nhiên, `<img>` không được hỗ trợ cho hình ảnh cục bộ trong `src`.
+
+Các component `<Image />` và `<Picture />` không khả dụng trong file `.md`. Nếu bạn cần kiểm soát nhiều hơn thuộc tính hình ảnh, chúng tôi khuyến nghị sử dụng [tích hợp MDX của Astro](/vi/guides/integrations-guide/mdx/) để thêm hỗ trợ cho định dạng file `.mdx`. MDX cho phép [tùy chọn hình ảnh bổ sung khả dụng trong MDX](#hình-ảnh-trong-file-mdx), bao gồm kết hợp component với cú pháp Markdown.
+
+## Hình ảnh trong file MDX
+
+Bạn có thể sử dụng các component `<Image />` và `<Picture />` của Astro trong file `.mdx` bằng cách import cả component và hình ảnh. Sử dụng chúng giống như [được sử dụng trong file `.astro`](#hình-ảnh-trong-file-astro). Thẻ JSX `<img />` cũng được hỗ trợ cho hình ảnh chưa xử lý và [sử dụng cùng import hình ảnh như thẻ HTML `<img>`](#hiển-thị-hình-ảnh-chưa-xử-lý-với-thẻ-html-img).
+
+Ngoài ra, có hỗ trợ cho [cú pháp Markdown tiêu chuẩn `![alt](src)`](#hình-ảnh-trong-file-markdown) mà không cần import.
+
+```mdx title="src/pages/post-1.mdx"
+---
+title: Tiêu đề trang của tôi
+---
+import { Image } from 'astro:assets';
+import rocket from '../assets/rocket.png';
+
+# Trang MDX của tôi
+
+// Hình ảnh cục bộ được lưu trong cùng thư mục
+![Houston trong tự nhiên](houston.png)
+
+// Hình ảnh cục bộ được lưu trong src/assets/
+<Image src={rocket} alt="Một tàu vũ trụ trong không gian." />
+<img src={rocket.src} alt="Một tàu vũ trụ trong không gian." />
+![Một tàu vũ trụ trong không gian](../assets/rocket.png)
+
+// Hình ảnh được lưu trong public/images/
+<Image src="/images/stars.png" alt="Bầu trời đêm đầy sao." />
+<img src="/images/stars.png" alt="Bầu trời đêm đầy sao." />
+![Bầu trời đêm đầy sao.](/images/stars.png)
+
+// Hình ảnh từ xa trên server khác
+<Image src="https://example.com/images/remote-image.png" />
+<img src="https://example.com/images/remote-image.png" />
+![Astro](https://example.com/images/remote-image.png)
+
+```
+
+<ReadMore>Xem tài liệu tham khảo API đầy đủ cho các component [`<Image />`](/vi/reference/modules/astro-assets/#image-) và [`<Picture />`](/vi/reference/modules/astro-assets/#picture-).</ReadMore>
+
+## Hình ảnh trong content collections
+
+Hình ảnh trong content collections sẽ được xử lý theo cách tương tự như trong [Markdown](#hình-ảnh-trong-file-markdown) và [MDX](#hình-ảnh-trong-file-mdx) tùy thuộc vào loại file bạn đang sử dụng.
+
+Ngoài ra, bạn có thể khai báo một hình ảnh liên quan cho một entry content collections, chẳng hạn như hình ảnh bìa của blog post, trong frontmatter sử dụng đường dẫn tương đối đến thư mục hiện tại:
+
+```md title="src/content/blog/my-post.md" {3}
+---
+title: "Blog post đầu tiên của tôi"
+cover: "./firstpostcover.jpeg" # sẽ resolve thành "src/content/blog/firstblogcover.jpeg"
+coverAlt: "Một bức ảnh hoàng hôn sau dãy núi."
+---
+
+Đây là một blog post
+```
+
+Helper `image` cho schema content collections cho phép bạn xác thực và import hình ảnh.
+
+```ts title="src/content.config.ts"
+import { defineCollection, z } from "astro:content";
+
+const blogCollection = defineCollection({
+	schema: ({ image }) => z.object({
+		title: z.string(),
+		cover: image(),
+		coverAlt: z.string(),
+	}),
+});
+
+export const collections = {
+	blog: blogCollection,
+};
+```
+
+Hình ảnh sẽ được import và biến đổi thành metadata, cho phép bạn truyền nó làm `src` cho `<Image/>`, `<img>`, hoặc `getImage()`.
+
+Ví dụ dưới đây cho thấy trang index blog hiển thị ảnh bìa và tiêu đề của mỗi blog post từ schema ở trên:
+
+```astro title="src/pages/blog.astro" {10}
+---
+import { Image } from "astro:assets";
+import { getCollection } from "astro:content";
+const allBlogPosts = await getCollection("blog");
+---
+
+{
+	allBlogPosts.map((post) => (
+		<div>
+			<Image src={post.data.cover} alt={post.data.coverAlt} />
+			<h2>
+				<a href={"/blog/" + post.slug}>{post.data.title}</a>
+			</h2>
+		</div>
+	))
+}
+```
+
+## Hình ảnh trong component UI framework
+
+Component `<Image />`, giống như bất kỳ component Astro nào khác, không khả dụng bên trong các component UI framework.
+
+Nhưng bạn có thể truyền nội dung tĩnh được tạo bởi `<Image />` đến một component framework bên trong file `.astro` [như children](/vi/guides/framework-components/#passing-children-to-framework-components) hoặc sử dụng [named `<slot/>`](/vi/guides/framework-components/#can-i-use-astro-components-inside-my-framework-components):
+
+```astro title="src/components/ImageWrapper.astro"
+---
+import ReactComponent from './ReactComponent.jsx';
+import { Image } from 'astro:assets';
+import stars from '~/stars/docline.png';
+---
+
+<ReactComponent>
+  <Image src={stars} alt="Bầu trời đêm đầy sao." />
+</ReactComponent>
+```
+
+Bạn cũng có thể sử dụng cú pháp hình ảnh riêng của framework để render hình ảnh (ví dụ `<img />` trong JSX, `<img>` trong Svelte).
+
+[Hình ảnh cục bộ phải được import trước](#hiển-thị-hình-ảnh-chưa-xử-lý-với-thẻ-html-img) để truy cập thuộc tính hình ảnh như `src`.
+
+```jsx title="src/components/ReactImage.jsx"
+import stars from "../assets/stars.png";
+
+export default function ReactImage() {
+  return (
+    <img src={stars.src} alt="Bầu trời đêm đầy sao." />
+  )
+}
+```
+
+```svelte title="src/components/SvelteImage.svelte"
+<script>
+  import stars from '../assets/stars.png';
+</script>
+
+<img src={stars.src} alt="Bầu trời đêm đầy sao." />
+
+```
+
+## Tạo hình ảnh với `getImage()`
+
+Hàm `getImage()` được thiết kế để tạo hình ảnh được định hướng sử dụng ở nơi khác ngoài HTML trực tiếp, ví dụ trong [API Route](/vi/guides/endpoints/#server-endpoints-api-routes). Khi bạn cần các tùy chọn mà các component `<Picture>` và `<Image>` hiện tại không hỗ trợ, bạn có thể sử dụng hàm `getImage()` để tạo component `<Image />` tùy chỉnh của riêng mình.
+
+<ReadMore>Xem thêm trong [tài liệu tham khảo `getImage()`](/vi/reference/modules/astro-assets/#getimage).</ReadMore>
+
+<RecipeLinks slugs={["en/recipes/build-custom-img-component" ]}/>
+
+## Alt Text
+
+Không phải tất cả người dùng đều có thể nhìn thấy hình ảnh theo cách tương tự, vì vậy khả năng tiếp cận là một mối quan tâm đặc biệt quan trọng khi sử dụng hình ảnh. Sử dụng thuộc tính `alt` để cung cấp [văn bản alt mô tả](https://www.w3.org/WAI/tutorials/images/) cho hình ảnh.
+
+Thuộc tính này là bắt buộc cho cả component `<Image />` và `<Picture />`. Nếu không cung cấp alt text, một thông báo lỗi hữu ích sẽ được cung cấp nhắc nhở bạn bao gồm thuộc tính `alt`.
+
+Nếu hình ảnh chỉ mang tính trang trí (tức là không đóng góp vào việc hiểu trang), hãy đặt `alt=""` để screen reader biết bỏ qua hình ảnh.
+
+## Dịch vụ hình ảnh mặc định
+
+[Sharp](https://github.com/lovell/sharp) là dịch vụ hình ảnh mặc định được sử dụng cho `astro:assets`. Bạn có thể cấu hình thêm dịch vụ hình ảnh bằng tùy chọn [`image.service`](/vi/reference/configuration-reference/#imageservice).
+
+:::note
+Khi sử dụng [package manager nghiêm ngặt](https://pnpm.io/pnpm-vs-npm#npms-flat-tree) như `pnpm`, bạn có thể cần cài đặt Sharp thủ công vào dự án mặc dù nó là dependency của Astro:
+
+```bash
+pnpm add sharp
+```
+:::
+
+### Cấu hình dịch vụ passthrough no-op
+
+Nếu [adapter](https://astro.build/integrations/?search=&categories%5B%5D=adapters) của bạn không hỗ trợ tối ưu hình ảnh Sharp có sẵn của Astro (ví dụ Deno, Cloudflare), bạn có thể cấu hình dịch vụ hình ảnh no-op để cho phép sử dụng các component `<Image />` và `<Picture />`. Lưu ý rằng Astro không thực hiện bất kỳ biến đổi và xử lý hình ảnh nào trong những môi trường này. Tuy nhiên, bạn vẫn có thể tận hưởng các lợi ích khác của việc sử dụng `astro:assets`, bao gồm không có Cumulative Layout Shift (CLS), thuộc tính `alt` được ép buộc, và trải nghiệm viết code nhất quán.
+
+Cấu hình `passthroughImageService()` để tránh xử lý hình ảnh Sharp:
+
+```js title="astro.config.mjs" ins={4-6} "passthroughImageService"
+import { defineConfig, passthroughImageService } from 'astro/config';
+
+export default defineConfig({
+  image: {
+    service: passthroughImageService()
+  }
+});
+```
+
+## Caching tài sản
+
+Astro lưu trữ tài sản hình ảnh đã xử lý trong thư mục cache trong quá trình build trang web cho cả [hình ảnh cục bộ và từ xa từ các nguồn được ủy quyền](#ủy-quyền-hình-ảnh-từ-xa). Bằng cách bảo tồn thư mục cache giữa các lần build, các tài sản đã xử lý được tái sử dụng, cải thiện thời gian build và sử dụng băng thông.
+
+Thư mục cache mặc định là `./node_modules/.astro`, tuy nhiên điều này có thể được thay đổi bằng cài đặt cấu hình [`cacheDir`](/vi/reference/configuration-reference/#cachedir).
+
+### Hình ảnh từ xa
+
+Hình ảnh từ xa trong cache tài sản được quản lý dựa trên [HTTP Caching](https://developer.mozilla.org/en-US/docs/Web/HTTP/Caching), và tôn trọng [Cache-Control header](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cache-Control) được trả về bởi server từ xa.
+Hình ảnh được cache nếu Cache-Control header cho phép, và sẽ được sử dụng cho đến khi chúng không còn [fresh](https://developer.mozilla.org/en-US/docs/Web/HTTP/Caching#fresh_and_stale_based_on_age).
+
+#### Revalidation
+
+<p><Since v="5.1.0" /></p>
+
+[Revalidation](https://developer.mozilla.org/en-US/docs/Web/HTTP/Caching#validation) giảm sử dụng băng thông và thời gian build bằng cách kiểm tra với server từ xa xem hình ảnh cache đã hết hạn có còn cập nhật hay không. Nếu server chỉ ra rằng hình ảnh vẫn fresh, phiên bản cache được tái sử dụng, nếu không hình ảnh được tải lại.
+
+Revalidation yêu cầu server từ xa gửi header [Last-Modified](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Last-Modified) và/hoặc [Etag (entity tag)](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/ETag) với phản hồi. Tính năng này khả dụng cho server từ xa hỗ trợ header [If-Modified-Since](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/If-Modified-Since) và [If-None-Match](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/If-None-Match).
+
+## Tích hợp cộng đồng
+
+Có nhiều [tích hợp hình ảnh cộng đồng](https://astro.build/integrations?search=images) của bên thứ ba để tối ưu và làm việc với hình ảnh trong dự án Astro của bạn.

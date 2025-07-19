@@ -1,0 +1,64 @@
+---
+title: Triển khai trang Astro của bạn lên Heroku
+description: Cách triển khai trang Astro của bạn lên web bằng Heroku.
+sidebar:
+  label: Heroku
+type: deploy
+i18nReady: true
+---
+import { Steps } from '@astrojs/starlight/components';
+
+[Heroku](https://www.heroku.com/) là một nền tảng như một dịch vụ (platform-as-a-service) để xây dựng, vận hành và quản lý các ứng dụng hiện đại trên đám mây. Bạn có thể triển khai một trang Astro lên Heroku bằng hướng dẫn này.
+
+:::danger
+Các hướng dẫn sau sử dụng [gói `heroku-static-buildpack` đã bị ngừng hỗ trợ](https://github.com/heroku/heroku-buildpack-static#warning-heroku-buildpack-static-is-deprecated). Vui lòng xem [tài liệu của Heroku về việc sử dụng `heroku-buildpack-nginx`](https://github.com/dokku/heroku-buildpack-nginx) thay thế.
+:::
+
+## Cách triển khai
+
+<Steps>
+1. Cài đặt [Heroku CLI](https://devcenter.heroku.com/articles/heroku-cli).
+
+2. Tạo tài khoản Heroku bằng cách [đăng ký](https://signup.heroku.com/).
+
+3. Chạy `heroku login` và điền thông tin đăng nhập Heroku của bạn:
+
+   ```bash
+   $ heroku login
+   ```
+
+4. Tạo một file tên là `static.json` ở thư mục gốc của dự án với nội dung sau:
+
+   ```json title="static.json"
+   {
+     "root": "./dist"
+   }
+   ```
+
+   Đây là cấu hình cho trang của bạn; đọc thêm tại [heroku-buildpack-static](https://github.com/heroku/heroku-buildpack-static).
+
+5. Thiết lập git remote Heroku của bạn:
+
+   ```bash
+   # thay đổi phiên bản
+   $ git init
+   $ git add .
+   $ git commit -m "Trang web của tôi đã sẵn sàng để triển khai."
+
+   # tạo một ứng dụng mới với tên chỉ định
+   $ heroku apps:create example
+
+   # đặt buildpack cho các trang tĩnh
+   $ heroku buildpacks:set https://github.com/heroku/heroku-buildpack-static.git
+   ```
+
+6. Triển khai trang của bạn:
+
+   ```bash
+   # xuất bản trang
+   $ git push heroku master
+
+   # mở trình duyệt để xem phiên bản Dashboard của Heroku CI
+   $ heroku open
+   ```
+</Steps>

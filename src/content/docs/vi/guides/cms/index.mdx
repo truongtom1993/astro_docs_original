@@ -1,0 +1,44 @@
+---
+title: Sử dụng CMS với Astro
+description: Cách sử dụng CMS để thêm nội dung vào Astro
+sidebar:
+  label: Tổng quan về CMS
+i18nReady: true
+---
+import CMSGuidesNav from '~/components/CMSGuidesNav.astro';
+import ReadMore from '~/components/ReadMore.astro';
+import Badge from "~/components/Badge.astro"
+
+**Sẵn sàng kết nối Headless CMS với dự án Astro của bạn?** Hãy làm theo một trong các hướng dẫn của chúng tôi để tích hợp CMS.
+
+:::tip
+Tìm [các tích hợp do cộng đồng duy trì](https://astro.build/integrations/?search=cms) để kết nối CMS với dự án của bạn trong thư mục tích hợp của chúng tôi.
+:::
+
+## Hướng dẫn CMS
+
+Lưu ý rằng nhiều trang trong số này là **bản nháp**: chúng là tập hợp các tài nguyên chờ bạn đóng góp!
+
+<CMSGuidesNav />
+
+## Tại sao nên sử dụng CMS?
+
+Hệ thống quản lý nội dung (Content Management System - CMS) cho phép bạn viết nội dung và quản lý tài sản bên ngoài dự án Astro của mình.
+
+Điều này mở khóa các tính năng mới để làm việc với nội dung. Hầu hết các CMS đều cung cấp cho bạn trình chỉnh sửa nội dung trực quan, khả năng xác định các loại nội dung tiêu chuẩn và cách để cộng tác với người khác.
+
+CMS có thể hữu ích cho những nội dung theo cấu trúc nhất định, thường mang lại cho bạn trải nghiệm giống như bảng điều khiển và các công cụ chỉnh sửa WYSIWYG. Bạn có thể dùng CMS để viết bài blog bằng trình soạn thảo rich text của CMS thay vì các tệp Markdown. Hoặc bạn có thể dùng CMS để quản lý danh sách sản phẩm cho cửa hàng thương mại điện tử, đặt một số trường là bắt buộc để tránh các danh sách không đầy đủ.
+
+Dự án Astro của bạn sau đó có thể lấy nội dung từ CMS và hiển thị ở bất kỳ đâu và theo cách nào bạn muốn trên trang web của mình.
+
+## Những CMS nào phù hợp với Astro?
+
+Vì Astro chịu trách nhiệm về _hiển thị_ nội dung của bạn, bạn nên chọn một CMS _headless_, như những CMS trong danh sách trên. Điều này có nghĩa là CMS giúp bạn viết nội dung, nhưng không tạo ra trang web để hiển thị nó. Thay vào đó, bạn sẽ lấy dữ liệu nội dung và sử dụng trong dự án Astro của mình.
+
+Một số CMS headless, như Storyblok, cung cấp [tích hợp](/vi/guides/integrations-guide/) với Astro để giúp lấy nội dung dành riêng cho trang web Astro. Các CMS khác cung cấp JavaScript SDK, một thư viện bạn cài đặt và sử dụng để lấy nội dung từ xa.
+
+<ReadMore> Khám phá [danh sách hơn 100 hệ thống quản lý nội dung headless](https://jamstack.org/headless-cms/) <Badge text="External" /> nơi bạn có thể lọc theo loại (ví dụ: dựa trên Git, điều khiển bằng API) và giấy phép (mã nguồn mở hoặc đóng).</ReadMore>
+
+## Tôi có thể sử dụng Astro mà không cần CMS không?
+
+Có! Astro cung cấp hỗ trợ tích hợp cho [Markdown](/vi/guides/markdown-content/).

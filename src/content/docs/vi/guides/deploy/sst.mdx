@@ -1,0 +1,53 @@
+---
+title: Triển khai trang Astro của bạn lên AWS với SST
+description: Cách triển khai trang Astro của bạn lên AWS với SST
+sidebar:
+  label: SST
+type: deploy
+i18nReady: true
+---
+import { Steps } from '@astrojs/starlight/components';
+
+Bạn có thể triển khai một trang Astro lên AWS bằng cách sử dụng [SST](https://sst.dev), một framework mã nguồn mở để triển khai các ứng dụng full-stack hiện đại với hỗ trợ SSG và SSR.
+
+Bạn cũng có thể sử dụng bất kỳ thành phần SST bổ sung nào như cron job, Bucket, Queue, v.v... trong khi vẫn đảm bảo an toàn kiểu dữ liệu.
+
+## Bắt đầu nhanh
+
+<Steps>
+1. Tạo một dự án astro.
+
+2. Chạy `npx sst@latest init`.
+
+3. SST sẽ phát hiện bạn đang sử dụng Astro và yêu cầu xác nhận.
+
+4. Khi bạn đã sẵn sàng triển khai, hãy chạy `npx sst deploy --stage production`.
+</Steps>
+
+Bạn cũng có thể đọc [hướng dẫn đầy đủ về Astro trên AWS với SST](https://sst.dev/docs/start/aws/astro) để được hướng dẫn chi tiết từng bước.
+
+### Thành phần SST
+
+Để sử dụng [thành phần SST bổ sung](https://sst.dev/docs/), hãy thêm chúng vào `sst.config.ts`. 
+
+```ts {1} {5} title="sst.config.ts"
+const bucket = new sst.aws.Bucket("MyBucket", {
+  access: "public",
+});
+new sst.aws.Astro("MyWeb", {
+  link: [bucket],
+});
+```
+
+Sau đó truy cập chúng trong tệp `.astro` của bạn.
+
+```astro
+---
+import { Resource } from "sst"
+console.log(Resource.MyBucket.name)
+---
+```
+
+Tham khảo [tài liệu SST về liên kết tài nguyên](https://sst.dev/docs/linking) để tìm hiểu thêm.
+
+Nếu bạn có bất kỳ câu hỏi nào, bạn có thể [hỏi trong SST Discord](https://discord.gg/sst).

@@ -1,0 +1,241 @@
+---
+title: Endpoints
+description: Tìm hiểu cách tạo endpoints để phục vụ mọi loại dữ liệu
+i18nReady: true
+---
+import RecipeLinks from "~/components/RecipeLinks.astro";
+
+Astro cho phép bạn tạo các endpoint tùy chỉnh để phục vụ mọi loại dữ liệu. Bạn có thể sử dụng để tạo hình ảnh, hiển thị tài liệu RSS, hoặc sử dụng chúng như API Routes để xây dựng một API đầy đủ cho trang web của bạn.
+
+Trong các trang web được tạo tĩnh, các endpoint tùy chỉnh của bạn được gọi tại thời điểm build để tạo ra các file tĩnh. Nếu bạn chọn sử dụng chế độ [SSR](/vi/guides/on-demand-rendering/), các endpoint tùy chỉnh sẽ trở thành các endpoint server trực tiếp được gọi theo yêu cầu. Các endpoint tĩnh và SSR được định nghĩa tương tự nhau, nhưng các endpoint SSR hỗ trợ thêm các tính năng bổ sung.
+
+## Endpoints File Tĩnh
+
+Để tạo một endpoint tùy chỉnh, thêm một file `.js` hoặc `.ts` vào thư mục `/pages`. Phần mở rộng `.js` hoặc `.ts` sẽ bị loại bỏ trong quá trình build, vì vậy tên file nên bao gồm phần mở rộng của dữ liệu bạn muốn tạo. Ví dụ, `src/pages/data.json.ts` sẽ build thành endpoint `/data.json`.
+
+Endpoints xuất một hàm `GET` (có thể là `async`) nhận một [context object](/vi/reference/api-reference/) với các thuộc tính tương tự như global `Astro`. Ở đây, nó trả về một đối tượng [`Response`](https://developer.mozilla.org/en-US/docs/Web/API/Response) với `name` và `url`, và Astro sẽ gọi điều này tại thời điểm build và sử dụng nội dung của body để tạo file.
+
+```ts title="src/pages/builtwith.json.ts"
+// Đầu ra: /builtwith.json
+export function GET({ params, request }) {
+  return new Response(
+    JSON.stringify({
+      name: "Astro",
+      url: "https://astro.build/",
+    }),
+  );
+}
+```
+
+Kể từ Astro v3.0, đối tượng `Response` được trả về không cần phải bao gồm thuộc tính `encoding` nữa. Ví dụ, để tạo ra một hình ảnh `.png` binary:
+
+```ts title="src/pages/astro-logo.png.ts" {6}
+export async function GET({ params, request }) {
+  const response = await fetch(
+    "https://docs.astro.build/assets/full-logo-light.png",
+  );
+  
+  return new Response(await response.arrayBuffer());
+}
+```
+
+Bạn cũng có thể type các hàm endpoint của mình bằng cách sử dụng type `APIRoute`:
+
+```ts
+import type { APIRoute } from "astro";
+
+export const GET: APIRoute = async ({ params, request }) => {...}
+```
+
+### `params` và Dynamic routing
+
+Endpoints hỗ trợ các tính năng [dynamic routing](/vi/guides/routing/#dynamic-routes) giống như pages. Đặt tên file với tên tham số trong ngoặc vuông và xuất một [hàm `getStaticPaths()`](/vi/reference/routing-reference/#getstaticpaths). Sau đó, bạn có thể truy cập tham số bằng thuộc tính `params` được truyền cho hàm endpoint:
+
+```ts title="src/pages/api/[id].json.ts"
+import type { APIRoute } from "astro";
+
+const usernames = ["Sarah", "Chris", "Yan", "Elian"];
+
+export const GET: APIRoute = ({ params, request }) => {
+  const id = params.id;
+  
+  return new Response(
+    JSON.stringify({
+      name: usernames[id],
+    }),
+  );
+};
+
+export function getStaticPaths() {
+  return [
+    { params: { id: "0" } },
+    { params: { id: "1" } },
+    { params: { id: "2" } },
+    { params: { id: "3" } },
+  ];
+}
+```
+
+Điều này sẽ tạo bốn JSON endpoints tại thời điểm build: `/api/0.json`, `/api/1.json`, `/api/2.json` và `/api/3.json`. Dynamic routing với endpoints hoạt động giống như với pages, nhưng vì endpoint là một hàm chứ không phải component, [props](/vi/reference/routing-reference/#data-passing-with-props) không được hỗ trợ.
+
+### `request`
+
+Tất cả endpoints đều nhận một thuộc tính `request`, nhưng trong chế độ tĩnh, bạn chỉ có quyền truy cập vào `request.url`. Điều này trả về URL đầy đủ của endpoint hiện tại và hoạt động giống như [Astro.request.url](/vi/reference/api-reference/#request) đối với pages.
+
+```ts title="src/pages/request-path.json.ts"
+import type { APIRoute } from "astro";
+
+export const GET: APIRoute = ({ params, request }) => {
+  return new Response(
+    JSON.stringify({
+      path: new URL(request.url).pathname,
+    }),
+  );
+};
+```
+
+## Server Endpoints (API Routes)
+
+Mọi thứ được mô tả trong phần endpoints file tĩnh cũng có thể được sử dụng trong chế độ SSR: các file có thể xuất một hàm `GET` nhận một [context object](/vi/reference/api-reference/) với các thuộc tính tương tự như global `Astro`.
+
+Tuy nhiên, không giống như trong chế độ `static`, khi bạn bật on-demand rendering cho một route, endpoint sẽ được build khi nó được yêu cầu. Điều này mở ra các tính năng mới không có sẵn tại thời điểm build, và cho phép bạn xây dựng các API routes lắng nghe các yêu cầu và thực thi code một cách an toàn trên server tại runtime.
+
+Các routes của bạn sẽ được render theo yêu cầu theo mặc định trong chế độ `server`. Trong chế độ `static`, bạn phải opt out khỏi prerendering cho mỗi endpoint tùy chỉnh với `export const prerender = false`.
+
+<RecipeLinks slugs={["en/recipes/call-endpoints" ]}/>
+
+:::note
+Hãy chắc chắn [bật chế độ on-demand rendering](/vi/guides/on-demand-rendering/) trước khi thử các ví dụ này, và opt out khỏi prerendering trong chế độ `static`.
+:::
+
+Server endpoints có thể truy cập `params` mà không cần xuất `getStaticPaths`, và chúng có thể trả về một đối tượng `Response`, cho phép bạn thiết lập status codes và headers:
+
+```js title="src/pages/[id].json.js"
+import { getProduct } from "../db";
+
+export async function GET({ params }) {
+  const id = params.id;
+  const product = await getProduct(id);
+
+  if (!product) {
+    return new Response(null, {
+      status: 404,
+      statusText: "Not found",
+    });
+  }
+
+  return new Response(JSON.stringify(product), {
+    status: 200,
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
+}
+```
+
+Điều này sẽ phản hồi bất kỳ yêu cầu nào khớp với dynamic route. Ví dụ, nếu chúng ta điều hướng đến `/helmet.json`, `params.id` sẽ được đặt thành `helmet`. Nếu `helmet` tồn tại trong cơ sở dữ liệu sản phẩm mô phỏng, endpoint sẽ sử dụng một đối tượng `Response` để phản hồi với JSON và trả về một [HTTP status code](https://developer.mozilla.org/en-US/docs/Web/API/Response/status) thành công. Nếu không, nó sẽ sử dụng một đối tượng `Response` để phản hồi với `404`.
+
+Trong chế độ SSR, một số providers yêu cầu header `Content-Type` để trả về hình ảnh. Trong trường hợp này, sử dụng một đối tượng `Response` để chỉ định thuộc tính `headers`. Ví dụ, để tạo ra một hình ảnh `.png` binary:
+
+```ts title="src/pages/astro-logo.png.ts"
+export async function GET({ params, request }) {
+  const response = await fetch(
+    "https://docs.astro.build/assets/full-logo-light.png",
+  );
+  const buffer = Buffer.from(await response.arrayBuffer());
+  
+  return new Response(buffer, {
+    headers: { "Content-Type": "image/png" },
+  });
+}
+```
+
+### HTTP methods
+
+Ngoài hàm `GET`, bạn có thể xuất một hàm với tên của bất kỳ [HTTP method](https://developer.mozilla.org/en-US/docs/Web/HTTP/Methods) nào. Khi một yêu cầu đến, Astro sẽ kiểm tra method và gọi hàm tương ứng.
+
+Bạn cũng có thể xuất một hàm `ALL` để khớp với bất kỳ method nào không có hàm xuất tương ứng. Nếu có một yêu cầu không có method khớp, nó sẽ chuyển hướng đến [trang 404](/vi/basics/astro-pages/#custom-404-error-page) của trang web bạn.
+
+```ts title="src/pages/methods.json.ts"
+export const GET: APIRoute = ({ params, request }) => {
+  return new Response(
+    JSON.stringify({
+      message: "This was a GET!",
+    }),
+  );
+};
+
+export const POST: APIRoute = ({ request }) => {
+  return new Response(
+    JSON.stringify({
+      message: "This was a POST!",
+    }),
+  );
+};
+
+export const DELETE: APIRoute = ({ request }) => {
+  return new Response(
+    JSON.stringify({
+      message: "This was a DELETE!",
+    }),
+  );
+};
+
+export const ALL: APIRoute = ({ request }) => {
+  return new Response(
+    JSON.stringify({
+      message: `This was a ${request.method}!`,
+    }),
+  );
+};
+```
+
+Nếu bạn định nghĩa một hàm `GET` nhưng không có hàm `HEAD`, Astro sẽ tự động xử lý các yêu cầu `HEAD` bằng cách gọi hàm `GET` và loại bỏ body khỏi phản hồi.
+
+<RecipeLinks slugs={["en/recipes/captcha", "en/recipes/build-forms-api" ]}/>
+
+### `request`
+
+Trong chế độ SSR, thuộc tính `request` trả về một đối tượng [`Request`](https://developer.mozilla.org/en-US/docs/Web/API/Request) hoàn toàn có thể sử dụng được tham chiếu đến yêu cầu hiện tại. Điều này cho phép bạn chấp nhận dữ liệu và kiểm tra headers:
+
+```ts title="src/pages/test-post.json.ts"
+export const POST: APIRoute = async ({ request }) => {
+  if (request.headers.get("Content-Type") === "application/json") {
+    const body = await request.json();
+    const name = body.name;
+    
+    return new Response(
+      JSON.stringify({
+        message: "Your name was: " + name,
+      }),
+      {
+        status: 200,
+      },
+    );
+  }
+  
+  return new Response(null, { status: 400 });
+};
+```
+
+### Redirects
+
+Context endpoint xuất một tiện ích `redirect()` tương tự như `Astro.redirect`:
+
+```js title="src/pages/links/[id].js" {14}
+import { getLinkUrl } from "../db";
+
+export async function GET({ params, redirect }) {
+  const { id } = params;
+  const link = await getLinkUrl(id);
+
+  if (!link) {
+    return new Response(null, {
+      status: 404,
+      statusText: "Not found",
+    });
+  }
+
+  return redirect(link, 307);
+}
+```

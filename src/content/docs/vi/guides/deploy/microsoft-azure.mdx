@@ -1,0 +1,53 @@
+---
+title: Triển khai trang web Astro lên Microsoft Azure
+description: Cách triển khai trang web Astro lên web bằng Microsoft Azure.
+sidebar:
+  label: Microsoft Azure
+type: deploy
+i18nReady: true
+---
+import { Steps } from '@astrojs/starlight/components';
+
+[Azure](https://azure.microsoft.com/) là nền tảng cloud từ Microsoft. Bạn có thể triển khai trang web Astro với dịch vụ [Static Web Apps](https://aka.ms/staticwebapps) của Microsoft Azure.
+
+Hướng dẫn này sẽ hướng dẫn bạn triển khai trang web Astro được lưu trữ trên GitHub bằng Visual Studio Code. Vui lòng xem hướng dẫn Microsoft để sử dụng [Azure Pipelines Task](https://learn.microsoft.com/en-us/azure/devops/pipelines/tasks/reference/azure-static-web-app-v0?view=azure-pipelines) cho các thiết lập khác.
+
+## Yêu cầu tiên quyết
+
+Để làm theo hướng dẫn này, bạn sẽ cần:
+
+- Tài khoản Azure và subscription key. Bạn có thể tạo [tài khoản Azure miễn phí tại đây](https://azure.microsoft.com/free).
+- Code ứng dụng được push lên [GitHub](https://github.com/).
+- [SWA Extension](https://marketplace.visualstudio.com/items?itemName=ms-azuretools.vscode-azurestaticwebapps) trong [Visual Studio Code](https://code.visualstudio.com/).
+
+## Cách triển khai
+
+<Steps>
+1. Mở dự án trong VS Code.
+
+2. Mở Static Web Apps extension, đăng nhập Azure, và nhấp nút **+** để tạo Static Web App mới. Bạn sẽ được nhắc chỉ định subscription key để sử dụng.
+
+3. Làm theo wizard do extension khởi động để đặt tên ứng dụng, chọn framework preset, và chỉ định app root (thường là `/`) và vị trí file được build (sử dụng `/dist`). Astro không được liệt kê trong các template có sẵn trong Azure nên bạn cần chọn `custom`. Wizard sẽ chạy và tạo [GitHub Action](https://github.com/features/actions) trong thư mục `.github` của repo. (Thư mục này sẽ được tạo tự động nếu chưa tồn tại.) 
+</Steps>
+
+GitHub Action sẽ triển khai ứng dụng (bạn có thể theo dõi tiến trình trong tab Actions của repo trên GitHub). Khi hoàn thành thành công, bạn có thể xem ứng dụng tại địa chỉ hiển thị trong cửa sổ tiến trình của SWA Extension bằng cách nhấp nút **Browse Website** (xuất hiện sau khi GitHub Action chạy).
+
+## Vấn đề đã biết
+
+GitHub action yaml được tạo cho bạn giả định sử dụng node 14. Điều này khiến Astro build thất bại. Để giải quyết, cập nhật file package.json của dự án với đoạn code này.
+
+```
+  "engines": {
+    "node": ">=18.0.0"
+  },
+```
+
+## Tài nguyên chính thức
+
+- [Tài liệu Microsoft Azure Static Web Apps](https://learn.microsoft.com/en-us/azure/static-web-apps/)
+
+## Tài nguyên cộng đồng 
+
+- [Deploying an Astro Website to Azure Static Web Apps](https://www.blueboxes.co.uk/deploying-an-astro-website-to-azure-static-web-apps)
+- [Deploying a Static Astro Site to Azure Static Web Apps using GitHub Actions](https://agramont.net/blog/create-static-site-astro-azure-ssg/#automate-deployment-with-github-actions)
+- [Astro site deployment to Azure Static Web Apps with the CLI from GitHub Actions](https://www.eliostruyf.com/deploy-astro-azure-static-web-apps-github-cli/)

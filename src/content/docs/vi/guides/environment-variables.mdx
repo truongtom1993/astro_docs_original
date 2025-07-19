@@ -1,0 +1,351 @@
+---
+title: Sử dụng biến môi trường
+sidebar:
+  label: Biến môi trường
+description: Tìm hiểu cách sử dụng biến môi trường trong dự án Astro.
+i18nReady: true
+---
+import PackageManagerTabs from '~/components/tabs/PackageManagerTabs.astro'
+import ReadMore from '~/components/ReadMore.astro';
+
+Astro cung cấp quyền truy cập vào [hỗ trợ biến môi trường tích hợp của Vite](#vites-built-in-support) và bao gồm một số [biến môi trường mặc định cho dự án của bạn](#default-environment-variables) cho phép bạn truy cập các giá trị cấu hình cho dự án hiện tại (ví dụ: `site`, `base`), xem dự án đang chạy ở chế độ phát triển hay sản xuất, và nhiều hơn nữa.
+
+Astro cũng cung cấp cách [sử dụng và tổ chức biến môi trường với type safety](#type-safe-environment-variables). Nó có thể sử dụng trong ngữ cảnh Astro (ví dụ: các thành phần Astro, routes và endpoints, thành phần UI framework, middleware), và được quản lý bằng [schema trong cấu hình Astro của bạn](/vi/reference/configuration-reference/#env).
+
+## Hỗ trợ tích hợp của Vite
+
+Astro sử dụng hỗ trợ tích hợp của Vite cho biến môi trường, được thay thế tĩnh tại thời điểm build, và cho phép bạn [sử dụng bất kỳ phương pháp nào](https://vite.dev/guide/env-and-mode.html) để làm việc với chúng.
+
+Lưu ý rằng trong khi _tất cả_ biến môi trường đều có sẵn trong mã phía server, chỉ các biến môi trường có tiền tố `PUBLIC_` mới có sẵn trong mã phía client vì mục đích bảo mật.
+
+```ini title=".env"
+SECRET_PASSWORD=password123
+PUBLIC_ANYBODY=there
+```
+
+Trong ví dụ này, `PUBLIC_ANYBODY` (có thể truy cập qua `import.meta.env.PUBLIC_ANYBODY`) sẽ có sẵn trong mã server hoặc client, trong khi `SECRET_PASSWORD` (có thể truy cập qua `import.meta.env.SECRET_PASSWORD`) sẽ chỉ có ở phía server.
+
+:::caution
+Các file `.env` không được tải bên trong [file cấu hình](#in-the-astro-config-file).
+:::
+
+### IntelliSense cho TypeScript
+
+Theo mặc định, Astro cung cấp định nghĩa kiểu cho `import.meta.env` trong `astro/client.d.ts`.
+
+Trong khi bạn có thể định nghĩa thêm các biến env tùy chỉnh trong file `.env.[mode]`, bạn có thể muốn có TypeScript IntelliSense cho các biến env do người dùng định nghĩa có tiền tố `PUBLIC_`.
+
+Để đạt được điều này, bạn có thể tạo file `env.d.ts` trong `src/` và cấu hình `ImportMetaEnv` như sau:
+
+```ts title="src/env.d.ts"
+interface ImportMetaEnv {
+  readonly DB_PASSWORD: string;
+  readonly PUBLIC_POKEAPI: string;
+  // thêm các biến env...
+}
+
+interface ImportMeta {
+  readonly env: ImportMetaEnv;
+}
+```
+
+## Biến môi trường mặc định
+
+Astro bao gồm một số biến môi trường sẵn có:
+
+- `import.meta.env.MODE`: Chế độ mà trang web của bạn đang chạy. Đây là `development` khi chạy `astro dev` và `production` khi chạy `astro build`.
+- `import.meta.env.PROD`: `true` nếu trang web đang chạy ở chế độ production; `false` nếu không.
+- `import.meta.env.DEV`: `true` nếu trang web đang chạy ở chế độ development; `false` nếu không. Luôn ngược lại với `import.meta.env.PROD`.
+- `import.meta.env.BASE_URL`: URL cơ sở mà trang web của bạn được phục vụ từ đó. Điều này được xác định bởi [tùy chọn cấu hình `base`](/vi/reference/configuration-reference/#base).
+- `import.meta.env.SITE`: Được đặt thành [tùy chọn `site`](/vi/reference/configuration-reference/#site) được chỉ định trong `astro.config` của dự án.
+- `import.meta.env.ASSETS_PREFIX`: Tiền tố cho các liên kết asset được tạo bởi Astro nếu tùy chọn cấu hình [`build.assetsPrefix`](/vi/reference/configuration-reference/#buildassetsprefix) được đặt. Điều này có thể được sử dụng để tạo các liên kết asset không được xử lý bởi Astro.
+
+Sử dụng chúng như bất kỳ biến môi trường nào khác.
+
+```ts utils.ts
+const isProd = import.meta.env.PROD;
+const isDev = import.meta.env.DEV;
+```
+
+## Thiết lập biến môi trường
+
+### File `.env`
+
+Biến môi trường có thể được tải từ file `.env` trong thư mục dự án của bạn.
+
+Chỉ cần tạo file `.env` trong thư mục dự án và thêm một số biến vào đó.
+
+```ini title=".env"
+# Điều này sẽ chỉ có sẵn khi chạy trên server!
+DB_PASSWORD="foobar"
+
+# Điều này sẽ có sẵn ở mọi nơi!
+PUBLIC_POKEAPI="https://pokeapi.co/api/v2"
+```
+
+Bạn cũng có thể thêm `.production`, `.development` hoặc tên chế độ tùy chỉnh vào tên file (ví dụ: `.env.testing`, `.env.staging`). Điều này cho phép bạn sử dụng các tập biến môi trường khác nhau vào các thời điểm khác nhau.
+
+Các lệnh `astro dev` và `astro build` mặc định tương ứng với chế độ `"development"` và `"production"`. Bạn có thể chạy các lệnh này với [cờ `--mode`](/vi/reference/cli-reference/#--mode-string) để truyền giá trị khác cho `mode` và tải file `.env` tương ứng.
+
+Điều này cho phép bạn chạy dev server hoặc build trang web kết nối với các API khác nhau:
+
+<PackageManagerTabs>
+ <Fragment slot="npm">
+    ```shell
+    # Chạy dev server kết nối với API "staging"
+    npm run astro dev -- --mode staging
+
+    # Build trang web kết nối với API "production" với thông tin debug bổ sung
+    npm run astro build -- --devOutput
+
+    # Build trang web kết nối với API "testing"
+    npm run astro build -- --mode testing
+    ```
+ </Fragment>
+ <Fragment slot="pnpm">
+    ```shell
+    # Chạy dev server kết nối với API "staging"
+    pnpm astro dev --mode staging
+
+    # Build trang web kết nối với API "production" với thông tin debug bổ sung
+    pnpm astro build --devOutput
+
+    # Build trang web kết nối với API "testing"
+    pnpm astro build --mode testing
+    ```
+ </Fragment>
+  <Fragment slot="yarn">
+    ```shell
+    # Chạy dev server kết nối với API "staging"
+    yarn astro dev --mode staging
+
+    # Build trang web kết nối với API "production" với thông tin debug bổ sung
+    yarn astro build --devOutput
+
+    # Build trang web kết nối với API "testing"
+    yarn astro build --mode testing
+    ```
+ </Fragment>
+</PackageManagerTabs>
+
+Để biết thêm về file `.env`, [xem tài liệu Vite](https://vite.dev/guide/env-and-mode.html#env-files).
+
+### Trong file cấu hình Astro
+
+Astro đánh giá file cấu hình trước khi tải các file khác. Điều này có nghĩa là bạn không thể sử dụng `import.meta.env` trong `astro.config.mjs` để truy cập biến môi trường được đặt trong file `.env`.
+
+Bạn có thể sử dụng `process.env` trong file cấu hình để truy cập các biến môi trường khác, như những biến [được đặt bởi CLI](#using-the-cli).
+
+Bạn cũng có thể sử dụng [helper `loadEnv` của Vite](https://main.vite.dev/config/#using-environment-variables-in-config) để tải file `.env` thủ công.
+
+```js title="astro.config.mjs"
+import { loadEnv } from "vite";
+
+const { SECRET_PASSWORD } = loadEnv(process.env.NODE_ENV, process.cwd(), "");
+```
+
+:::note
+`pnpm` không cho phép bạn import các module không được cài đặt trực tiếp trong dự án. Nếu bạn đang sử dụng `pnpm`, bạn sẽ cần cài đặt `vite` để sử dụng helper `loadEnv`.
+
+```sh
+pnpm add -D vite
+```
+:::
+
+### Sử dụng CLI
+
+Bạn cũng có thể thêm biến môi trường khi chạy dự án:
+
+<PackageManagerTabs>
+ <Fragment slot="yarn">
+    ```shell
+    PUBLIC_POKEAPI=https://pokeapi.co/api/v2 yarn run dev
+    ```
+ </Fragment>
+ <Fragment slot="npm">
+    ```shell
+    PUBLIC_POKEAPI=https://pokeapi.co/api/v2 npm run dev
+    ```
+ </Fragment>
+ <Fragment slot="pnpm">
+    ```shell
+    PUBLIC_POKEAPI=https://pokeapi.co/api/v2 pnpm run dev
+    ```
+ </Fragment>
+</PackageManagerTabs>
+
+## Lấy biến môi trường
+
+Biến môi trường trong Astro được truy cập bằng `import.meta.env`, sử dụng [tính năng `import.meta` được thêm vào ES2020](https://tc39.es/ecma262/2020/#prod-ImportMeta), thay vì `process.env`.
+
+Ví dụ, sử dụng `import.meta.env.PUBLIC_POKEAPI` để lấy biến môi trường `PUBLIC_POKEAPI`.
+
+```js /(?<!//.*)import.meta.env.[A-Z_]+/
+// Khi import.meta.env.SSR === true
+const data = await db(import.meta.env.DB_PASSWORD);
+
+// Khi import.meta.env.SSR === false
+const data = fetch(`${import.meta.env.PUBLIC_POKEAPI}/pokemon/squirtle`);
+```
+
+Khi sử dụng SSR, biến môi trường có thể được truy cập tại runtime dựa trên SSR adapter được sử dụng. Với hầu hết các adapter, bạn có thể truy cập biến môi trường bằng `process.env`, nhưng một số adapter hoạt động khác. Đối với Deno adapter, bạn sẽ sử dụng `Deno.env.get()`. Xem cách [truy cập Cloudflare runtime](/vi/guides/integrations-guide/cloudflare/#cloudflare-runtime) để xử lý biến môi trường khi sử dụng Cloudflare adapter. Astro sẽ kiểm tra môi trường server trước cho các biến, và nếu chúng không tồn tại, Astro sẽ tìm chúng trong file `.env`.
+
+## Biến môi trường type safe
+
+API `astro:env` cho phép bạn cấu hình schema type-safe cho [biến môi trường bạn đã đặt](#setting-environment-variables). Điều này cho phép bạn chỉ ra liệu chúng có nên có sẵn trên server hay client, và định nghĩa kiểu dữ liệu cũng như các thuộc tính bổ sung.
+
+<ReadMore>Đang phát triển adapter? Xem cách [làm cho adapter tương thích với `astro:env`](/vi/reference/adapter-reference/#envgetsecret).</ReadMore>
+
+### Sử dụng cơ bản
+
+#### Định nghĩa schema của bạn
+
+Để cấu hình schema, thêm tùy chọn `env.schema` vào cấu hình Astro:
+
+```js title="astro.config.mjs" ins={4-8}
+import { defineConfig } from "astro/config";
+
+export default defineConfig({
+  env: {
+    schema: {
+      // ...
+    }
+  }
+})
+```
+
+Sau đó bạn có thể [đăng ký biến dưới dạng chuỗi, số, enum, hoặc boolean](#data-types) bằng cách sử dụng helper `envField`. Định nghĩa [loại biến môi trường](#variable-types) bằng cách cung cấp `context` (`"client"` hoặc `"server"`) và `access` (`"secret"` hoặc `"public"`) cho mỗi biến, và truyền bất kỳ thuộc tính bổ sung nào như `optional` hoặc `default` trong một object:
+
+```js title="astro.config.mjs" ins="envField"
+import { defineConfig, envField } from "astro/config";
+
+export default defineConfig({
+  env: {
+    schema: {
+      API_URL: envField.string({ context: "client", access: "public", optional: true }),
+      PORT: envField.number({ context: "server", access: "public", default: 4321 }),
+      API_SECRET: envField.string({ context: "server", access: "secret" }),
+    }
+  }
+})
+```
+
+Các kiểu sẽ được tạo cho bạn khi chạy `astro dev` hoặc `astro build`, nhưng bạn có thể chạy `astro sync` để chỉ tạo kiểu.
+
+#### Sử dụng biến từ schema của bạn
+
+Import và sử dụng các biến đã định nghĩa từ module `/client` hoặc `/server` thích hợp:
+
+```astro
+---
+import { API_URL } from "astro:env/client";
+import { API_SECRET_TOKEN } from "astro:env/server";
+
+const data = await fetch(`${API_URL}/users`, {
+	method: "GET",
+	headers: {
+		"Content-Type": "application/json",
+		"Authorization": `Bearer ${API_SECRET_TOKEN}`
+	},
+})
+---
+
+<script>
+  import { API_URL } from "astro:env/client";
+  
+  fetch(`${API_URL}/ping`)
+</script>
+```
+
+### Loại biến
+
+Có ba loại biến môi trường, được xác định bởi sự kết hợp của cài đặt `context` (`"client"` hoặc `"server"`) và `access` (`"secret"` hoặc `"public"`) được định nghĩa trong schema:
+
+- **Biến client công khai**: Các biến này kết thúc trong cả bundle client và server cuối cùng, và có thể được truy cập từ cả client và server thông qua module `astro:env/client`:
+
+   ```js
+   import { API_URL } from "astro:env/client";
+   ```
+
+- **Biến server công khai**: Các biến này kết thúc trong bundle server cuối cùng và có thể được truy cập trên server thông qua module `astro:env/server`:
+
+   ```js
+   import { PORT } from "astro:env/server";
+   ```
+
+- **Biến server bí mật**: Các biến này không phải là một phần của bundle cuối cùng và có thể được truy cập trên server thông qua module `astro:env/server`:
+
+   ```js
+   import { API_SECRET } from "astro:env/server";
+   ```
+
+   Theo mặc định, secrets chỉ được xác thực tại runtime. Bạn có thể bật xác thực biến private khi khởi động bằng cách [cấu hình `validateSecrets: true`](/vi/reference/configuration-reference/#envvalidatesecrets).
+
+:::note
+**Biến client bí mật** không được hỗ trợ vì không có cách an toàn nào để gửi dữ liệu này đến client. Do đó, không thể cấu hình cả `context: "client"` và `access: "secret"` trong schema.
+:::
+
+### Kiểu dữ liệu
+
+Hiện tại có bốn kiểu dữ liệu được hỗ trợ: chuỗi, số, enum, và boolean:
+
+```js
+import { envField } from "astro/config";
+
+envField.string({
+   // context & access
+   optional: true,
+   default: "foo",
+})
+
+envField.number({
+   // context & access
+   optional: true,
+   default: 15,
+})
+
+envField.boolean({
+   // context & access
+   optional: true,
+   default: true,
+})
+
+envField.enum({
+   // context & access
+   values: ["foo", "bar", "baz"],
+   optional: true,
+   default: "baz",
+})
+```
+
+<ReadMore>Để xem danh sách đầy đủ các trường xác thực, xem [tham chiếu API `envField`](/vi/reference/configuration-reference/#envschema).</ReadMore>
+
+### Lấy secrets động
+
+Dù đã định nghĩa schema, bạn có thể muốn lấy giá trị thô của một secret cụ thể hoặc lấy secrets không được định nghĩa trong schema. Trong trường hợp này, bạn có thể sử dụng `getSecret()` được export từ `astro:env/server`:
+
+```js
+import {
+   FOO, // boolean
+   getSecret
+} from "astro:env/server";
+
+getSecret("FOO"); // string | undefined
+```
+
+<ReadMore>Tìm hiểu thêm trong [tham chiếu API](/vi/reference/modules/astro-env/#getsecret).</ReadMore>
+
+### Hạn chế
+
+`astro:env` là một module ảo có nghĩa là nó chỉ có thể được sử dụng bên trong ngữ cảnh Astro. Ví dụ, bạn có thể sử dụng nó trong:
+
+- Middleware
+- Astro routes và endpoints
+- Astro components
+- Framework components
+- Module
+
+Bạn không thể sử dụng nó trong những trường hợp sau và sẽ phải dùng `process.env`:
+
+- `astro.config.mjs`
+- Script

@@ -1,0 +1,835 @@
+---
+title: API fonts thử nghiệm
+sidebar:
+  label: Fonts
+i18nReady: true
+tableOfContents:
+  minHeadingLevel: 2
+  maxHeadingLevel: 6
+---
+
+import Since from '~/components/Since.astro';
+import ReadMore from '~/components/ReadMore.astro';
+import { Steps, Tabs, TabItem } from '@astrojs/starlight/components';
+
+<p>
+
+**Kiểu:** `FontFamily[]`<br />
+
+<Since v="5.7.0" />
+</p>
+
+Tính năng thử nghiệm này cho phép bạn sử dụng fonts từ hệ thống tệp và các nhà cung cấp fonts khác nhau (ví dụ: Google, Fontsource, Bunny) thông qua API thống nhất, hoàn toàn tùy chỉnh và an toàn kiểu dữ liệu.
+
+Web fonts có thể ảnh hưởng đến hiệu suất trang cả ở thời gian tải và thời gian render. API này giúp bạn giữ cho trang web của mình hiệu quả với các [tối ưu hóa web font](https://web.dev/learn/performance/optimize-web-fonts) tự động bao gồm liên kết preload, fallback được tối ưu hóa và các mặc định được xác định rõ. [Xem các ví dụ sử dụng phổ biến](#usage-examples).
+
+Để kích hoạt tính năng này, hãy cấu hình đối tượng `experimental.fonts` với ít nhất một font:
+
+```js title="astro.config.mjs" ins={5-9} ins=" fontProviders "
+import { defineConfig, fontProviders } from 'astro/config';
+
+export default defineConfig({
+	experimental: {
+		fonts: [
+			{
+				provider: fontProviders.google(),
+				name: 'Roboto',
+				cssVariable: '--font-roboto',
+			},
+		],
+	},
+});
+```
+
+Sau đó, thêm component `<Font />` và styling toàn trang trong `<head>`:
+
+```astro title="src/components/Head.astro" ins={2,5,8-10}
+---
+import { Font } from 'astro:assets';
+---
+
+<Font cssVariable='--font-roboto' preload />
+
+<style>
+body {
+    font-family: var(--font-roboto);
+}
+</style>
+```
+
+## Cách sử dụng
+
+<Steps>
+
+1. `experimental.fonts` chấp nhận một mảng các đối tượng font. Với mỗi font, bạn phải chỉ định `provider`, `name` của họ và định nghĩa một `cssVariable` để tham chiếu đến font của bạn.
+
+   - [`provider`](#provider): Bạn có thể chọn từ danh sách các [nhà cung cấp remote có sẵn](#available-remote-font-providers), xây dựng [nhà cung cấp font tùy chỉnh](#build-your-own-font-provider) của riêng mình, hoặc sử dụng [nhà cung cấp local](#local-font-variants) để đăng ký các tệp font local.
+   - [`name`](#name): Chọn một họ font được hỗ trợ bởi nhà cung cấp của bạn.
+   - [`cssVariable`](#cssvariable-1): Phải là một [ident](https://developer.mozilla.org/en-US/docs/Web/CSS/ident) hợp lệ dưới dạng biến CSS.
+
+   Ví dụ sau cấu hình ["họ Roboto từ Google Fonts"](https://fonts.google.com/specimen/Roboto):
+
+   ```js title="astro.config.mjs" ins={4-10} ins="fontProviders"
+   import { defineConfig, fontProviders } from 'astro/config';
+
+   export default defineConfig({
+   	experimental: {
+   		fonts: [
+   			{
+   				provider: fontProviders.google(),
+   				name: 'Roboto',
+   				cssVariable: '--font-roboto',
+   			},
+   		],
+   	},
+   });
+   ```
+
+   Các tùy chọn cấu hình khác, như định nghĩa [họ font fallback](#fallbacks) và [`weights`](#weights) và [`styles`](#styles) nào cần tải xuống, có sẵn và một số sẽ phụ thuộc vào nhà cung cấp bạn chọn.
+
+   Xem [tham chiếu cấu hình](#font-configuration-reference) đầy đủ để tìm hiểu thêm.
+
+2. Áp dụng styles bằng component `<Font />`. Nó phải được import và thêm vào `<head>` của trang. Việc cung cấp [`cssVariable`](#cssvariable) của font là bắt buộc, và bạn có thể tùy chọn [xuất ra liên kết preload](#preload):
+
+   ```astro title="src/components/Head.astro" ins={2, 5}
+   ---
+   import { Font } from 'astro:assets';
+   ---
+
+   <Font cssVariable="--font-roboto" preload />
+   ```
+
+   Điều này thường được thực hiện trong một component như `Head.astro` được sử dụng trong layout trang web chung.
+
+   <ReadMore>Xem [tham chiếu component `<Font>`](#font--component-reference) đầy đủ để biết thêm thông tin.</ReadMore>
+
+   Vì component `<Font />` tạo ra CSS với khai báo font, bạn có thể tham chiếu đến họ font bằng cách sử dụng `cssVariable`:
+
+   <Tabs>
+
+   <TabItem label="CSS">
+
+   ```css ins={3}
+   <style>
+   body {
+       font-family: var(--font-roboto);
+   }
+   </style>
+   ```
+
+   </TabItem>
+
+   <TabItem label="Tailwind CSS 4.0">
+
+   ```css title="src/styles/global.css" ins={4} ins="inline"
+   @import 'tailwindcss';
+
+   @theme inline {
+   	--font-sans: var(--font-roboto);
+   }
+   ```
+
+   </TabItem>
+
+   <TabItem label="Tailwind CSS 3.0">
+
+   ```js title="tailwind.config.mjs" ins={6-8}
+   /** @type {import("tailwindcss").Config} */
+   export default {
+   	content: ['./src/**/*.{astro,html,js,jsx,md,mdx,svelte,ts,tsx,vue}'],
+   	theme: {
+   		extend: {},
+   		fontFamily: {
+   			sans: ['var(--font-roboto)'],
+   		},
+   	},
+   	plugins: [],
+   };
+   ```
+
+   </TabItem>
+
+   </Tabs>
+
+</Steps>
+
+## Nhà cung cấp font remote có sẵn
+
+Astro re-export hầu hết các nhà cung cấp [unifont](https://github.com/unjs/unifont/). Những nhà cung cấp sau có hỗ trợ tích hợp:
+
+- [Adobe](https://fonts.adobe.com/)
+- [Bunny](https://fonts.bunny.net/)
+- [Fontshare](https://www.fontshare.com/)
+- [Fontsource](https://fontsource.org/)
+- [Google](https://fonts.google.com/)
+
+Để sử dụng nhà cung cấp remote tích hợp, cấu hình `provider` với giá trị thích hợp cho nhà cung cấp font bạn chọn:
+
+<Tabs>
+
+<TabItem label="Adobe">
+
+```js
+provider: fontProviders.adobe({ id: process.env.ADOBE_ID });
+```
+
+</TabItem>
+
+<TabItem label="Bunny">
+
+```js
+provider: fontProviders.bunny();
+```
+
+</TabItem>
+
+<TabItem label="Fontshare">
+
+```js
+provider: fontProviders.fontshare();
+```
+
+</TabItem>
+
+<TabItem label="Fontsource">
+
+```js
+provider: fontProviders.fontsource();
+```
+
+</TabItem>
+
+<TabItem label="Google">
+
+```js
+provider: fontProviders.google();
+```
+
+Ngoài ra, nhà cung cấp font `google()` chấp nhận tất cả các tùy chọn có sẵn cho [unifont Google `ProviderOption`](https://github.com/unjs/unifont/blob/main/src/providers/google.ts#L10-L26):
+
+```js
+provider: fontProviders.google({
+	glyphs: {
+		Roboto: ['a'],
+	},
+});
+```
+
+</TabItem>
+
+</Tabs>
+
+Bạn cũng có thể [tạo nhà cung cấp font Astro tùy chỉnh](#build-your-own-font-provider) cho bất kỳ nhà cung cấp unifont nào.
+
+## Ví dụ sử dụng
+
+```js title="astro.config.mjs"
+import { defineConfig, fontProviders } from "astro/config";
+
+export default defineConfig({
+  experimental: {
+    fonts: [
+      {
+        name: "Roboto",
+        cssVariable: "--font-roboto"
+        provider: fontProviders.google(),
+        // Mặc định bao gồm:
+        // weights: [400] ,
+        // styles: ["normal", "italics"],
+        // subsets: ["cyrillic-ext", "cyrillic", "greek-ext", "greek", "vietnamese", "latin-ext", "latin"],
+        // fallbacks: ["sans-serif"],
+      },
+      {
+        name: "Inter",
+        cssVariable: "--font-inter",
+        provider: fontProviders.fontsource(),
+        // Chỉ định weights thực sự được sử dụng
+        weights: [400, 500, 600, 700],
+        // Chỉ định styles thực sự được sử dụng
+        styles: ["normal"],
+        // Chỉ tải xuống các tệp font cho các ký tự được sử dụng trên trang
+        subsets: ["cyrillic"],
+      },
+      {
+        name: "JetBrains Mono",
+        cssVariable: "--font-jetbrains-mono",
+        provider: fontProviders.fontsource(),
+        // Chỉ tải xuống các tệp font cho các ký tự được sử dụng trên trang
+        subsets: ["latin"],
+        // Sử dụng họ font fallback phù hợp với giao diện dự định
+        fallbacks: ["monospace"],
+      },
+      {
+        name: "Poppins",
+        cssVariable: "--font-poppins",
+        provider: "local",
+        // Weight và style không được chỉ định nên Astro
+        // sẽ cố gắng suy luận chúng cho mỗi variant
+        variants: [
+          {
+            src: [
+              "./src/assets/fonts/Poppins-regular.woff2",
+              "./src/assets/fonts/Poppins-regular.woff",
+            ]
+          },
+          {
+            src: [
+              "./src/assets/fonts/Poppins-bold.woff2",
+              "./src/assets/fonts/Poppins-bold.woff",
+            ]
+          },
+        ]
+      }
+    ],
+  }
+});
+```
+
+## Tham chiếu component `<Font />`
+
+Component này xuất ra các thẻ style và có thể tùy chọn xuất ra liên kết preload cho một họ font nhất định.
+
+Nó phải được import và thêm vào `<head>` của trang. Điều này thường được thực hiện trong một component như `Head.astro` được sử dụng trong layout trang web chung cho việc sử dụng toàn cục nhưng có thể được thêm vào các trang riêng lẻ khi cần.
+
+Với component này, bạn có thể kiểm soát họ font nào được sử dụng trên trang nào và fonts nào được preload.
+
+### cssVariable
+
+<p>
+
+**Kiểu ví dụ:** `"--font-roboto" | "--font-comic-sans" | ...`
+
+</p>
+
+[`cssVariable`](#cssvariable-1) được đăng ký trong cấu hình Astro của bạn:
+
+```astro title="src/components/Head.astro" "cssVariable"
+---
+import { Font } from 'astro:assets';
+---
+
+<Font cssVariable="--font-roboto" />
+```
+
+### preload
+
+<p>
+
+**Kiểu:** `boolean`<br />
+**Mặc định:** `false`
+
+</p>
+
+Có xuất ra [liên kết preload](https://web.dev/learn/performance/optimize-web-fonts#preload) hay không:
+
+```astro title="src/components/Head.astro" "preload"
+---
+import { Font } from 'astro:assets';
+---
+
+<Font cssVariable="--font-roboto" preload />
+```
+
+## Tham chiếu cấu hình font
+
+Tất cả các thuộc tính của fonts phải được cấu hình trong Astro config. Một số thuộc tính chung cho cả font remote và local, và các thuộc tính khác có sẵn tùy thuộc vào nhà cung cấp font bạn chọn.
+
+### Thuộc tính chung
+
+Các thuộc tính sau có sẵn cho font remote và local. `provider`, `name`, và `cssVariable` là bắt buộc.
+
+```js title="astro.config.mjs"
+import { defineConfig, fontProviders } from 'astro/config';
+
+export default defineConfig({
+	experimental: {
+		fonts: [
+			{
+				provider: fontProviders.google(),
+				name: 'Roboto',
+				cssVariable: '--font-roboto',
+			},
+		],
+	},
+});
+```
+
+#### provider
+
+<p>
+
+**Kiểu:** `AstroFontProvider | "local"`
+
+</p>
+
+Nguồn của các tệp font của bạn. Bạn có thể sử dụng [nhà cung cấp tích hợp](#available-remote-font-providers), viết [nhà cung cấp tùy chỉnh](#build-your-own-font-provider) của riêng mình, hoặc đặt thành `"local"` để sử dụng các tệp font local:
+
+```js title="astro.config.mjs" {6}
+import { defineConfig, fontProviders } from 'astro/config';
+
+export default defineConfig({
+	experimental: {
+		fonts: [
+			{
+				provider: fontProviders.google(),
+				name: 'Roboto',
+				cssVariable: '--font-roboto',
+			},
+		],
+	},
+});
+```
+
+#### name
+
+<p>
+
+**Kiểu:** `string`
+
+</p>
+
+Tên họ font, như được xác định bởi nhà cung cấp font của bạn:
+
+```js
+name: 'Roboto';
+```
+
+#### cssVariable
+
+<p>
+
+**Kiểu:** `string`
+
+</p>
+
+Một [ident](https://developer.mozilla.org/en-US/docs/Web/CSS/ident) hợp lệ mà bạn chọn dưới dạng biến CSS (tức là bắt đầu bằng `--`):
+
+```js
+cssVariable: '--font-roboto';
+```
+
+#### fallbacks
+
+<p>
+
+**Kiểu:** `string[]`<br />
+**Mặc định:** `["sans-serif"]`
+
+</p>
+
+Một mảng các fonts để sử dụng khi font bạn chọn không có sẵn hoặc đang tải. Fonts fallback sẽ được chọn theo thứ tự liệt kê. Font có sẵn đầu tiên sẽ được sử dụng:
+
+```js
+fallbacks: ['CustomFont', 'serif'];
+```
+
+Để vô hiệu hóa hoàn toàn fonts fallback, hãy cấu hình một mảng rỗng:
+
+```js
+fallbacks: [];
+```
+
+Chỉ định ít nhất một [tên họ generic](https://developer.mozilla.org/en-US/docs/Web/CSS/font-family#generic-name) phù hợp với giao diện dự định của font. Astro sau đó sẽ cố gắng tạo ra [fallback được tối ưu hóa](https://developer.chrome.com/blog/font-fallbacks) sử dụng font metrics. Để vô hiệu hóa tối ưu hóa này, đặt `optimizedFallbacks` thành false.
+
+#### optimizedFallbacks
+
+<p>
+
+**Kiểu:** `boolean`<br />
+**Mặc định:** `true`
+
+</p>
+
+Có bật tối ưu hóa mặc định của Astro khi tạo fonts fallback hay không. Bạn có thể vô hiệu hóa tối ưu hóa mặc định này để có toàn quyền kiểm soát cách tạo ra [`fallbacks`](#fallbacks):
+
+```js
+optimizedFallbacks: false;
+```
+
+### Thuộc tính font remote
+
+Các tùy chọn cấu hình khác có sẵn cho font remote. Đặt chúng để tùy chỉnh dữ liệu được tải từ [nhà cung cấp font](#available-remote-font-providers) của bạn, ví dụ để chỉ tải xuống các font weights hoặc styles nhất định.
+
+Bên dưới, các tùy chọn này được xử lý bởi [unifont](https://github.com/unjs/unifont/). Một số thuộc tính có thể không được hỗ trợ bởi một số nhà cung cấp và có thể được xử lý khác nhau bởi mỗi nhà cung cấp.
+
+#### weights
+
+<p>
+
+**Kiểu:** `(number | string)[]`<br />
+**Mặc định:** `[400]`
+
+</p>
+
+Một mảng các [font weights](https://developer.mozilla.org/en-US/docs/Web/CSS/font-weight). Nếu không có giá trị nào được chỉ định trong cấu hình của bạn, chỉ có weight `400` được bao gồm theo mặc định để tránh tải xuống không cần thiết. Bạn sẽ cần bao gồm thuộc tính này để truy cập bất kỳ font weights nào khác:
+
+```js
+weights: [200, '400', 'bold'];
+```
+
+Nếu font liên quan là [variable font](https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_fonts/Variable_fonts_guide), bạn có thể chỉ định một phạm vi weights:
+
+```js
+weights: ['100 900'];
+```
+
+#### styles
+
+<p>
+
+**Kiểu:** `("normal" | "italic" | "oblique")[]`<br />
+**Mặc định:** `["normal", "italic"]`
+
+</p>
+
+Một mảng các [font styles](https://developer.mozilla.org/en-US/docs/Web/CSS/font-style):
+
+```js
+styles: ['normal', 'oblique'];
+```
+
+#### subsets
+
+<p>
+
+**Kiểu:** `string[]`<br />
+**Mặc định:** `["cyrillic-ext", "cyrillic", "greek-ext", "greek", "vietnamese", "latin-ext", "latin"]`
+
+</p>
+
+Định nghĩa danh sách các [font subsets](https://knaap.dev/posts/font-subsetting/) để preload.
+
+```js
+subsets: ['latin'];
+```
+
+#### display
+
+<p>
+
+**Kiểu:** `"auto" | "block" | "swap" | "fallback" | "optional"`<br />
+**Mặc định:** `"swap"`
+
+</p>
+
+Định nghĩa [cách font hiển thị](https://developer.mozilla.org/en-US/docs/Web/CSS/@font-face/font-display) dựa trên khi nào nó được tải xuống và sẵn sàng sử dụng:
+
+```js
+display: 'block';
+```
+
+#### unicodeRange
+
+<p>
+
+**Kiểu:** `string[]`<br />
+**Mặc định:** `undefined`
+
+</p>
+
+Xác định khi nào font phải được tải xuống và sử dụng dựa trên [phạm vi ký tự unicode](https://developer.mozilla.org/en-US/docs/Web/CSS/@font-face/unicode-range) cụ thể. Nếu ký tự trên trang phù hợp với phạm vi đã cấu hình, trình duyệt sẽ tải xuống font và tất cả ký tự sẽ có sẵn để sử dụng trên trang. Để cấu hình subset ký tự được preload cho một font đơn lẻ, hãy xem thuộc tính [subsets](#subsets).
+
+Điều này có thể hữu ích cho localization để tránh tải xuống font không cần thiết khi một phần cụ thể của trang web sử dụng bảng chữ cái khác và sẽ được hiển thị với font riêng biệt. Ví dụ, một trang web cung cấp cả phiên bản tiếng Anh và tiếng Nhật có thể ngăn trình duyệt tải xuống font tiếng Nhật trên các phiên bản tiếng Anh của trang không chứa bất kỳ ký tự tiếng Nhật nào được cung cấp trong `unicodeRange`.
+
+```js
+unicodeRange: ['U+26'];
+```
+
+#### stretch
+
+<p>
+
+**Kiểu:** `string`<br />
+**Mặc định:** `undefined`
+
+</p>
+
+Một [font stretch](https://developer.mozilla.org/en-US/docs/Web/CSS/@font-face/font-stretch):
+
+```js
+stretch: 'condensed';
+```
+
+#### featureSettings
+
+<p>
+
+**Kiểu:** `string`<br />
+**Mặc định:** `undefined`
+
+</p>
+
+Kiểm soát [tính năng font typography](https://developer.mozilla.org/en-US/docs/Web/CSS/@font-face/font-feature-settings) (ví dụ: ligatures, small caps, hoặc swashes):
+
+```js
+featureSettings: "'smcp' 2";
+```
+
+#### variationSettings
+
+<p>
+
+**Kiểu:** `string`<br />
+**Mặc định:** `undefined`
+
+</p>
+
+[Cài đặt variation](https://developer.mozilla.org/en-US/docs/Web/CSS/@font-face/font-variation-settings) của font:
+
+```js
+variationSettings: "'xhgt' 0.7";
+```
+
+### `variants` font local
+
+<p>
+
+**Kiểu:** `LocalFontFamily["variants"]`
+
+</p>
+
+Thuộc tính `variants` là bắt buộc khi sử dụng các tệp font local. Mỗi variant đại diện cho một [khai báo `@font-face`](https://developer.mozilla.org/en-US/docs/Web/CSS/@font-face/) và yêu cầu giá trị `weight`, `style`, và `src`.
+
+Ngoài ra, [một số thuộc tính khác của font remote](#other-properties) có thể được chỉ định trong mỗi variant.
+
+```js title="astro.config.mjs"
+import { defineConfig } from 'astro/config';
+
+export default defineConfig({
+	experimental: {
+		fonts: [
+			{
+				provider: 'local',
+				name: 'Custom',
+				cssVariable: '--font-custom',
+				variants: [
+					{
+						weight: 400,
+						style: 'normal',
+						src: ['./src/assets/fonts/custom-400.woff2'],
+					},
+					{
+						weight: 700,
+						style: 'normal',
+						src: ['./src/assets/fonts/custom-700.woff2'],
+					},
+					// ...
+				],
+			},
+		],
+	},
+});
+```
+
+#### weight
+
+<p>
+
+**Kiểu:** `number | string`<br />
+**Mặc định:** `undefined`
+
+</p>
+
+Một [font weight](https://developer.mozilla.org/en-US/docs/Web/CSS/font-weight):
+
+```js
+weight: 200;
+```
+
+Nếu font liên quan là [variable font](https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_fonts/Variable_fonts_guide), bạn có thể chỉ định phạm vi weights:
+
+```js
+weight: '100 900';
+```
+
+Khi giá trị không được đặt, theo mặc định Astro sẽ cố gắng suy luận giá trị dựa trên [`source`](#src) đầu tiên.
+
+#### style
+
+<p>
+
+**Kiểu:** `"normal" | "italic" | "oblique"`<br />
+**Mặc định:** `undefined`
+
+</p>
+
+Một [font style](https://developer.mozilla.org/en-US/docs/Web/CSS/font-style):
+
+```js
+style: 'normal';
+```
+
+Khi giá trị không được đặt, theo mặc định Astro sẽ cố gắng suy luận giá trị dựa trên [`source`](#src) đầu tiên.
+
+#### src
+
+<p>
+
+**Kiểu:** `(string | URL | { url: string | URL; tech?: string })[]`
+
+</p>
+
+[Nguồn](https://developer.mozilla.org/en-US/docs/Web/CSS/@font-face/src) font. Có thể là đường dẫn tương đối từ root, package import hoặc URL. URLs đặc biệt hữu ích nếu bạn inject font local thông qua integration:
+
+<Tabs>
+
+<TabItem label="Đường dẫn tương đối">
+
+```js
+src: ['./src/assets/fonts/MyFont.woff2', './src/assets/fonts/MyFont.woff'];
+```
+
+</TabItem>
+
+<TabItem label="URL">
+
+```js
+src: [new URL('./custom.ttf', import.meta.url)];
+```
+
+</TabItem>
+
+<TabItem label="Package import">
+
+```js
+src: ['my-package/SomeFont.ttf'];
+```
+
+</TabItem>
+
+</Tabs>
+
+:::caution
+Chúng tôi khuyến khích không đặt các tệp font của bạn trong [thư mục `public/`](/vi/reference/configuration-reference/#publicdir). Vì Astro sẽ sao chép các tệp này vào thư mục đó tại thời gian build, điều này sẽ dẫn đến việc trùng lặp tệp trong đầu ra build của bạn. Thay vào đó, hãy lưu trữ chúng ở nơi khác trong dự án, chẳng hạn như trong [`src/`](/vi/reference/configuration-reference/#srcdir).
+:::
+
+Bạn cũng có thể chỉ định [tech](https://developer.mozilla.org/en-US/docs/Web/CSS/@font-face/src#tech) bằng cách cung cấp objects:
+
+```js
+src: [{ url: './src/assets/fonts/MyFont.woff2', tech: 'color-COLRv1' }];
+```
+
+#### Thuộc tính khác
+
+Các tùy chọn sau từ họ font remote cũng có sẵn cho họ font local trong variants:
+
+- [display](#display)
+- [unicodeRange](#unicoderange)
+- [stretch](#stretch)
+- [featureSettings](#featuresettings)
+- [variationSettings](#variationsettings)
+
+```js title="astro.config.mjs" {14}
+import { defineConfig } from 'astro/config';
+
+export default defineConfig({
+	experimental: {
+		fonts: [
+			{
+				provider: 'local',
+				name: 'Custom',
+				cssVariable: '--font-custom',
+				variants: [
+					{
+						weight: 400,
+						style: 'normal',
+						src: ['./src/assets/fonts/custom-400.woff2'],
+						display: 'block',
+					},
+				],
+			},
+		],
+	},
+});
+```
+
+## Xây dựng nhà cung cấp font của riêng bạn
+
+Nếu bạn không muốn sử dụng một trong những [nhà cung cấp tích hợp](#available-remote-font-providers) (ví dụ: bạn muốn sử dụng nhà cung cấp unifont của bên thứ 3 hoặc xây dựng thứ gì đó cho registry riêng), bạn có thể xây dựng nhà cung cấp của riêng mình.
+
+Nhà cung cấp font Astro được tạo thành từ hai phần: đối tượng config và implementation thực tế.
+
+<Steps>
+
+1. Sử dụng type helper `defineAstroFontProvider()`, tạo một function trả về đối tượng config nhà cung cấp font chứa:
+
+   - `entrypoint`: Một URL, đường dẫn tương đối từ root, hoặc package import.
+   - `config`: Một đối tượng serializable tùy chọn được truyền đến nhà cung cấp unifont.
+
+   <Tabs>
+
+   <TabItem label="Không có config">
+
+   ```ts title="provider/config.ts"
+   import { defineAstroFontProvider } from 'astro/config';
+
+   export function myProvider() {
+   	return defineAstroFontProvider({
+   		entrypoint: new URL('./implementation.js', import.meta.url),
+   	});
+   }
+   ```
+
+   </TabItem>
+
+   <TabItem label="Có config">
+
+   ```ts title="provider/config.ts"
+   import { defineAstroFontProvider } from 'astro/config';
+
+   interface Config {
+   	// ...
+   }
+
+   export function myProvider(config: Config) {
+   	return defineAstroFontProvider({
+   		entrypoint: new URL('./implementation.js', import.meta.url),
+   		config,
+   	});
+   }
+   ```
+
+   </TabItem>
+
+   </Tabs>
+
+2. Tạo tệp thứ hai để export implementation `provider` unifont của bạn:
+
+   ```ts title="implementation.ts"
+   import { defineFontProvider } from 'unifont';
+
+   export const provider = defineFontProvider('my-provider', async (options, ctx) => {
+   	// fetch/define your custom fonts
+   	// ...
+   });
+   ```
+
+   :::tip
+
+   Bạn có thể xem [mã nguồn cho các nhà cung cấp của unifont](https://github.com/unjs/unifont/blob/main/src/providers/) để tìm hiểu thêm về cách tạo nhà cung cấp unifont.
+
+   :::
+
+3. Thêm nhà cung cấp tùy chỉnh của bạn vào cấu hình font.
+
+   ```js title="astro.config.mjs" ins="myProvider()"
+   fonts: [
+   	{
+   		provider: fontProviders.myProvider(),
+   		name: 'Custom Font',
+   		cssVariable: '--font-custom',
+   	},
+   ];
+   ```
+
+</Steps>
+
+## Caching
+
+Implementation caching của Fonts API được thiết kế để thực tế trong quá trình phát triển và hiệu quả trong production. Trong quá trình build, các tệp font được sao chép vào thư mục đầu ra `_astro/fonts`, vì vậy chúng có thể hưởng lợi từ HTTP caching của static assets (thường là một năm).
+
+Để xóa cache trong quá trình phát triển, hãy xóa thư mục `.astro/fonts`. Để xóa build cache, hãy xóa thư mục `node_modules/.astro/fonts`
+
+## Đọc thêm
+
+Để biết chi tiết đầy đủ và đưa ra phản hồi về API thử nghiệm này, hãy xem [RFC Fonts](https://github.com/withastro/roadmap/blob/rfc/fonts/proposals/0052-fonts.md).

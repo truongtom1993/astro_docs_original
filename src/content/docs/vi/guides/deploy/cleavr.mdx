@@ -1,0 +1,54 @@
+---
+title: Triển khai trang Astro của bạn với Cleavr
+description: Cách triển khai trang Astro của bạn lên máy chủ VPS bằng Cleavr.
+sidebar:
+  label: Cleavr
+type: deploy
+i18nReady: true
+---
+import { Steps } from '@astrojs/starlight/components';
+
+Bạn có thể triển khai dự án Astro của mình lên Máy chủ ảo riêng (VPS) bằng [Cleavr](https://cleavr.io/), một công cụ quản lý triển khai máy chủ và ứng dụng.
+
+:::tip
+Xem thêm [hướng dẫn Astro trong tài liệu Cleavr](https://docs.cleavr.io/guides/astro)!
+:::
+
+## Điều kiện cần thiết
+
+Để bắt đầu, bạn sẽ cần:
+
+- Một tài khoản Cleavr
+- Một máy chủ trên nhà cung cấp VPS của bạn sử dụng Cleavr
+
+## Thêm trang của bạn
+
+<Steps>
+1. Trong Cleavr, điều hướng đến máy chủ mà bạn muốn thêm dự án Astro của mình.
+
+2. Chọn **Add Site** và điền thông tin chi tiết cho ứng dụng của bạn, như tên miền.
+
+3. Ở mục **App Type**, chọn 'NodeJS Static' hoặc 'NodeJS SSR' tùy vào cách bạn thiết lập ứng dụng Astro.
+   
+4. Với ứng dụng Static, đặt **Artifact Folder** là `dist`.
+   
+5. Với ứng dụng SSR:
+   - Đặt **Entry Point** là `entry.mjs`.
+   - Đặt **Artifact Folder** là `dist/server`.
+   
+6. Chọn **Add** để thêm trang web vào máy chủ của bạn.
+</Steps>
+
+## Cài đặt và triển khai
+
+<Steps>
+1. Sau khi trang mới đã được thêm, nhấn vào **Setup and deploy**.
+   
+2. Chọn **VC Profile**, **Repo**, và **Branch** cho Dự án Astro của bạn.
+   
+3. Thực hiện các cấu hình bổ sung cần thiết cho dự án của bạn.
+   
+4. Nhấn vào tab **Deployments** rồi nhấn vào **Deploy**.
+</Steps>
+
+Chúc mừng, bạn vừa triển khai thành công ứng dụng Astro của mình!

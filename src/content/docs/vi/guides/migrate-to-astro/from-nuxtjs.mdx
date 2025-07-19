@@ -1,0 +1,687 @@
+---
+title: Di chuyển từ NuxtJS
+description: Các mẹo để di chuyển dự án NuxtJS hiện tại sang Astro
+sidebar:
+  label: NuxtJS
+type: migration
+stub: false
+framework: NuxtJS
+i18nReady: true
+---
+import { Steps, LinkCard, CardGrid } from '@astrojs/starlight/components';
+import AstroVueTabs from '~/components/tabs/AstroVueTabs.astro';
+import PackageManagerTabs from '~/components/tabs/PackageManagerTabs.astro';
+import { FileTree } from '@astrojs/starlight/components';
+
+Dưới đây là một số khái niệm chính và chiến lược di chuyển để giúp bạn bắt đầu. Sử dụng phần còn lại của tài liệu và [cộng đồng Discord](https://astro.build/chat) để tiếp tục!
+
+> Hướng dẫn này đề cập đến [Nuxt 2](https://nuxtjs.org/), không phải Nuxt 3 mới hơn. Mặc dù một số khái niệm tương tự, Nuxt 3 là phiên bản mới hơn của framework và có thể cần các chiến lược khác nhau cho các phần di chuyển của bạn.
+
+## Những điểm tương đồng chính giữa Nuxt và Astro
+
+Nuxt và Astro chia sẻ một số điểm tương đồng sẽ giúp bạn di chuyển dự án:
+
+- Các dự án Astro cũng có thể là SSG hoặc [SSR với prerendering cấp trang](/vi/guides/on-demand-rendering/).
+- Astro sử dụng routing dựa trên file, và [cho phép các trang có tên đặc biệt tạo routes động](/vi/guides/routing/#dynamic-routes).
+- Astro [dựa trên component](/vi/basics/astro-components/), và cấu trúc markup của bạn sẽ tương tự trước và sau khi di chuyển.
+- Astro có [tích hợp chính thức để sử dụng các component Vue](/vi/guides/integrations-guide/vue/).
+- Astro hỗ trợ [cài đặt các package NPM](/vi/guides/imports/#npm-packages), bao gồm các thư viện Vue. Bạn có thể giữ một số hoặc tất cả các component Vue và dependencies hiện tại.
+
+## Những khác biệt chính giữa Nuxt và Astro
+
+Khi bạn xây dựng lại trang Nuxt trong Astro, bạn sẽ nhận thấy một số khác biệt quan trọng:
+
+- Nuxt là SPA (single-page application) dựa trên Vue. Trang Astro là ứng dụng nhiều trang được xây dựng bằng các component `.astro`, nhưng cũng có thể hỗ trợ React, Preact, Vue.js, Svelte, SolidJS, AlpineJS, và templating HTML thô.
+
+- [Page Routing](/vi/basics/astro-pages/#file-based-routing): Nuxt sử dụng `vue-router` cho SPA routing, và `vue-meta` để quản lý `<head>`. Trong Astro, bạn sẽ tạo các route trang HTML riêng biệt và kiểm soát `<head>` của trang trực tiếp, hoặc trong component layout.
+
+- [content-driven](/vi/concepts/why-astro/#content-driven): Astro được thiết kế để showcase nội dung của bạn và cho phép bạn chọn tương tác chỉ khi cần thiết. Ứng dụng Nuxt hiện tại có thể được xây dựng cho tương tác client-side cao. Astro có khả năng tích hợp để làm việc với nội dung của bạn, chẳng hạn như tạo trang, nhưng có thể cần các kỹ thuật Astro nâng cao để bao gồm các mục khó sao chép hơn bằng các component `.astro`, chẳng hạn như dashboards.
+
+## Chuyển đổi dự án NuxtJS của bạn
+
+Mỗi quá trình di chuyển dự án sẽ khác nhau, nhưng có một số hành động phổ biến bạn sẽ thực hiện khi chuyển đổi từ Nuxt sang Astro.
+
+### Tạo dự án Astro mới
+Sử dụng lệnh `create astro` cho package manager của bạn để khởi chạy CLI wizard của Astro hoặc chọn theme cộng đồng từ [Astro Theme Showcase](https://astro.build/themes).
+
+Bạn có thể truyền đối số `--template` cho lệnh `create astro` để bắt đầu dự án Astro mới với một trong những starter chính thức của chúng tôi (ví dụ: `docs`, `blog`, `portfolio`). Hoặc, bạn có thể [bắt đầu dự án mới từ bất kỳ repository Astro hiện có nào trên GitHub](/vi/install-and-setup/#install-from-the-cli-wizard).
+
+  <PackageManagerTabs>
+    <Fragment slot="npm">
+    ```shell
+    # khởi chạy Astro CLI Wizard 
+    npm create astro@latest
+
+    # tạo dự án mới với ví dụ chính thức
+    npm create astro@latest -- --template <example-name>
+    ```
+    </Fragment>
+    <Fragment slot="pnpm">
+    ```shell
+    # khởi chạy Astro CLI Wizard 
+    pnpm create astro@latest
+
+    # tạo dự án mới với ví dụ chính thức
+    pnpm create astro@latest --template <example-name>
+    ```
+    </Fragment>
+    <Fragment slot="yarn">
+    ```shell
+    # khởi chạy Astro CLI Wizard 
+    yarn create astro@latest
+
+    # tạo dự án mới với ví dụ chính thức
+    yarn create astro@latest --template <example-name>
+    ```
+    </Fragment>
+  </PackageManagerTabs>
+
+Sau đó, sao chép các file dự án Nuxt hiện tại của bạn vào dự án Astro mới trong một thư mục riêng bên ngoài `src`.
+
+:::tip
+Truy cập https://astro.new để xem danh sách đầy đủ các template starter chính thức, và liên kết để mở dự án mới trong IDX, StackBlitz, CodeSandbox, hoặc Gitpod.
+:::
+
+### Cài đặt integrations (tùy chọn)
+
+Bạn có thể thấy hữu ích khi cài đặt một số [integrations tùy chọn của Astro](/vi/guides/integrations-guide/) để sử dụng khi chuyển đổi dự án Nuxt sang Astro:
+
+- **@astrojs/vue**: để tái sử dụng một số component Vue UI hiện tại trong trang Astro mới của bạn, hoặc tiếp tục viết với các component Vue.
+
+- **@astrojs/mdx**: để mang các file MDX hiện tại từ dự án Nuxt của bạn, hoặc sử dụng MDX trong trang Astro mới của bạn.
+
+### Đặt source code vào `src`
+
+<Steps>
+1. **Di chuyển** nội dung của thư mục `static/` của Nuxt vào `public/`.
+   
+    Astro sử dụng thư mục `public/` cho static assets, tương tự như thư mục `static/` của Nuxt.
+
+2. **Sao chép hoặc Di chuyển** các file và thư mục khác của Nuxt (ví dụ: `pages`, `layouts` v.v.) vào thư mục `src/` của Astro.
+
+    Giống như Nuxt, thư mục `src/pages/` của Astro là thư mục đặc biệt được sử dụng cho file-based routing. Tất cả các thư mục khác là tùy chọn, và bạn có thể tổ chức nội dung của thư mục `src/` theo cách bạn thích. Các thư mục phổ biến khác trong dự án Astro bao gồm `src/layouts/`, `src/components`, `src/styles`, `src/scripts`.
+</Steps>
+
+### Chuyển đổi trang Vue SFC thành file `.astro`
+
+Dưới đây là một số mẹo để chuyển đổi component `.vue` của Nuxt thành component `.astro`:
+
+1. Sử dụng `<template>` của hàm component NuxtJS hiện tại làm cơ sở cho template HTML của bạn.
+
+2. Thay đổi bất kỳ [cú pháp Nuxt hoặc Vue nào thành Astro](#reference-convert-nuxtjs-syntax-to-astro) hoặc thành tiêu chuẩn web HTML. Điều này bao gồm `<NuxtLink>`, `:class`, `{{variable}}`, và `v-if`, chẳng hạn.
+
+3. Di chuyển JavaScript `<script>`, vào "code fence" (`---`). Chuyển đổi các thuộc tính data-fetching của component của bạn thành JavaScript phía server - xem [Nuxt data fetching to Astro](#nuxt-data-fetching-to-astro).
+
+4. Sử dụng `Astro.props` để truy cập bất kỳ props bổ sung nào trước đây được truyền cho component Vue của bạn.
+
+5. Quyết định xem có cần chuyển đổi component được import nào thành Astro không. Với integration chính thức được cài đặt, bạn có thể [sử dụng các component Vue hiện tại trong file Astro của bạn](/vi/guides/integrations-guide/vue/). Nhưng, bạn có thể muốn chuyển đổi chúng thành Astro, đặc biệt nếu chúng không cần tương tác!
+
+Xem [ví dụ từ ứng dụng Nuxt được chuyển đổi từng bước](#guided-example-see-the-steps).
+
+#### So sánh: Vue vs Astro
+
+So sánh component Nuxt sau và component Astro tương ứng:
+
+<AstroVueTabs>
+  <Fragment slot="vue">
+    ```vue title="Page.vue"
+    <template>
+      <div>
+        <p v-if="message === 'Not found'">
+          The repository you're looking up doesn't exist
+        </p>
+        <div v-else>
+          <Header/>
+          <p class="banner">Astro có {{stars}} 🧑‍🚀</p>
+          <Footer />
+        </div>
+      </div>
+    </template>
+
+    <script>
+    import Vue from 'vue'
+    
+    export default Vue.extend({
+      name: 'IndexPage',
+      async asyncData() {
+        const res = await fetch('https://api.github.com/repos/withastro/astro')
+        const json = await res.json();
+        return {
+          message: json.message,
+          stars: json.stargazers_count || 0,
+        };
+      }
+    });
+    </script>
+    
+    <style scoped>
+    .banner {
+      background-color: #f4f4f4;
+      padding: 1em 1.5em;
+      text-align: center;
+      margin-bottom: 1em;
+    }
+    <style>
+    ```
+  </Fragment>
+  <Fragment slot="astro">
+    ```astro title="Page.astro"
+    ---
+    import Header from "./header";
+    import Footer from './footer';
+    import "./layout.css";
+
+    const res = await fetch('https://api.github.com/repos/withastro/astro')
+    const json = await res.json()
+    const message = json.message;
+    const stars = json.stargazers_count || 0;
+    ---
+    
+    {message === "Not Found" ? 
+          <p>The repository you're looking up doesn't exist</p> :
+          <>
+                <Header />
+                <p class="banner">Astro có {stars} 🧑‍🚀</p>
+                <Footer />
+            </> 
+    }
+    
+    <style>
+      .banner {
+        background-color: #f4f4f4; 
+        padding: 1em 1.5em;
+        text-align: center;
+        margin-bottom: 1em;
+      }
+    <style>
+    ```
+  </Fragment>
+</AstroVueTabs>
+
+### Di chuyển Layout Files
+
+Bạn có thể thấy hữu ích khi bắt đầu bằng cách chuyển đổi layouts và templates của Nuxt thành [component layout Astro](/vi/basics/layouts/).
+
+Mỗi trang Astro yêu cầu rõ ràng các thẻ `<html>`, `<head>`, và `<body>` phải có mặt. `layout.vue` và templates của Nuxt sẽ không bao gồm những thẻ này.
+
+Lưu ý templating HTML tiêu chuẩn, và truy cập trực tiếp vào `<head>`:
+
+```astro title="src/layouts/Layout.astro"
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="viewport" content="width=device-width" />
+    <title>Astro</title>
+  </head>
+  <body>
+    <!-- Bọc element slot với templating layout hiện tại của bạn -->
+    <slot />
+  </body>
+</html>
+```
+
+Bạn cũng có thể muốn tái sử dụng code từ [thuộc tính `head` của trang Nuxt](https://nuxtjs.org/docs/configuration-glossary/configuration-head/#the-head-property) để bao gồm metadata trang bổ sung. Lưu ý rằng Astro không sử dụng `vue-meta` cũng không sử dụng thuộc tính `head` của component mà thay vào đó tạo `<head>` trực tiếp. Bạn có thể import và sử dụng components, ngay cả trong `<head>`, để phân tách và tổ chức nội dung trang của bạn.
+
+### Di chuyển Pages và Posts
+
+Trong NuxtJS, [trang](/vi/basics/astro-pages/) của bạn nằm trong `/pages`. Trong Astro, tất cả nội dung trang của bạn phải nằm trong `src/` trừ khi bạn đang sử dụng [content collections](/vi/guides/content-collections/).
+
+#### Trang Vue
+
+Các trang Nuxt Vue (`.vue`) hiện tại của bạn sẽ cần được [chuyển đổi từ file Vue thành trang `.astro`](#convert-vue-sfc-pages-to-astro-files). Bạn không thể sử dụng file trang Vue hiện tại trong Astro.
+
+Các [trang `.astro`](/vi/basics/astro-pages/) này phải được đặt trong `src/pages/` và sẽ có các routes trang được tạo tự động dựa trên đường dẫn file của chúng.
+
+##### Đặt tên Dynamic File Path
+
+Trong Nuxt, các trang động của bạn sử dụng dấu gạch dưới để đại diện cho thuộc tính trang động sau đó được truyền cho tạo trang:
+
+<FileTree>
+- pages/
+  - pokemon/
+    - _name.vue
+  - index.vue
+- nuxt.config.js
+</FileTree>
+
+Để chuyển đổi sang Astro, thay đổi thuộc tính đường dẫn động có dấu gạch dưới này (ví dụ: `_name.vue`) để được bọc trong một cặp dấu ngoặc vuông (ví dụ: `[name].astro`):
+
+<FileTree>
+- src/
+  - pages/
+    - pokemon/
+      - [name].astro
+    - index.astro
+- astro.config.mjs
+</FileTree>
+
+#### Trang Markdown và MDX
+
+Astro có hỗ trợ tích hợp cho Markdown và integration tùy chọn cho file MDX. Bạn có thể tái sử dụng bất kỳ trang Markdown và MDX hiện tại nào, nhưng chúng có thể cần một số điều chỉnh cho frontmatter của chúng, chẳng hạn như thêm [thuộc tính frontmatter `layout` đặc biệt của Astro](/vi/basics/layouts/#markdown-layouts).
+
+Bạn sẽ không còn cần tạo trang thủ công cho mỗi route được tạo từ Markdown hoặc sử dụng package bên ngoài như `@nuxt/content`. Các file này có thể được đặt trong `src/pages/` để tận dụng file-based routing tự động.
+
+Khi là một phần của [content collection](/vi/guides/content-collections/), bạn sẽ [tạo trang động](/vi/guides/content-collections/#generating-routes-from-content) từ các mục nội dung của bạn.
+
+### Di chuyển Tests
+
+Vì Astro xuất HTML thô, có thể viết end-to-end tests sử dụng output của build step. Bất kỳ end-to-end tests nào được viết trước đó có thể hoạt động ngay lập tức, nếu bạn có thể khớp markup của trang Nuxt. Các thư viện testing như Jest và Vue Testing Library có thể được import và sử dụng trong Astro để test các component Vue của bạn.
+
+Xem [hướng dẫn testing của Astro](/vi/guides/testing/) để biết thêm.
+
+## Tham khảo: Chuyển đổi cú pháp NuxtJS sang Astro
+
+### Biến cục bộ Nuxt sang Astro
+
+Để sử dụng biến cục bộ trong HTML của component Astro, thay đổi bộ hai dấu ngoặc nhọn thành một bộ dấu ngoặc nhọn:
+
+```astro title="src/components/Component.astro" del={4} add={5}
+---
+const message = "Hello!"
+---
+<p>{{message}}</p>
+<p>{message}</p>
+```
+
+### Truyền Property Nuxt sang Astro
+
+Để bind một attribute hoặc component property trong component Astro, thay đổi cú pháp này thành như sau:
+
+```astro title="src/components/Component.astro" del={3-7} ins={9-11}
+---
+---
+<p v-bind:aria-label="message">...</p>
+<!-- Hoặc -->
+<p :aria-label="message">...</p>
+<!-- Cũng hỗ trợ component props -->
+<Header title="Page"/>
+
+<p aria-label={message}>...</p>
+<!-- Cũng hỗ trợ component props -->
+<Header title={"Page"}/>
+```
+
+### Link Nuxt sang Astro
+
+Chuyển đổi bất kỳ component `<NuxtLink to="">` của Nuxt thành thẻ HTML `<a href="">`.
+
+```astro del={1} ins={2}
+<NuxtLink to="/blog">Blog</Link>
+<a href="/blog">Blog</a>
+```
+
+Astro không sử dụng component đặc biệt nào cho links, mặc dù bạn có thể tự do xây dựng các component link tùy chỉnh. Sau đó bạn có thể import và sử dụng `<Link>` này giống như bất kỳ component nào khác.
+
+```astro title="src/components/Link.astro"
+---
+const { to } = Astro.props
+---
+<a href={to}><slot /></a>
+```
+
+### Imports Nuxt sang Astro
+
+Nếu cần thiết, cập nhật bất kỳ [file imports](/vi/guides/imports/) nào để tham chiếu đường dẫn file tương đối chính xác. Điều này có thể được thực hiện bằng cách sử dụng [import aliases](/vi/guides/typescript/#import-aliases), hoặc bằng cách viết ra đường dẫn tương đối đầy đủ.
+
+Lưu ý rằng `.astro` và một số loại file khác phải được import với phần mở rộng file đầy đủ của chúng.
+
+```astro title="src/pages/authors/Fred.astro" ".astro"
+---
+import Card from `../../components/Card.astro`;
+---
+<Card />
+```
+
+### Tạo trang động Nuxt sang Astro
+
+Trong Nuxt, để tạo trang động bạn phải:
+
+- Sử dụng SSR.
+- [Sử dụng hàm `generate` trong `nuxt.config.js`](https://nuxtjs.org/docs/configuration-glossary/configuration-generate/) để định nghĩa tất cả các static routes có thể.
+
+Trong Astro, bạn tương tự có hai lựa chọn:
+- [Sử dụng SSR](/vi/guides/on-demand-rendering/).
+- Export hàm `getStaticPaths()` trong frontmatter của trang Astro để báo cho framework biết [static routes để tạo động](/vi/guides/routing/#dynamic-routes).
+
+#### Chuyển đổi hàm `generate` trong Nuxt thành hàm `getStaticPaths` trong Astro.
+
+Để tạo nhiều trang, thay thế hàm tạo routes trong `nuxt.config.js` của bạn bằng `getStaticPaths()` trực tiếp bên trong trang routing động:
+
+```javascript title="nuxt.config.js"
+{
+	// ...
+    generate: {
+        async routes() {
+          // Axios được yêu cầu ở đây trừ khi bạn đang sử dụng Node 18
+          const res = await axios.get("https://pokeapi.co/api/v2/pokemon?limit=151")
+          const pokemons = res.data.results;
+          return pokemons.map(pokemon => {
+            return '/pokemon/' + pokemon.name
+          })
+        }
+      }
+}
+```
+
+```astro title="src/pages/pokemon/[name].astro"
+---
+export const getStaticPaths = async () => {
+  const res = await fetch("https://pokeapi.co/api/v2/pokemon?limit=151")
+  const resJson = await res.json();
+  const pokemons = resJson.results;
+  return pokemons.map(({ name }) => ({
+      params: { name },
+    }))
+}
+// ...
+---
+<!-- Template của bạn ở đây -->
+```
+
+### Data Fetching Nuxt sang Astro
+
+Nuxt có hai phương thức fetch dữ liệu server-side:
+
+- [`asyncData` options API](https://nuxtjs.org/docs/features/data-fetching/#async-data)
+- [`fetch` hook](https://nuxtjs.org/docs/features/data-fetching/#the-fetch-hook)
+
+Trong Astro, fetch dữ liệu bên trong code fence của trang.
+
+Di chuyển như sau:
+
+```vue title="pages/index.vue"
+{
+  // ...
+  async asyncData() {
+    const res = await fetch("https://pokeapi.co/api/v2/pokemon?limit=151")
+    const resJson = await res.json();
+    const pokemons = resJson.results;
+    return {
+      pokemons,
+    }
+  },
+}
+```
+
+Thành code fence không có wrapper function:
+
+```astro title="src/pages/index.astro"
+---
+const res = await fetch("https://pokeapi.co/api/v2/pokemon?limit=151")
+const resJson = await res.json();
+const pokemons = resJson.results;
+---
+
+<!-- Template của bạn ở đây -->
+```
+
+### Styling Nuxt sang Astro
+
+Nuxt sử dụng component styling của Vue để tạo style cho trang.
+
+```vue title="pages/index.vue"
+<template>
+	<!-- Template của bạn ở đây -->
+</template>
+
+<script>
+	// Server logic của bạn ở đây
+</script>
+
+<style scoped>
+    .class {
+        color: red;
+    }
+</style>
+```
+
+Tương tự, trong Astro bạn có thể thả element `<style>` vào template trang của bạn để cung cấp scoped styles cho component.
+
+```astro title="src/pages/index.vue"
+---
+// Server logic của bạn ở đây
+---
+
+<style>
+    .class {
+        color: red;
+    }
+</style>
+```
+
+#### Global Styling
+
+Thẻ `<style>` được `scoped` mặc định trong Astro. Để làm cho thẻ `<style>` global, đánh dấu nó với attribute `is:global`:
+
+```astro title="src/pages/index.vue"
+<style is:global> 
+	p {
+		color: red;
+	}
+</style>
+```
+
+#### Hỗ trợ Pre-processor
+
+[Astro hỗ trợ các CSS preprocessors phổ biến nhất](/vi/guides/styling/#css-preprocessors) bằng cách cài đặt chúng như dev dependency. Ví dụ, để sử dụng SCSS:
+
+```shell
+npm install -D sass
+```
+
+Sau khi làm điều đó, bạn có thể sử dụng style `.scss` hoặc `.sass` mà không cần sửa đổi từ các component Vue của bạn.
+
+```astro title="src/layouts/Layout.astro"
+<p>Hello, world</p>
+<style lang="scss">
+p {
+   color: black;
+   
+   &:hover {
+       color: red;
+   }
+}
+</style>
+```
+
+Xem thêm về [Styling trong Astro](/vi/guides/styling/).
+
+### Plugin Image Nuxt sang Astro
+
+Chuyển đổi bất kỳ [component `<nuxt-img/>` hoặc `<nuxt-picture/>` của Nuxt](https://image.nuxtjs.org/components/nuxt-img) thành [component image riêng của Astro](/vi/guides/images/) trong file `.astro` hoặc `.mdx`, hoặc thành [thẻ HTML `<img>`](/vi/guides/images/#images-in-ui-framework-components) hoặc `<picture>` tiêu chuẩn tùy theo trong các component Vue của bạn.
+
+Component `<Image />` của Astro chỉ hoạt động trong file `.astro` và `.mdx`. Xem [danh sách đầy đủ các thuộc tính component](/vi/reference/modules/astro-assets/#image-properties) và lưu ý rằng một số sẽ khác với các thuộc tính của Nuxt.
+
+```astro title="src/pages/index.astro"
+---
+import { Image } from 'astro:assets';
+import rocket from '../assets/rocket.png';
+---
+<Image src={rocket} alt="A rocketship in space." />
+<img src={rocket.src} alt="A rocketship in space.">
+```
+
+Trong các component Vue (`.vue`) trong ứng dụng Astro của bạn, sử dụng cú pháp image JSX tiêu chuẩn (`<img />`). Astro sẽ không tối ưu hóa những hình ảnh này, nhưng bạn có thể cài đặt và sử dụng các package NPM để có tính linh hoạt hơn.
+
+Bạn có thể tìm hiểu thêm về [sử dụng images trong Astro](/vi/guides/images/) trong Images Guide.
+
+## Ví dụ hướng dẫn: Xem các bước!
+
+Đây là ví dụ về data fetch Pokédex của Nuxt được chuyển đổi sang Astro.
+
+`pages/index.vue` fetch và hiển thị danh sách 151 Pokémon đầu tiên sử dụng [REST PokéAPI](https://pokeapi.co/).
+
+Đây là cách tái tạo điều đó trong `src/pages/index.astro`, thay thế `asyncData()` bằng `fetch()`.
+
+<Steps>
+1. Xác định `<template>` và `<style>` trong Vue SFC.
+
+    ```jsx title="pages/index.vue" {2-13,47-55}
+    <template>
+      <ul class="plain-list pokeList">
+                <li v-for="pokemon of pokemons" class="pokemonListItem" :key="pokemon.name">
+                    <NuxtLink class="pokemonContainer" :to="`/pokemon/${pokemon.name}`">
+                        <p class="pokemonId">No. {{pokemon.id}}</p>
+                        <img
+                          class="pokemonImage"
+                          :src="`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${pokemon.id}.png`" 
+                          :alt="`${pokemon.name} picture`"/>
+                        <h2 class="pokemonName">{{pokemon.name}}</h2>
+                    </NuxtLink>
+                </li>
+        </ul>
+    </template>
+
+    <script>
+    import Vue from 'vue'
+    export default Vue.extend({
+      name: 'IndexPage',
+      layout: 'default',
+      async asyncData() {
+        const res = await fetch("https://pokeapi.co/api/v2/pokemon?limit=151")
+        const resJson = await res.json();
+        const pokemons = resJson.results.map(pokemon => {
+            const name = pokemon.name;
+            // https://pokeapi.co/api/v2/pokemon/1/
+            const url = pokemon.url;
+            const id = url.split("/")[url.split("/").length - 2];
+            return {
+                name,
+                url,
+                id
+            }
+        });
+        return {
+          pokemons,
+        }
+      },
+      head() {
+        return {
+          title: "Pokedex: Generation 1"
+        }
+      }
+    });
+    </script>
+
+    <style scoped>
+    .pokeList {
+      display: grid;
+      grid-template-columns: repeat( auto-fit, minmax(250px, 1fr) );
+      gap: 1rem;
+    }
+
+    /* ... */
+    </style>
+    ```
+
+2. Tạo `src/pages/index.astro`
+
+    Sử dụng thẻ `<template>` và `<style>` của Nuxt SFC. Chuyển đổi bất kỳ cú pháp Nuxt hoặc Vue nào sang Astro.
+
+    Lưu ý rằng:
+
+    - `<template>` được loại bỏ
+
+    - `<style>` có thuộc tính `scoped` được loại bỏ
+
+    - `v-for` trở thành `.map`.
+
+    - `:attr="val"` trở thành `attr={val}`
+
+    - `<NuxtLink>` trở thành `<a>`.
+
+    - Fragment `<> </>` không cần thiết trong templating Astro.
+
+    ```astro title="src/pages/index.astro" ".map" "</a>" "<a" "key={" "}>" "href={" " {pokemon.id}" "} alt={" "src={" "}/>" ">{pokemon.name}<"
+    ---
+    ---
+    <ul class="plain-list pokeList">
+        {pokemons.map((pokemon) => (
+            <li class="pokemonListItem" key={pokemon.name}>
+                <a class="pokemonContainer" href={`/pokemon/${pokemon.name}`}>
+                    <p class="pokemonId">No. {pokemon.id}</p>
+                    <img class="pokemonImage" src={`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${pokemon.id}.png`} alt={`${pokemon.name} picture`}/>
+                    <h2 class="pokemonName">{pokemon.name}</h2>
+                </a>
+            </li>
+        ))}
+    </ul>
+
+    <style>
+    .pokeList {
+      display: grid;
+      grid-template-columns: repeat( auto-fit, minmax(250px, 1fr) );
+      gap: 1rem;
+    }
+
+    /* ... */
+    </style>
+    ```
+
+3. Thêm imports, props và JavaScript cần thiết
+
+    Lưu ý rằng:
+
+    - Hàm `asyncData` không còn cần thiết. Dữ liệu từ API được fetch trực tiếp trong code fence.
+    - Component `<Layout>` được import, và bọc page templating.
+      - Phương thức `head()` của Nuxt được truyền cho component `<Layout>`, được truyền cho element `<title>` như một property.
+
+    ```astro ins={2,4-16,19,31} title="src/pages/index.astro"
+    ---
+    import Layout from '../layouts/layout.astro';
+
+    const res = await fetch("https://pokeapi.co/api/v2/pokemon?limit=151");
+    const resJson = await res.json();
+    const pokemons = resJson.results.map(pokemon => {
+        const name = pokemon.name;
+        // https://pokeapi.co/api/v2/pokemon/1/
+        const url = pokemon.url;
+        const id = url.split("/")[url.split("/").length - 2];
+        return {
+            name,
+            url,
+            id
+        }
+    });
+    ---
+
+    <Layout title="Pokedex: Generation 1">
+      <ul class="plain-list pokeList">
+          {pokemons.map((pokemon) => (
+              <li class="pokemonListItem" key={pokemon.name}>
+                  <a class="pokemonContainer" href={`/pokemon/${pokemon.name}`}>
+                      <p class="pokemonId">No. {pokemon.id}</p>
+                      <img class="pokemonImage" src={`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${pokemon.id}.png`} alt={`${pokemon.name} picture`}/>
+                      <h2 class="pokemonName">{pokemon.name}</h2>
+                  </a>
+              </li>
+          ))}
+      </ul>
+    </Layout>
+
+    <style>
+    .pokeList {
+      display: grid;
+      grid-template-columns: repeat( auto-fit, minmax(250px, 1fr) );
+      gap: 1rem;
+    }
+
+    /* ... */
+    </style>
+    ```
+</Steps>
+
+## Tài nguyên cộng đồng
+
+<CardGrid>
+
+  <LinkCard title="Từ Nuxt sang Astro - xây dựng lại với Astro" href="https://dev.to/lindsaykwardell/from-nuxt-to-astro-rebuilding-with-astro-5ann"/>
+
+  <LinkCard title="Chuyển đổi nền tảng Nuxt 2 sang Astro 3 – từ Thiết lập đến Production" href="https://stevenwoodson.com/blog/replatforming-from-nuxtjs-2-to-astro/"/>
+
+</CardGrid>
+
+:::note[Có tài nguyên để chia sẻ?]
+Nếu bạn tìm thấy (hoặc tạo!) video hoặc bài blog hữu ích về việc chuyển đổi trang Nuxt sang Astro, [thêm nó vào danh sách này](https://github.com/withastro/docs/edit/main/src/content/docs/vi/guides/migrate-to-astro/from-nuxtjs.mdx)!
+:::

@@ -1,0 +1,122 @@
+---
+title: Triển khai trang Astro của bạn lên Azion
+description: Cách triển khai trang Astro của bạn lên web bằng Azion.
+sidebar:
+  label: Azion
+type: deploy
+i18nReady: true
+---
+import { Steps } from '@astrojs/starlight/components';
+
+Bạn có thể triển khai dự án Astro của mình trên [Azion](https://console.azion.com/), một nền tảng dành cho các lập trình viên frontend để hợp tác và triển khai các website tĩnh (JAMstack) và SSR.
+
+## Yêu cầu trước
+
+Để bắt đầu, bạn sẽ cần:
+
+- Một [tài khoản Azion](https://www.azion.com/). Nếu bạn chưa có, bạn có thể đăng ký tài khoản miễn phí.
+- Mã nguồn ứng dụng của bạn được lưu trữ trong một kho [GitHub](https://github.com/).
+- Đã cài đặt [Azion CLI](https://www.azion.com/vi/documentation/products/azion-cli/overview/) để thiết lập và triển khai dự án nhanh hơn.
+
+## Cách triển khai qua Azion Console Dashboard
+
+Để bắt đầu xây dựng, hãy làm theo các bước sau:
+
+<Steps>
+1. Truy cập [Azion Console](https://console.azion.com).
+2. Ở trang chủ, nhấn nút **\+ Create**.
+   - Thao tác này sẽ mở một cửa sổ với các tùy chọn tạo ứng dụng và tài nguyên mới.
+3. Chọn tùy chọn **Import from GitHub** và nhấp vào thẻ này.
+   - Thao tác này sẽ mở trang cấu hình.
+4. Kết nối tài khoản Azion của bạn với GitHub.
+   - Một cửa sổ bật lên sẽ xuất hiện yêu cầu cấp quyền.
+5. Chọn kho lưu trữ bạn muốn nhập từ GitHub.
+6. Cấu hình các thiết lập build:
+   - **Framework preset:** Chọn framework phù hợp (ví dụ: `Astro`).
+   - **Root Directory:** Đây là thư mục chứa mã nguồn của bạn. Mã nguồn của bạn phải nằm ở thư mục gốc, không phải thư mục con. Một ký hiệu ./ sẽ xuất hiện trong trường này, cho biết đó là thư mục gốc.
+   - **Install Command:** lệnh dùng để biên dịch thiết lập của bạn nhằm build cho môi trường production. Các lệnh build sẽ được thực thi thông qua các script. Ví dụ: npm run build hoặc npm install cho một gói NPM.
+7. Nhấn **Save and Deploy**.
+8. Theo dõi quá trình triển khai bằng **Azion Real-Time Metrics** và xác nhận trang web của bạn đã hoạt động trên edge.
+</Steps>
+
+## Cách triển khai trang tĩnh bằng Azion CLI
+
+<Steps>
+
+1. **Cài đặt Azion CLI:**
+     
+   - Tải về và cài đặt [Azion CLI](https://www.azion.com/vi/documentation/products/azion-cli/overview/) để dễ dàng quản lý và triển khai dự án.
+
+   :::caution
+   Azion CLI hiện chưa hỗ trợ môi trường Windows nguyên bản. Tuy nhiên, bạn có thể sử dụng trên Windows thông qua Windows Subsystem for Linux (WSL). Làm theo [hướng dẫn cài đặt WSL](https://docs.microsoft.com/en-us/windows/wsl/install) để thiết lập môi trường Linux trên máy Windows của bạn.
+   :::
+
+2. **Xác thực CLI:**
+     
+   - Chạy lệnh sau để xác thực CLI với tài khoản Azion của bạn.
+
+   ```bash
+   azion login
+   ```
+
+3. **Thiết lập ứng dụng của bạn:**
+     
+   - Sử dụng các lệnh sau để khởi tạo và cấu hình dự án của bạn:
+
+   ```bash
+   azion init
+   ```  
+
+4. **Build dự án Astro của bạn:**
+     
+   - Chạy lệnh build trên máy của bạn:
+
+   ```bash
+   azion build
+   ```
+
+5. **Triển khai các tệp tĩnh của bạn:**
+     
+   - Triển khai các tệp tĩnh bằng Azion CLI:
+
+   ```bash
+   azion deploy
+   ```
+</Steps>
+
+Hướng dẫn này cung cấp tổng quan về việc triển khai ứng dụng tĩnh.
+
+## Kích hoạt phát triển cục bộ bằng Azion CLI
+
+Để bản preview hoạt động, bạn cần thực hiện lệnh sau:
+
+```bash
+azion dev
+```
+
+Sau khi bạn đã khởi tạo server phát triển cục bộ, ứng dụng sẽ thực hiện quá trình `build`.
+
+```bash 
+Đang xây dựng ứng dụng Edge của bạn. Quá trình này có thể mất vài phút
+Đang chạy lệnh build:
+...
+```
+
+Khi quá trình build hoàn tất, bạn sẽ nhận được thông báo truy cập ứng dụng:
+
+```bash
+[Azion Bundler] [Server] › ✔  thành công   Chức năng đang chạy tại cổng http://localhost:3000 
+```
+
+## Khắc phục sự cố
+
+
+### Các API runtime của Node.js
+
+Một dự án sử dụng gói NPM bị lỗi build với thông báo như `[Error] Could not resolve "XXXX. The package "XXXX" wasn't found on the file system but is built into node.`:
+
+Điều này có nghĩa là một gói hoặc import bạn đang sử dụng không tương thích với các API runtime của Azion.
+
+Nếu bạn đang import trực tiếp một API runtime của Node.js, vui lòng tham khảo [tính tương thích Node.js của Azion](https://www.azion.com/vi/documentation/products/azion-edge-runtime/compatibility/node/) để biết các bước xử lý tiếp theo.
+
+Nếu bạn đang import một gói mà bên trong gói đó lại import một API runtime của Node.js, hãy kiểm tra với tác giả gói xem họ có hỗ trợ cú pháp import `node:*` hay không. Nếu không, bạn có thể cần tìm một gói thay thế.

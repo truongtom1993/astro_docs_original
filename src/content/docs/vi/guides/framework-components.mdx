@@ -1,0 +1,238 @@
+---
+title: Framework front-end
+description: Xây dựng trang web Astro của bạn với React, Svelte, và nhiều hơn nữa.
+i18nReady: true
+---
+import IntegrationsNav from '~/components/IntegrationsNav.astro'
+import ReadMore from '~/components/ReadMore.astro'
+
+Xây dựng trang web Astro của bạn mà không cần hy sinh framework component yêu thích. Tạo các [islands](/vi/concepts/islands/) Astro với các UI framework mà bạn lựa chọn.
+
+## Tích hợp framework front-end chính thức
+
+Astro hỗ trợ nhiều framework phổ biến bao gồm [React](https://react.dev/), [Preact](https://preactjs.com/), [Svelte](https://svelte.dev/), [Vue](https://vuejs.org/), [SolidJS](https://www.solidjs.com/), và [AlpineJS](https://alpinejs.dev/) với các tích hợp chính thức.
+
+Tìm thêm [tích hợp framework do cộng đồng duy trì](https://astro.build/integrations/?search=&categories%5B%5D=frameworks) (ví dụ: Angular, Qwik, Elm) trong thư mục tích hợp của chúng tôi.
+
+<IntegrationsNav category="renderer" />
+
+## Cài đặt tích hợp
+
+Một hoặc nhiều tích hợp Astro này có thể được cài đặt và cấu hình trong dự án của bạn.
+
+Xem [Hướng dẫn Tích hợp](/vi/guides/integrations-guide/) để biết thêm chi tiết về cài đặt và cấu hình các tích hợp Astro.
+
+:::tip
+Muốn xem ví dụ cho framework bạn chọn? Truy cập [astro.new](https://astro.new/latest/frameworks) và chọn một trong các template framework.
+:::
+
+## Sử dụng component framework
+
+Sử dụng các component JavaScript framework trong các trang, layout và component Astro của bạn giống như các component Astro! Tất cả component của bạn có thể cùng tồn tại trong `/src/components`, hoặc có thể được tổ chức theo bất kỳ cách nào bạn thích.
+
+Để sử dụng component framework, import nó từ đường dẫn tương đối trong script component Astro của bạn. Sau đó, sử dụng component cùng với các component khác, phần tử HTML và biểu thức giống JSX trong template component.
+
+```astro title="src/pages/static-components.astro" ins={2,7}
+---
+import MyReactComponent from '../components/MyReactComponent.jsx';
+---
+<html>
+  <body>
+    <h1>Sử dụng component React trực tiếp trong Astro!</h1>
+    <MyReactComponent />
+  </body>
+</html>
+```
+
+Theo mặc định, các component framework của bạn sẽ chỉ render trên server, dưới dạng HTML tĩnh. Điều này hữu ích cho các component templating không tương tác và tránh gửi bất kỳ JavaScript không cần thiết nào đến client.
+
+## Hydrate component tương tác
+
+Một component framework có thể được làm cho tương tác (hydrated) bằng cách sử dụng [`client:*` directive](/vi/reference/directives-reference/#client-directives). Đây là các thuộc tính component xác định khi nào JavaScript của component nên được gửi đến trình duyệt.
+
+Với tất cả client directive trừ `client:only`, component của bạn sẽ được render trước trên server để tạo HTML tĩnh. JavaScript của component sẽ được gửi đến trình duyệt theo directive bạn đã chọn. Component sau đó sẽ hydrate và trở nên tương tác.
+
+```astro title="src/pages/interactive-components.astro" /client:\S+/
+---
+// Ví dụ: hydrating component framework trong trình duyệt.
+import InteractiveButton from '../components/InteractiveButton.jsx';
+import InteractiveCounter from '../components/InteractiveCounter.jsx';
+import InteractiveModal from '../components/InteractiveModal.svelte';
+---
+<!-- JS của component này sẽ bắt đầu import khi trang tải -->
+<InteractiveButton client:load />
+
+<!-- JS của component này sẽ không được gửi đến client cho đến khi
+người dùng cuộn xuống và component hiển thị trên trang -->
+<InteractiveCounter client:visible />
+
+<!-- Component này sẽ không render trên server, nhưng sẽ render trên client khi trang tải -->
+<InteractiveModal client:only="svelte" />
+```
+
+JavaScript framework (React, Svelte, v.v.) cần thiết để render component sẽ được gửi đến trình duyệt cùng với JavaScript của chính component đó. Nếu hai hoặc nhiều component trên một trang sử dụng cùng framework, framework sẽ chỉ được gửi một lần.
+
+:::note[Accessibility]
+Hầu hết các pattern accessibility đặc thù của framework sẽ hoạt động giống nhau khi những component này được sử dụng trong Astro. Hãy chắc chắn chọn client directive sẽ đảm bảo bất kỳ JavaScript liên quan đến accessibility nào được tải và thực thi đúng lúc!
+:::
+
+### Các directive hydration có sẵn
+
+Có một số directive hydration có sẵn cho các component UI framework: `client:load`, `client:idle`, `client:visible`, `client:media={QUERY}` và `client:only={FRAMEWORK}`.
+
+<ReadMore>Xem trang [tham chiếu directive](/vi/reference/directives-reference/#client-directives) của chúng tôi để có mô tả đầy đủ về các directive hydration này và cách sử dụng chúng.</ReadMore>
+
+## Kết hợp các framework
+
+Bạn có thể import và render component từ nhiều framework trong cùng một component Astro.
+
+```astro title="src/pages/mixing-frameworks.astro"
+---
+// Ví dụ: Kết hợp nhiều component framework trên cùng một trang.
+import MyReactComponent from '../components/MyReactComponent.jsx';
+import MySvelteComponent from '../components/MySvelteComponent.svelte';
+import MyVueComponent from '../components/MyVueComponent.vue';
+---
+<div>
+  <MySvelteComponent />
+  <MyReactComponent />
+  <MyVueComponent />
+</div>
+```
+
+:::caution
+Chỉ có các component **Astro** (`.astro`) mới có thể chứa component từ nhiều framework.
+:::
+
+## Truyền props cho component framework
+
+Bạn có thể truyền props từ component Astro sang component framework:
+
+```astro title="src/pages/frameworks-props.astro"
+---
+import TodoList from '../components/TodoList.jsx';
+import Counter from '../components/Counter.svelte';
+---
+<div>
+  <TodoList initialTodos={["học Astro", "review PRs"]} />
+  <Counter startingCount={1} />
+</div>
+```
+
+:::caution[Truyền function làm props]
+Bạn có thể truyền function làm prop cho component framework, nhưng nó chỉ hoạt động trong quá trình server rendering. Nếu bạn cố gắng sử dụng function trong component đã hydrated (ví dụ: làm event handler), sẽ xảy ra lỗi.
+
+Điều này là do các function không thể được _serialized_ (truyền từ server đến client) bởi Astro.
+:::
+
+## Truyền children cho component framework
+
+Bên trong component Astro, bạn **có thể** truyền children cho component framework. Mỗi framework có các pattern riêng về cách tham chiếu những children này: React, Preact, và Solid đều sử dụng prop đặc biệt có tên `children`, trong khi Svelte và Vue sử dụng phần tử `<slot />`.
+
+```astro title="src/pages/component-children.astro" {5}
+---
+import MyReactSidebar from '../components/MyReactSidebar.jsx';
+---
+<MyReactSidebar>
+  <p>Đây là một sidebar với một số văn bản và một nút.</p>
+</MyReactSidebar>
+```
+
+Ngoài ra, bạn có thể sử dụng [Named Slots](/vi/basics/astro-components/#named-slots) để nhóm các children cụ thể lại với nhau.
+
+Đối với React, Preact, và Solid, những slot này sẽ được chuyển đổi thành prop cấp cao nhất. Tên slot sử dụng `kebab-case` sẽ được chuyển đổi thành `camelCase`.
+
+```astro title="src/pages/named-slots.astro" /slot="(.*)"/
+---
+import MySidebar from '../components/MySidebar.jsx';
+---
+<MySidebar>
+  <h2 slot="title">Menu</h2>
+  <p>Đây là một sidebar với một số văn bản và một nút.</p>
+  <ul slot="social-links">
+    <li><a href="https://twitter.com/astrodotbuild">Twitter</a></li>
+    <li><a href="https://github.com/withastro">GitHub</a></li>
+  </ul>
+</MySidebar>
+```
+
+```jsx /{props.(title|socialLinks)}/
+// src/components/MySidebar.jsx
+export default function MySidebar(props) {
+  return (
+    <aside>
+      <header>{props.title}</header>
+      <main>{props.children}</main>
+      <footer>{props.socialLinks}</footer>
+    </aside>
+  )
+}
+```
+
+Đối với Svelte và Vue, những slot này có thể được tham chiếu bằng phần tử `<slot>` với thuộc tính `name`. Tên slot sử dụng `kebab-case` sẽ được giữ nguyên.
+
+```jsx /slot name="(.*)"/
+// src/components/MySidebar.svelte
+<aside>
+  <header><slot name="title" /></header>
+  <main><slot /></main>
+  <footer><slot name="social-links" /></footer>
+</aside>
+```
+
+## Lồng component framework
+
+Bên trong file Astro, các children component framework cũng có thể là các component đã hydrated. Điều này có nghĩa là bạn có thể lồng recursively các component từ bất kỳ framework nào trong số này.
+
+```astro title="src/pages/nested-components.astro" {10-11}
+---
+import MyReactSidebar from '../components/MyReactSidebar.jsx';
+import MyReactButton from '../components/MyReactButton.jsx';
+import MySvelteButton from '../components/MySvelteButton.svelte';
+---
+<MyReactSidebar>
+  <p>Đây là một sidebar với một số văn bản và một nút.</p>
+  <div slot="actions">
+    <MyReactButton client:idle />
+    <MySvelteButton client:idle />
+  </div>
+</MyReactSidebar>
+```
+
+:::caution
+Nhớ rằng: các file component framework (ví dụ: `.jsx`, `.svelte`) không thể kết hợp nhiều framework.
+:::
+
+Điều này cho phép bạn xây dựng toàn bộ "ứng dụng" trong JavaScript framework ưa thích của mình và render chúng, thông qua component cha, đến trang Astro.
+
+:::note
+Các component Astro luôn được render thành HTML tĩnh, ngay cả khi chúng bao gồm các component framework đã được hydrated. Điều này có nghĩa là bạn chỉ có thể truyền các props không thực hiện bất kỳ HTML rendering nào. Việc truyền "render props" của React cho component framework từ component Astro sẽ không hoạt động, vì các component Astro không thể cung cấp hành vi runtime phía client mà pattern này yêu cầu. Thay vào đó, hãy sử dụng named slot.
+:::
+
+## Tôi có thể sử dụng component Astro bên trong component framework không?
+
+Bất kỳ component UI framework nào đều trở thành một "island" của framework đó. Những component này phải được viết hoàn toàn như mã hợp lệ cho framework đó, chỉ sử dụng các import và package riêng của nó. Bạn không thể import component `.astro` trong component UI framework (ví dụ: `.jsx` hoặc `.svelte`).
+
+Tuy nhiên, bạn có thể sử dụng [pattern Astro `<slot />`](/vi/basics/astro-components/#slots) để truyền nội dung tĩnh được tạo bởi các component Astro làm children cho component framework của bạn **bên trong component `.astro`**.
+
+```astro title="src/pages/astro-children.astro" {6}
+---
+import MyReactComponent from  '../components/MyReactComponent.jsx';
+import MyAstroComponent from '../components/MyAstroComponent.astro';
+---
+<MyReactComponent>
+  <MyAstroComponent slot="name" />
+</MyReactComponent>
+```
+
+## Tôi có thể hydrate component Astro không?
+
+Nếu bạn cố gắng hydrate component Astro với modifier `client:`, bạn sẽ gặp lỗi.
+
+[Các component Astro](/vi/basics/astro-components/) là các component templating chỉ có HTML mà không có runtime phía client. Nhưng, bạn có thể sử dụng thẻ `<script>` trong template component Astro của mình để gửi JavaScript đến trình duyệt thực thi trong phạm vi toàn cục.
+
+<ReadMore>Tìm hiểu thêm về [thẻ `<script>` phía client trong component Astro](/vi/guides/client-side-scripts/)</ReadMore>
+
+[mdn-io]: https://developer.mozilla.org/en-US/docs/Web/API/Intersection_Observer_API
+[mdn-ric]: https://developer.mozilla.org/en-US/docs/Web/API/Window/requestIdleCallback
+[mdn-mm]: https://developer.mozilla.org/en-US/docs/Web/API/Window/matchMedia

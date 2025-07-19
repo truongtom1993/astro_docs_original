@@ -1,0 +1,382 @@
+---
+title: Chuyển đổi từ Create React App (CRA)
+description: Hướng dẫn chuyển đổi dự án Create React App hiện tại sang Astro
+sidebar:
+  label: Create React App
+type: migration
+stub: true
+framework: Create React App
+i18nReady: true
+---
+import AstroJSXTabs from '~/components/tabs/AstroJSXTabs.astro';
+import PackageManagerTabs from '~/components/tabs/PackageManagerTabs.astro';
+import { FileTree } from '@astrojs/starlight/components';
+import ReadMore from '~/components/ReadMore.astro';
+import Badge from "~/components/Badge.astro"
+import { LinkCard, CardGrid } from '@astrojs/starlight/components';
+
+[React integration](/vi/guides/integrations-guide/react/) của Astro hỗ trợ [sử dụng các React component bên trong Astro component](/vi/guides/framework-components/), bao gồm cả toàn bộ React app như Create React App (CRA)!
+
+```astro title="src/pages/index.astro"
+---
+// Import root App component của bạn
+import App from '../cra-project/App.jsx';
+---
+<!-- Sử dụng client directive để load app của bạn -->
+<App client:load />
+```
+
+<ReadMore>Xem cách [Xây dựng Single Page Application (SPA) với Astro](https://logsnag.com/blog/react-spa-with-astro) <Badge text="External" /> sử dụng React Router.</ReadMore>
+
+Nhiều app sẽ "hoạt động ngay lập tức" như full React app khi bạn thêm chúng trực tiếp vào Astro project với React integration đã được cài đặt. Đây là cách tuyệt vời để khởi chạy dự án của bạn ngay lập tức và giữ cho app hoạt động trong khi bạn chuyển đổi sang Astro.
+
+Theo thời gian, bạn có thể chuyển đổi cấu trúc từng phần thành sự kết hợp của các component `.astro` và `.jsx`. Có thể bạn sẽ phát hiện ra rằng mình cần ít React component hơn so với suy nghĩ!
+
+Dưới đây là một số khái niệm chính và chiến lược chuyển đổi để giúp bạn bắt đầu. Sử dụng phần còn lại của tài liệu và [Discord community](https://astro.build/chat) để tiếp tục!
+
+## Điểm tương đồng chính giữa CRA và Astro
+
+- [Cú pháp của file `.astro` tương tự JSX](/vi/reference/astro-syntax/#differences-between-astro-and-jsx). Viết Astro sẽ cảm thấy quen thuộc.
+
+- Astro sử dụng file-based routing, và [cho phép các trang được đặt tên đặc biệt để tạo dynamic routes](/vi/guides/routing/#dynamic-routes).
+
+- Astro là [component-based](/vi/basics/astro-components/), và cấu trúc markup của bạn sẽ tương tự trước và sau khi chuyển đổi.
+
+- Astro có [các integration chính thức cho React, Preact, và Solid](/vi/guides/integrations-guide/react/) nên bạn có thể sử dụng các JSX component hiện có. Lưu ý rằng trong Astro, các file này **phải** có extension `.jsx` hoặc `.tsx`.
+
+- Astro hỗ trợ [cài đặt NPM packages](/vi/guides/imports/#npm-packages), bao gồm React libraries. Nhiều dependency hiện có của bạn sẽ hoạt động trong Astro.
+
+## Điểm khác biệt chính giữa CRA và Astro
+
+Khi bạn rebuild CRA site trong Astro, bạn sẽ nhận thấy một số khác biệt quan trọng:
+
+- CRA là single-page application sử dụng `index.js` làm root của dự án. Astro là multi-page site, và `index.astro` là trang chủ của bạn.
+
+- [`.astro` components](/vi/basics/astro-components/) không được viết như exported functions trả về page templating. Thay vào đó, bạn sẽ tách code thành "code fence" cho JavaScript và body dành riêng cho HTML bạn tạo ra.
+
+- [content-driven](/vi/concepts/why-astro/#content-driven): Astro được thiết kế để showcase nội dung của bạn và cho phép bạn opt-in vào interactivity chỉ khi cần thiết. CRA app hiện có có thể được xây dựng cho high client-side interactivity và có thể yêu cầu kỹ thuật Astro nâng cao để bao gồm các item khó replicate hơn khi sử dụng `.astro` components, như dashboards.
+
+## Thêm CRA của bạn vào Astro
+
+App hiện có của bạn có thể được render trực tiếp bên trong Astro project mới, thường không cần thay đổi code của app.
+
+### Tạo Astro project mới
+
+Sử dụng lệnh `create astro` cho package manager của bạn để khởi chạy Astro's CLI wizard và chọn Astro project "empty" mới.
+
+<PackageManagerTabs>
+  <Fragment slot="npm">
+  ```shell
+  npm create astro@latest
+  ```
+  </Fragment>
+  <Fragment slot="pnpm">
+  ```shell
+  pnpm create astro@latest
+  ```
+  </Fragment>
+  <Fragment slot="yarn">
+  ```shell
+  yarn create astro@latest
+  ```
+  </Fragment>
+</PackageManagerTabs>
+
+### Thêm integrations và dependencies
+Thêm React integration sử dụng lệnh `astro add` cho package manager của bạn. Nếu app của bạn sử dụng các package khác được hỗ trợ bởi lệnh `astro add`, như Tailwind và MDX, bạn có thể thêm tất cả với một lệnh:
+
+<PackageManagerTabs>
+  <Fragment slot="npm">
+  ```shell
+  npx astro add react
+  npx astro add react tailwind mdx
+  ```
+  </Fragment>
+  <Fragment slot="pnpm">
+  ```shell
+  pnpm astro add react
+  pnpm astro add react tailwind mdx
+  ```
+  </Fragment>
+  <Fragment slot="yarn">
+  ```shell
+  yarn astro add react
+  yarn astro add react tailwind mdx
+  ```
+  </Fragment>
+</PackageManagerTabs>
+
+Nếu CRA của bạn yêu cầu bất kỳ dependency nào (ví dụ: NPM packages), thì cài đặt chúng riêng lẻ bằng command line hoặc bằng cách thêm chúng vào `package.json` của Astro project mới thủ công rồi chạy lệnh install. Lưu ý rằng nhiều, nhưng không phải tất cả, React dependencies sẽ hoạt động trong Astro.
+
+### Thêm các file app hiện có
+
+Copy các source file và folder của Create React App (CRA) project hiện có (ví dụ: `components`, `hooks`, `styles`, v.v.) vào folder mới bên trong `src/`, giữ nguyên cấu trúc file để app của bạn tiếp tục hoạt động. Lưu ý rằng tất cả file extension `.js` phải được đổi tên thành `.jsx` hoặc `.tsx`.
+
+Không bao gồm bất kỳ file cấu hình nào. Bạn sẽ sử dụng `astro.config.mjs`, `package.json`, và `tsconfig.json` của riêng Astro.
+
+Di chuyển nội dung của folder `public/` của app (ví dụ: static assets) vào folder `public/` của Astro.
+
+<FileTree>
+- public/
+  - logo.png
+  - favicon.ico
+  - ...
+- src/
+  - cra-project/
+    - App.jsx
+    - ...
+  - pages/
+    - index.astro
+- astro.config.mjs
+- package.json
+- tsconfig.json
+</FileTree>
+
+### Render app của bạn
+
+Import root component của app trong frontmatter section của `index.astro`, sau đó render `<App />` component trong page template của bạn:
+
+```astro title="src/pages/index.astro"
+---
+import App from '../cra-project/App.jsx';
+---
+<App client:load />
+```
+
+:::note[Client directives]
+App của bạn cần [client directive](/vi/reference/directives-reference/#client-directives) để có interactivity. Astro sẽ render React app của bạn như static HTML cho đến khi bạn opt-in vào client-side JavaScript.
+
+Sử dụng `client:load` để đảm bảo app của bạn load ngay lập tức từ server, hoặc `client:only="react"` để skip rendering trên server và chạy app hoàn toàn client-side.
+:::
+
+## Chuyển đổi CRA của bạn sang Astro
+
+Sau khi [thêm app hiện có vào Astro](#add-your-cra-to-astro), có thể bạn muốn chuyển đổi chính app đó sang Astro!
+
+Bạn sẽ replicate thiết kế component-based tương tự [sử dụng Astro HTML templating components cho cấu trúc cơ bản](/vi/basics/astro-components/) trong khi import và include các React component riêng lẻ (có thể chính là toàn bộ app!) để tạo islands of interactivity.
+
+Mỗi quá trình chuyển đổi sẽ khác nhau và có thể được thực hiện dần dần mà không làm gián đoạn app đang hoạt động. Chuyển đổi từng phần theo tốc độ của riêng bạn để ngày càng nhiều phần của app được hỗ trợ bởi Astro components.
+
+Khi chuyển đổi React app, bạn sẽ quyết định React component nào sẽ [viết lại thành Astro components](#converting-jsx-files-to-astro-files). Hạn chế duy nhất của bạn là Astro components có thể import React components, nhưng React components chỉ được import React components khác:
+
+```astro title="src/pages/static-components.astro" ins={2,7}
+---
+import MyReactComponent from '../components/MyReactComponent.jsx';
+---
+<html>
+  <body>
+    <h1>Sử dụng React components trực tiếp trong Astro!</h1>
+    <MyReactComponent />
+  </body>
+</html>
+```
+
+Thay vì import Astro components vào React components, bạn có thể nest React components bên trong một Astro component:
+
+```astro title="src/pages/nested-components.astro" {2,3,5,8,10}
+---
+import MyReactSidebar from '../components/MyReactSidebar.jsx';
+import MyReactButton from '../components/MyReactButton.jsx';
+---
+<MyReactSidebar>
+  <p>Đây là sidebar với một ít text và button.</p>
+  <div slot="actions">
+    <MyReactButton client:idle />
+  </div>
+</MyReactSidebar>
+```
+
+Có thể bạn sẽ thấy hữu ích khi tìm hiểu về [Astro islands](/vi/concepts/islands/) và [Astro components](/vi/basics/astro-components/) trước khi tái cấu trúc CRA của bạn thành Astro project.
+
+### So sánh: JSX vs Astro
+
+So sánh CRA component sau đây với Astro component tương ứng:
+
+<AstroJSXTabs>
+  <Fragment slot="jsx">
+    ```jsx title="StarCount.jsx"
+    import React, { useState, useEffect } from 'react';
+import Header from './Header';
+import Footer from './Footer';
+
+const Component = () => {
+    const [stars, setStars] = useState(0);
+    const [message, setMessage] = useState('');
+
+    useEffect(() => {
+        const fetchData = async () => {
+            const res = await fetch('https://api.github.com/repos/withastro/astro');
+            const json = await res.json();
+
+            setStars(json.stargazers_count || 0);
+            setMessage(json.message);
+        };
+
+        fetchData();
+    }, []);
+
+    return (
+        <>
+            <Header />
+            <p style={{
+                backgroundColor: `#f4f4f4`,
+                padding: `1em 1.5em`,
+                textAlign: `center`,
+                marginBottom: `1em`
+            }}>Astro có {stars} 🧑‍🚀</p>
+            <Footer />
+        </>
+    )
+};
+
+export default Component;
+    ```
+  </Fragment>
+  <Fragment slot="astro">
+    ```astro title="StarCount.astro"
+    ---
+    import Header from './Header.astro';
+    import Footer from './Footer.astro';
+    import './layout.css';
+    const res = await fetch('https://api.github.com/repos/withastro/astro')
+    const json = await res.json();
+    const message = json.message;
+    const stars = json.stargazers_count || 0;
+    ---
+    <Header />
+    <p class="banner">Astro có {stars} 🧑‍🚀</p>
+    <Footer />
+    <style>
+      .banner {
+        background-color: #f4f4f4; 
+        padding: 1em 1.5em;
+        text-align: center;
+        margin-bottom: 1em;
+      }
+    </style>
+    ```
+  </Fragment>
+</AstroJSXTabs>
+
+### Chuyển đổi file JSX thành file `.astro`
+
+Dưới đây là một số mẹo để chuyển đổi CRA `.js` component thành `.astro` component:
+
+1. Sử dụng JSX được return của CRA component function hiện có làm cơ sở cho HTML template của bạn.
+
+2. Thay đổi bất kỳ [CRA hoặc JSX syntax thành Astro](#reference-convert-cra-syntax-to-astro) hoặc thành HTML web standards. Điều này bao gồm `{children}` và `className`, ví dụ.
+
+3. Di chuyển bất kỳ JavaScript cần thiết nào, bao gồm import statements, vào ["code fence" (`---`)](/vi/basics/astro-components/#the-component-script). Lưu ý: JavaScript để [conditionally render content](/vi/reference/astro-syntax/#dynamic-html) thường được viết trực tiếp bên trong HTML template trong Astro.
+
+4. Sử dụng [`Astro.props`](/vi/reference/api-reference/#props) để truy cập bất kỳ props bổ sung nào trước đây được truyền cho CRA function của bạn.
+
+5. Quyết định xem có component import nào cũng cần được chuyển đổi sang Astro không. Bạn có thể giữ chúng như React components hiện tại, hoặc mãi mãi. Nhưng, cuối cùng bạn có thể muốn chuyển đổi chúng thành `.astro` components, đặc biệt nếu chúng không cần interactive!
+
+6. Thay thế `useEffect()` bằng import statements hoặc [`import.meta.glob()`](/vi/guides/imports/#importmetaglob) để query các local file. Sử dụng `fetch()` để fetch external data.
+
+### Chuyển đổi Tests
+
+Vì Astro xuất ra raw HTML, có thể viết end-to-end tests sử dụng output của build step. Bất kỳ end-to-end test nào được viết trước đây có thể hoạt động ngay lập tức nếu bạn có thể match markup của CRA site. Testing libraries như Jest và React Testing Library có thể được import và sử dụng trong Astro để test React components của bạn.
+
+Xem [testing guide](/vi/guides/testing/) của Astro để biết thêm.
+
+## Tham khảo: Chuyển đổi CRA Syntax sang Astro
+
+### CRA Imports sang Astro
+
+Cập nhật bất kỳ [file imports](/vi/guides/imports/) nào để tham chiếu relative file paths chính xác. Điều này có thể được thực hiện bằng [import aliases](/vi/guides/typescript/#import-aliases), hoặc bằng cách viết ra relative path đầy đủ.
+
+Lưu ý rằng `.astro` và một số file type khác phải được import với full file extension.
+
+```astro title="src/pages/authors/Fred.astro"
+---
+import Card from '../../components/Card.astro';
+---
+<Card />
+```
+
+### CRA Children Props sang Astro
+
+Chuyển đổi bất kỳ instance nào của `{children}` thành Astro `<slot />`. Astro không cần nhận `{children}` như function prop và sẽ tự động render child content trong `<slot />`.
+
+```astro title="src/components/MyComponent.astro" del={3-9} ins={11-13}
+---
+---
+export default function MyComponent(props) { 
+    return (
+      <div>
+        {props.children}
+      </div>
+    );  
+}
+
+<div>
+  <slot />
+</div>
+```
+
+React components truyền nhiều set children có thể được migrate sang Astro component sử dụng [named slots](/vi/basics/astro-components/#named-slots).
+
+Xem thêm về [cách sử dụng `<slot />` cụ thể trong Astro](/vi/basics/astro-components/#slots).
+
+### CRA Data Fetching sang Astro
+
+Fetching data trong Create React App component tương tự Astro, với một số khác biệt nhỏ.
+
+Bạn sẽ cần loại bỏ bất kỳ instance nào của side effect hook (`useEffect`) cho `import.meta.glob()` hoặc `getCollection()`/`getEntry()` để truy cập data từ các file khác trong project source của bạn.
+
+Để [fetch remote data](/vi/guides/data-fetching/), sử dụng `fetch()`.
+
+Các data request này được thực hiện trong frontmatter của Astro component và sử dụng top-level await.
+
+```astro title="src/pages/index.astro"
+---
+import { getCollection } from 'astro:content';
+
+// Lấy tất cả `src/content/blog/` entries
+const allBlogPosts = await getCollection('blog');
+
+// Lấy tất cả `src/pages/posts/` entries
+const allPosts = Object.values(import.meta.glob('../pages/post/*.md', { eager: true }));
+
+// Fetch remote data
+const response = await fetch('https://randomuser.me/api/');
+const data = await response.json();
+const randomUser = data.results[0];
+---
+```
+
+Xem thêm về local files imports với [`import.meta.glob()`](/vi/guides/imports/#importmetaglob), [querying sử dụng Collections API](/vi/guides/content-collections/#querying-collections) hoặc [fetching remote data](/vi/guides/data-fetching/).
+
+### CRA Styling sang Astro
+
+Bạn có thể cần thay thế bất kỳ [CSS-in-JS libraries](https://github.com/withastro/astro/issues/4432) nào (ví dụ: styled-components) bằng các CSS option khác có sẵn trong Astro.
+
+Nếu cần thiết, chuyển đổi bất kỳ inline style object nào (`style={{ fontWeight: "bold" }}`) thành inline HTML style attributes (`style="font-weight:bold;"`). Hoặc, sử dụng [Astro `<style>` tag](/vi/guides/styling/#styling-in-astro) cho scoped CSS styles.
+
+```astro title="src/components/Card.astro" del={1} ins={2}
+<div style={{backgroundColor: `#f4f4f4`, padding: `1em`}}>{message}</div>
+<div style="background-color: #f4f4f4; padding: 1em;">{message}</div>
+```
+
+Tailwind được hỗ trợ sau khi cài đặt [Tailwind Vite plugin](/vi/guides/styling/#tailwind). Không cần thay đổi Tailwind code hiện có!
+
+Xem thêm về [Styling trong Astro](/vi/guides/styling/).
+
+## Khắc phục sự cố
+
+CRA của bạn có thể "hoạt động ngay lập tức" trong Astro! Nhưng, có thể bạn cần thực hiện các điều chỉnh nhỏ để duplicate functionality và/hoặc styles của app hiện có.
+
+Nếu bạn không thể tìm thấy câu trả lời trong tài liệu này, vui lòng truy cập [Astro Discord](https://astro.build/chat) và đặt câu hỏi trong support forum của chúng tôi!
+
+## Tài nguyên Cộng đồng
+
+<CardGrid>
+
+  <LinkCard title="Code Fix: The SIBA Website's Move from Create-React-App to Astro" href="https://brittanisavery.com/post/move-siba-to-astro"/>
+
+</CardGrid>
+
+:::note[Có tài nguyên để chia sẻ?]
+Nếu bạn tìm thấy (hoặc tạo ra!) video hoặc blog post hữu ích về việc chuyển đổi Create React App sang Astro, [thêm nó vào danh sách này](https://github.com/withastro/docs/edit/main/src/content/docs/vi/guides/migrate-to-astro/from-create-react-app.mdx)!
+:::

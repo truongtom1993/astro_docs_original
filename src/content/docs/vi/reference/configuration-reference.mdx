@@ -1,0 +1,1832 @@
+---
+# LƯU Ý: File này được tự động tạo từ 'scripts/docgen.mjs'
+# Không chỉnh sửa trực tiếp, các thay đổi sẽ bị ghi đè.
+# Thay vào đó, hãy thay đổi file này: https://github.com/withastro/astro/blob/main/packages/astro/src/types/public/config.ts
+# Các dịch giả, vui lòng xóa ghi chú này và component <DontEditWarning/>.
+
+title: Tham Chiếu Cấu Hình
+i18nReady: true
+githubURL: https://github.com/withastro/astro/blob/main/packages/astro/src/types/public/config.ts
+---
+
+import Since from '~/components/Since.astro';
+import DontEditWarning from '~/components/DontEditWarning.astro';
+
+<DontEditWarning />
+
+Tham chiếu sau đây bao gồm tất cả các tùy chọn cấu hình được hỗ trợ trong Astro. Để tìm hiểu thêm về cách cấu hình Astro, hãy đọc hướng dẫn [Cấu hình Astro](/vi/guides/configuring-astro/).
+
+```js
+// astro.config.mjs
+import { defineConfig } from 'astro/config';
+
+export default defineConfig({
+	// các tùy chọn cấu hình của bạn ở đây...
+});
+```
+
+## Tùy Chọn Cấp Cao
+
+### site
+
+<p>
+
+**Kiểu:** `string`
+
+</p>
+
+URL cuối cùng, đã triển khai của bạn. Astro sử dụng URL đầy đủ này để tạo sitemap và URL canonical trong bản build cuối cùng. Bạn nên thiết lập cấu hình này để tận dụng tối đa Astro.
+
+```js
+{
+	site: 'https://www.my-site.dev';
+}
+```
+
+### base
+
+<p>
+
+**Kiểu:** `string`
+
+</p>
+
+Đường dẫn cơ sở để triển khai. Astro sẽ sử dụng đường dẫn này làm gốc cho các trang và assets của bạn trong cả development và production build.
+
+Trong ví dụ bên dưới, `astro dev` sẽ khởi động server tại `/docs`.
+
+```js
+{
+	base: '/docs';
+}
+```
+
+Khi sử dụng tùy chọn này, tất cả các imports static asset và URL của bạn nên thêm base làm tiền tố. Bạn có thể truy cập giá trị này qua `import.meta.env.BASE_URL`.
+
+Giá trị của `import.meta.env.BASE_URL` sẽ được xác định bởi cấu hình `trailingSlash` của bạn, bất kể giá trị bạn đã đặt cho `base`.
+
+Trailing slash luôn được bao gồm nếu `trailingSlash: "always"` được đặt. Nếu `trailingSlash: "never"` được đặt, `BASE_URL` sẽ không bao gồm trailing slash, ngay cả khi `base` có chứa.
+
+Ngoài ra, Astro sẽ thao tác nội bộ giá trị đã cấu hình của `config.base` trước khi cung cấp cho integrations. Giá trị của `config.base` như được đọc bởi integrations cũng sẽ được xác định bởi cấu hình `trailingSlash` của bạn theo cách tương tự.
+
+Trong ví dụ bên dưới, các giá trị của `import.meta.env.BASE_URL` và `config.base` khi được xử lý sẽ đều là `/docs`:
+
+```js
+{
+	 base: '/docs/',
+	 trailingSlash: "never"
+}
+```
+
+Trong ví dụ bên dưới, các giá trị của `import.meta.env.BASE_URL` và `config.base` khi được xử lý sẽ đều là `/docs/`:
+
+```js
+{
+	 base: '/docs',
+	 trailingSlash: "always"
+}
+```
+
+### trailingSlash
+
+<p>
+
+**Kiểu:** `'always' | 'never' | 'ignore'`<br />
+**Mặc định:** `'ignore'`
+
+</p>
+
+Đặt hành vi khớp route cho trailing slashes trong dev server và các trang rendered on-demand. Chọn từ các tùy chọn sau:
+
+- `'ignore'` - Khớp URLs bất kể có trailing "/" hay không. Requests cho "/about" và "/about/" sẽ đều khớp cùng route.
+- `'always'` - Chỉ khớp URLs có trailing slash (vd: "/about/"). Trong production, requests cho URLs rendered on-demand không có trailing slash sẽ được redirect đến URL đúng để thuận tiện. Tuy nhiên, trong development, chúng sẽ hiển thị trang warning nhắc nhở bạn rằng bạn đã cấu hình `always`.
+- `'never'` - Chỉ khớp URLs không bao gồm trailing slash (vd: "/about"). Trong production, requests cho URLs rendered on-demand có trailing slash sẽ được redirect đến URL đúng để thuận tiện. Tuy nhiên, trong development, chúng sẽ hiển thị trang warning nhắc nhở bạn rằng bạn đã cấu hình `never`.
+
+Khi redirects xảy ra trong production cho GET requests, redirect sẽ là 301 (permanent) redirect. Đối với tất cả các request methods khác, nó sẽ là 308 (permanent, và giữ nguyên request method) redirect.
+
+Trailing slashes trên các trang prerendered được xử lý bởi hosting platform, và có thể không tuân theo cấu hình bạn đã chọn.
+Xem tài liệu hosting platform của bạn để biết thêm thông tin. Bạn không thể sử dụng Astro [redirects](#redirects) cho trường hợp này tại thời điểm này.
+
+```js
+{
+	// Ví dụ: Yêu cầu trailing slash trong development
+	trailingSlash: 'always';
+}
+```
+
+**Xem thêm:**
+
+- build.format
+
+### redirects
+
+<p>
+
+**Kiểu:** `Record<string, RedirectConfig>`<br />
+**Mặc định:** `{}`<br />
+
+<Since v="2.9.0" />
+</p>
+
+Chỉ định mapping của redirects trong đó key là route cần khớp
+và value là đường dẫn để redirect đến.
+
+Bạn có thể redirect cả static và dynamic routes, nhưng chỉ đến cùng loại route.
+Ví dụ, bạn không thể có redirect `'/article': '/blog/[...slug]'`.
+
+```js
+export default defineConfig({
+	redirects: {
+		'/old': '/new',
+		'/blog/[...slug]': '/articles/[...slug]',
+		'/about': 'https://example.com/about',
+		'/news': {
+			status: 302,
+			destination: 'https://example.com/news',
+		},
+		// '/product1/', '/product1' // Lưu ý, điều này không được hỗ trợ
+	},
+});
+```
+
+Đối với các sites được tạo tĩnh không có adapter được cài đặt, điều này sẽ tạo ra client redirect sử dụng [`<meta http-equiv="refresh">` tag](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/meta#http-equiv) và không hỗ trợ status codes.
+
+Khi sử dụng SSR hoặc với static adapter trong mode `output: static`, status codes được hỗ trợ.
+Astro sẽ serve các redirected GET requests với status `301`
+và sử dụng status `308` cho bất kỳ request method nào khác.
+
+Bạn có thể tùy chỉnh [redirection status code](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status#redirection_messages) bằng cách sử dụng object trong redirect config:
+
+```js
+export default defineConfig({
+	redirects: {
+		'/other': {
+			status: 302,
+			destination: '/place',
+		},
+	},
+});
+```
+
+### output
+
+<p>
+
+**Kiểu:** `'static' | 'server'`<br />
+**Mặc định:** `'static'`
+
+</p>
+
+Chỉ định output target cho builds.
+
+- `'static'` - Prerender tất cả các trang của bạn theo mặc định, xuất ra một site hoàn toàn tĩnh nếu không có trang nào opt out khỏi prerendering.
+- `'server'` - Sử dụng server-side rendering (SSR) cho tất cả các trang theo mặc định, luôn xuất ra một server-rendered site.
+
+```js
+import { defineConfig } from 'astro/config';
+
+export default defineConfig({
+	output: 'static',
+});
+```
+
+**Xem thêm:**
+
+- adapter
+
+### adapter
+
+<p>
+
+**Kiểu:** `AstroIntegration`
+
+</p>
+
+Triển khai đến server, serverless, hoặc edge host yêu thích với build adapters. Import một trong các first-party adapters của chúng tôi ([Cloudflare](/vi/guides/integrations-guide/cloudflare/), [Netlify](/vi/guides/integrations-guide/netlify/), [Node.js](/vi/guides/integrations-guide/node/), [Vercel](/vi/guides/integrations-guide/vercel/)) hoặc khám phá [community adapters](https://astro.build/integrations/2/?search=&categories%5B%5D=adapters) để kích hoạt on-demand rendering trong dự án Astro của bạn.
+
+Xem [hướng dẫn on-demand rendering](/vi/guides/on-demand-rendering/) để biết thêm về các tùy chọn server rendering của Astro.
+
+```js
+import netlify from '@astrojs/netlify';
+{
+  // Ví dụ: Build cho Netlify serverless deployment
+  adapter: netlify(),
+}
+```
+
+**Xem thêm:**
+
+- output
+
+### integrations
+
+<p>
+
+**Kiểu:** `AstroIntegration[]`
+
+</p>
+
+Mở rộng Astro với các integrations tùy chỉnh. Integrations là cửa hàng một cửa để thêm framework support (như Solid.js), các tính năng mới (như sitemaps), và các thư viện mới (như Partytown).
+
+Đọc [Hướng dẫn Integrations](/vi/guides/integrations-guide/) để được hỗ trợ bắt đầu với Astro Integrations.
+
+```js
+import react from '@astrojs/react';
+import mdx from '@astrojs/mdx';
+{
+	// Ví dụ: Thêm React + MDX support vào Astro
+	integrations: [react(), mdx()];
+}
+```
+
+### root
+
+<p>
+
+**Kiểu:** `string`<br />
+**CLI:** `--root`<br />
+**Mặc định:** `"."` (thư mục làm việc hiện tại)
+
+</p>
+
+Bạn chỉ nên cung cấp tùy chọn này nếu bạn chạy các lệnh CLI `astro` trong thư mục khác với thư mục gốc của dự án. Thường thì tùy chọn này được cung cấp qua CLI thay vì file cấu hình Astro, vì Astro cần biết project root trước khi có thể tìm file cấu hình của bạn.
+
+Nếu bạn cung cấp đường dẫn tương đối (vd: `--root: './my-project'`) Astro sẽ resolve nó dựa trên thư mục làm việc hiện tại của bạn.
+
+#### Ví dụ
+
+```js
+{
+	root: './my-project-directory';
+}
+```
+
+```bash
+$ astro build --root ./my-project-directory
+```
+
+### srcDir
+
+<p>
+
+**Kiểu:** `string`<br />
+**Mặc định:** `"./src"`
+
+</p>
+
+Đặt thư mục mà Astro sẽ đọc site của bạn.
+
+Giá trị có thể là đường dẫn tuyệt đối của file system hoặc đường dẫn tương đối so với project root.
+
+```js
+{
+	srcDir: './www';
+}
+```
+
+### publicDir
+
+<p>
+
+**Kiểu:** `string`<br />
+**Mặc định:** `"./public"`
+
+</p>
+
+Đặt thư mục cho các static assets của bạn. Files trong thư mục này được serve tại `/` trong dev và copied vào build directory trong build. Các files này luôn được serve hoặc copied as-is, không có transform hoặc bundling.
+
+Giá trị có thể là đường dẫn tuyệt đối của file system hoặc đường dẫn tương đối so với project root.
+
+```js
+{
+	publicDir: './my-custom-publicDir-directory';
+}
+```
+
+### outDir
+
+<p>
+
+**Kiểu:** `string`<br />
+**Mặc định:** `"./dist"`
+
+</p>
+
+Đặt thư mục mà `astro build` ghi build cuối cùng của bạn.
+
+Giá trị có thể là đường dẫn tuyệt đối của file system hoặc đường dẫn tương đối so với project root.
+
+```js
+{
+	outDir: './my-custom-build-directory';
+}
+```
+
+**Xem thêm:**
+
+- build.server
+
+### cacheDir
+
+<p>
+
+**Kiểu:** `string`<br />
+**Mặc định:** `"./node_modules/.astro"`
+
+</p>
+
+Đặt thư mục để cache build artifacts. Files trong thư mục này sẽ được sử dụng trong các builds tiếp theo để tăng tốc build time.
+
+Giá trị có thể là đường dẫn tuyệt đối của file system hoặc đường dẫn tương đối so với project root.
+
+```js
+{
+	cacheDir: './my-custom-cache-directory';
+}
+```
+
+### compressHTML
+
+<p>
+
+**Kiểu:** `boolean`<br />
+**Mặc định:** `true`
+
+</p>
+
+Đây là tùy chọn để minify HTML output và giảm kích thước các HTML files của bạn.
+
+Theo mặc định, Astro loại bỏ whitespace khỏi HTML của bạn, bao gồm line breaks, từ các `.astro` components theo cách lossless.
+Một số whitespace có thể được giữ lại nếu cần để bảo toàn visual rendering của HTML. Điều này xảy ra cả trong development mode và trong build cuối cùng.
+
+Để tắt HTML compression, đặt `compressHTML` thành false.
+
+```js
+{
+	compressHTML: false;
+}
+```
+
+### scopedStyleStrategy
+
+<p>
+
+**Kiểu:** `'where' | 'class' | 'attribute'`<br />
+**Mặc định:** `'attribute'`<br />
+
+<Since v="2.4" />
+</p>
+
+Chỉ định strategy được sử dụng để scope styles trong các Astro components. Chọn từ:
+
+- `'where'` - Sử dụng `:where` selectors, không gây tăng specificity.
+- `'class'` - Sử dụng class-based selectors, gây tăng specificity +1.
+- `'attribute'` - Sử dụng `data-` attributes, gây tăng specificity +1.
+
+Sử dụng `'class'` hữu ích khi bạn muốn đảm bảo rằng element selectors trong Astro component override global style defaults (vd từ global stylesheet).
+Sử dụng `'where'` cho bạn nhiều kiểm soát hơn về specificity, nhưng yêu cầu bạn sử dụng higher-specificity selectors, layers, và các tools khác để kiểm soát selectors nào được áp dụng.
+Sử dụng `'attribute'` hữu ích khi bạn đang thao tác `class` attribute của elements và cần tránh xung đột giữa styling logic của bạn và việc áp dụng styles của Astro.
+
+### security
+
+<p>
+
+**Kiểu:** `Record<"checkOrigin", boolean> | undefined`<br />
+**Mặc định:** `{checkOrigin: true}`<br />
+
+<Since v="4.9.0" />
+</p>
+
+Kích hoạt các biện pháp bảo mật cho website Astro.
+
+Các tính năng này chỉ tồn tại cho các trang được rendered on demand (SSR) sử dụng mode `server` hoặc các trang opt out khỏi prerendering trong mode `static`.
+
+Theo mặc định, Astro sẽ tự động kiểm tra rằng "origin" header
+khớp với URL được gửi bởi mỗi request trong các trang rendered on-demand. Bạn có thể
+tắt hành vi này bằng cách đặt `checkOrigin` thành `false`:
+
+```js
+// astro.config.mjs
+export default defineConfig({
+	output: 'server',
+	security: {
+		checkOrigin: false,
+	},
+});
+```
+
+#### security.checkOrigin
+
+<p>
+
+**Kiểu:** `boolean`<br />
+**Mặc định:** `true`<br />
+
+<Since v="4.9.0" />
+</p>
+
+Thực hiện kiểm tra rằng "origin" header, được tự động truyền bởi tất cả các browsers hiện đại, khớp với URL được gửi bởi mỗi `Request`. Điều này được sử dụng để cung cấp bảo vệ Cross-Site Request Forgery (CSRF).
+
+Kiểm tra "origin" chỉ được thực thi cho các trang rendered on demand, và chỉ cho các requests `POST`, `PATCH`, `DELETE` và `PUT` với
+một trong các `content-type` headers sau: `'application/x-www-form-urlencoded'`, `'multipart/form-data'`, `'text/plain'`.
+
+Nếu "origin" header không khớp với `pathname` của request, Astro sẽ trả về status code 403 và sẽ không render trang.
+
+### vite
+
+<p>
+
+**Kiểu:** `ViteUserConfig`
+
+</p>
+
+Truyền thêm các tùy chọn cấu hình cho Vite. Hữu ích khi Astro không hỗ trợ một số cấu hình nâng cao mà bạn có thể cần.
+
+Xem tài liệu object cấu hình `vite` đầy đủ tại [vite.dev](https://vite.dev/config/).
+
+#### Ví dụ
+
+```js
+{
+  vite: {
+    ssr: {
+      // Ví dụ: Buộc một package bị lỗi bỏ qua SSR processing, nếu cần
+      external: ['broken-npm-package'],
+    }
+  }
+}
+```
+
+```js
+{
+  vite: {
+    // Ví dụ: Thêm custom vite plugins trực tiếp vào dự án Astro của bạn
+    plugins: [myPlugin()],
+  }
+}
+```
+
+## Tùy Chọn Build
+
+### build.format
+
+<p>
+
+**Kiểu:** `('file' | 'directory' | 'preserve')`<br />
+**Mặc định:** `'directory'`
+
+</p>
+
+Kiểm soát output file format của mỗi trang. Giá trị này có thể được đặt bởi adapter cho bạn.
+
+- `'file'`: Astro sẽ tạo HTML file được đặt tên cho mỗi page route. (vd `src/pages/about.astro` và `src/pages/about/index.astro` đều build file `/about.html`)
+- `'directory'`: Astro sẽ tạo thư mục với nested `index.html` file cho mỗi trang. (vd `src/pages/about.astro` và `src/pages/about/index.astro` đều build file `/about/index.html`)
+- `'preserve'`: Astro sẽ tạo HTML files chính xác như chúng xuất hiện trong source folder của bạn. (vd `src/pages/about.astro` builds `/about.html` và `src/pages/about/index.astro` builds file `/about/index.html`)
+
+```js
+{
+	build: {
+		// Ví dụ: Tạo `page.html` thay vì `page/index.html` trong build.
+		format: 'file';
+	}
+}
+```
+
+#### Tác động lên Astro.url
+
+Đặt `build.format` kiểm soát những gì `Astro.url` được đặt thành trong build. Khi nó là:
+
+- `directory` - `Astro.url.pathname` sẽ bao gồm trailing slash để mô phỏng folder behavior. (vd `/foo/`)
+- `file` - `Astro.url.pathname` sẽ bao gồm `.html`. (vd `/foo.html`)
+
+Điều này có nghĩa là khi bạn tạo relative URLs sử dụng `new URL('./relative', Astro.url)`, bạn sẽ có hành vi nhất quán giữa dev và build.
+
+Để ngăn chặn inconsistencies với trailing slash behaviour trong dev, bạn có thể giới hạn [`trailingSlash` option](#trailingslash) thành `'always'` hoặc `'never'` tùy thuộc vào build format của bạn:
+
+- `directory` - Đặt `trailingSlash: 'always'`
+- `file` - Đặt `trailingSlash: 'never'`
+
+### build.client
+
+<p>
+
+**Kiểu:** `string`<br />
+**Mặc định:** `'./client'`
+
+</p>
+
+Kiểm soát output directory của client-side CSS và JavaScript khi building website với server-rendered pages.
+`outDir` kiểm soát nơi code được built đến.
+
+Giá trị này tương đối so với `outDir`.
+
+```js
+{
+  output: 'server',
+  build: {
+    client: './client'
+  }
+}
+```
+
+### build.server
+
+<p>
+
+**Kiểu:** `string`<br />
+**Mặc định:** `'./server'`
+
+</p>
+
+Kiểm soát output directory của server JavaScript khi building đến SSR.
+
+Giá trị này tương đối so với `outDir`.
+
+```js
+{
+	build: {
+		server: './server';
+	}
+}
+```
+
+### build.assets
+
+<p>
+
+**Kiểu:** `string`<br />
+**Mặc định:** `'_astro'`<br />
+
+<Since v="2.0.0" />
+</p>
+
+Chỉ định thư mục trong build output nơi Astro-generated assets (bundled JS và CSS chẳng hạn) nên nằm.
+
+```js
+{
+	build: {
+		assets: '_custom';
+	}
+}
+```
+
+**Xem thêm:**
+
+- outDir
+
+### build.assetsPrefix
+
+<p>
+
+**Kiểu:** `string | Record<string, string>`<br />
+**Mặc định:** `undefined`<br />
+
+<Since v="2.2.0" />
+</p>
+
+Chỉ định prefix cho Astro-generated asset links. Điều này có thể được sử dụng nếu assets được serve từ domain khác với site hiện tại.
+
+Điều này yêu cầu upload các assets trong folder local `./dist/_astro` của bạn đến folder `/_astro/` tương ứng trên remote domain.
+Để đổi tên đường dẫn `_astro`, chỉ định thư mục mới trong `build.assets`.
+
+Để fetch tất cả assets được upload đến cùng domain (vd `https://cdn.example.com/_astro/...`), đặt `assetsPrefix` thành root domain dưới dạng string (bất kể cấu hình `base` của bạn):
+
+```js
+{
+	build: {
+		assetsPrefix: 'https://cdn.example.com';
+	}
+}
+```
+
+**Thêm vào:** `astro@4.5.0`
+
+Bạn cũng có thể truyền object cho `assetsPrefix` để chỉ định domain khác nhau cho mỗi loại file.
+Trong trường hợp này, thuộc tính `fallback` là bắt buộc và sẽ được sử dụng mặc định cho bất kỳ files nào khác.
+
+```js
+{
+  build: {
+    assetsPrefix: {
+      'js': 'https://js.cdn.example.com',
+      'mjs': 'https://js.cdn.example.com',
+      'css': 'https://css.cdn.example.com',
+      'fallback': 'https://cdn.example.com'
+    }
+  }
+}
+```
+
+### build.serverEntry
+
+<p>
+
+**Kiểu:** `string`<br />
+**Mặc định:** `'entry.mjs'`
+
+</p>
+
+Chỉ định file name của server entrypoint khi building đến SSR.
+Entrypoint này thường phụ thuộc vào host bạn đang triển khai đến và
+sẽ được đặt bởi adapter của bạn.
+
+Lưu ý rằng khuyến nghị file này kết thúc bằng `.mjs` để runtime
+phát hiện rằng file là JavaScript module.
+
+```js
+{
+	build: {
+		serverEntry: 'main.mjs';
+	}
+}
+```
+
+### build.redirects
+
+<p>
+
+**Kiểu:** `boolean`<br />
+**Mặc định:** `true`<br />
+
+<Since v="2.6.0" />
+</p>
+
+Chỉ định liệu redirects có được output thành HTML trong build hay không.
+Tùy chọn này chỉ áp dụng cho mode `output: 'static'`; trong SSR redirects
+được xử lý giống như tất cả responses.
+
+Tùy chọn này chủ yếu dành cho các adapters có
+configuration files đặc biệt cho redirects và không cần/muốn HTML based redirects.
+
+```js
+{
+	build: {
+		redirects: false;
+	}
+}
+```
+
+### build.inlineStylesheets
+
+<p>
+
+**Kiểu:** `'always' | 'auto' | 'never'`<br />
+**Mặc định:** `auto`<br />
+
+<Since v="2.6.0" />
+</p>
+
+Kiểm soát liệu project styles có được gửi đến browser trong file css riêng biệt hay được inline vào `<style>` tags. Chọn từ các tùy chọn sau:
+
+- `'always'` - project styles được inline vào `<style>` tags
+- `'auto'` - chỉ stylesheets nhỏ hơn `ViteConfig.build.assetsInlineLimit` (mặc định: 4kb) được inline. Nếu không, project styles được gửi trong external stylesheets.
+- `'never'` - project styles được gửi trong external stylesheets
+
+```js
+{
+	build: {
+		inlineStylesheets: `never`,
+	},
+}
+```
+
+### build.concurrency
+
+<p>
+
+**Kiểu:** `number`<br />
+**Mặc định:** `1`<br />
+
+<Since v="4.16.0" />
+</p>
+
+Số lượng trang để build song song.
+
+**Trong hầu hết các trường hợp, bạn không nên thay đổi giá trị mặc định `1`.**
+
+Chỉ sử dụng tùy chọn này khi các nỗ lực khác để giảm overall rendering time (vd batch hoặc cache các tác vụ chạy lâu như fetch calls hoặc data access) không khả thi hoặc không đủ.
+Nếu số lượng được đặt quá cao, page rendering có thể chậm lại do thiếu memory resources và vì JS là single-threaded.
+
+```js
+{
+	build: {
+		concurrency: 2;
+	}
+}
+```
+
+:::caution[Có thể có breaking changes]
+Tính năng này ổn định và không được coi là experimental. Tuy nhiên, tính năng này chỉ nhằm giải quyết các vấn đề hiệu suất khó khăn, và có thể xảy ra breaking changes trong [minor release](/vi/upgrade-astro/#semantic-versioning) để giữ tùy chọn này hiệu quả nhất có thể. Vui lòng kiểm tra [Astro CHANGELOG](https://github.com/withastro/astro/blob/refs/heads/next/packages/astro/CHANGELOG.md) cho mỗi minor release nếu bạn đang sử dụng tính năng này.
+:::
+
+## Tùy Chọn Server
+
+Tùy chỉnh Astro dev server, được sử dụng bởi cả `astro dev` và `astro preview`.
+
+```js
+{
+  server: { port: 1234, host: true}
+}
+```
+
+Để đặt cấu hình khác nhau dựa trên lệnh được chạy ("dev", "preview") một function cũng có thể được truyền cho tùy chọn cấu hình này.
+
+```js
+{
+	// Ví dụ: Sử dụng function syntax để tùy chỉnh dựa trên command
+	server: ({ command }) => ({ port: command === 'dev' ? 4321 : 4000 });
+}
+```
+
+### server.host
+
+<p>
+
+**Kiểu:** `string | boolean`<br />
+**Mặc định:** `false`<br />
+
+<Since v="0.24.0" />
+</p>
+
+Đặt network IP addresses nào mà server nên lắng nghe (tức là non-localhost IPs).
+
+- `false` - không expose trên network IP address
+- `true` - lắng nghe tất cả addresses, bao gồm LAN và public addresses
+- `[custom-address]` - expose trên network IP address tại `[custom-address]` (vd: `192.168.0.1`)
+
+### server.port
+
+<p>
+
+**Kiểu:** `number`<br />
+**Mặc định:** `4321`
+
+</p>
+
+Đặt port mà server nên lắng nghe.
+
+Nếu port đã cho đang được sử dụng, Astro sẽ tự động thử port có sẵn tiếp theo.
+
+```js
+{
+	server: {
+		port: 8080;
+	}
+}
+```
+
+### server.allowedHosts
+
+<p>
+
+**Kiểu:** `Array<string> | true`<br />
+**Mặc định:** `[]`<br />
+
+<Since v="5.4.0" />
+</p>
+
+Danh sách các hostnames mà Astro được phép phản hồi. Khi giá trị được đặt thành `true`, bất kỳ
+hostname nào đều được phép.
+
+```js
+{
+	server: {
+		allowedHosts: ['staging.example.com', 'qa.example.com'];
+	}
+}
+```
+
+### server.open
+
+<p>
+
+**Kiểu:** `string | boolean`<br />
+**Mặc định:** `false`<br />
+
+<Since v="4.1.0" />
+</p>
+
+Kiểm soát liệu dev server có nên mở trong browser window khi startup hay không.
+
+Truyền full URL string (vd "http://example.com") hoặc pathname (vd "/about") để chỉ định URL cần mở.
+
+```js
+{
+	server: {
+		open: '/about';
+	}
+}
+```
+
+### server.headers
+
+<p>
+
+**Kiểu:** `OutgoingHttpHeaders`<br />
+**Mặc định:** `{}`<br />
+
+<Since v="1.7.0" />
+</p>
+
+Đặt custom HTTP response headers để được gửi trong `astro dev` và `astro preview`.
+
+## Tùy Chọn Session
+
+<p>
+
+<Since v="5.7.0" />
+</p>
+
+Cấu hình session storage cho dự án Astro của bạn. Điều này được sử dụng để lưu trữ session data theo cách persistent, để có thể được truy cập qua các requests khác nhau.
+Một số adapters có thể cung cấp default session driver, nhưng bạn có thể override nó với cấu hình riêng của mình.
+
+Xem [hướng dẫn sessions](/vi/guides/sessions/) để biết thêm thông tin.
+
+```js title="astro.config.mjs"
+  {
+    session: {
+      // Tên của Unstorage driver
+      driver: 'redis',
+      // Các tùy chọn bắt buộc phụ thuộc vào driver
+      options: {
+        url: process.env.REDIS_URL,
+      },
+      ttl: 3600, // 1 giờ
+    }
+  }
+```
+
+### session.driver
+
+<p>
+
+**Kiểu:** `string | undefined`<br />
+
+<Since v="5.7.0" />
+</p>
+
+Unstorage driver để sử dụng cho session storage. Các adapters [Node](/vi/guides/integrations-guide/node/#sessions),
+[Cloudflare](/vi/guides/integrations-guide/cloudflare/#sessions), và
+[Netlify](/vi/guides/integrations-guide/netlify/#sessions) tự động cấu hình default driver cho bạn,
+nhưng bạn có thể chỉ định driver riêng nếu muốn hoặc nếu bạn đang sử dụng adapter không cung cấp.
+
+Giá trị là "Driver name" từ [tài liệu Unstorage driver](https://unstorage.unjs.io/drivers).
+
+```js title="astro.config.mjs" ins={4}
+{
+  adapter: vercel(),
+  session: {
+    driver: "redis",
+  },
+}
+```
+
+:::note
+Một số drivers có thể cần thêm packages để được cài đặt. Một số drivers cũng có thể yêu cầu environment variables hoặc credentials được đặt. Xem [tài liệu Unstorage](https://unstorage.unjs.io/drivers) để biết thêm thông tin.
+:::
+
+### session.options
+
+<p>
+
+**Kiểu:** `Record<string, unknown> | undefined`<br />
+**Mặc định:** `{}`<br />
+
+<Since v="5.7.0" />
+</p>
+
+Các tùy chọn driver-specific để sử dụng cho session storage. Các tùy chọn phụ thuộc vào driver bạn đang sử dụng. Xem [tài liệu Unstorage](https://unstorage.unjs.io/drivers)
+để biết thêm thông tin về các tùy chọn có sẵn cho mỗi driver.
+
+```js title="astro.config.mjs" ins={4-6}
+{
+   session: {
+     driver: "redis",
+     options: {
+       url: process.env.REDIS_URL
+     },
+   }
+}
+```
+
+### session.cookie
+
+<p>
+
+**Kiểu:** `string | AstroCookieSetOptions | undefined`<br />
+**Mặc định:** `{ name: "astro-session", sameSite: "lax", httpOnly: true, secure: true }`<br />
+
+<Since v="5.7.0" />
+</p>
+
+Cấu hình session cookie. Nếu đặt thành string, nó sẽ được sử dụng như cookie name.
+Ngoài ra, bạn có thể truyền object với các tùy chọn bổ sung. Chúng sẽ được merge với defaults.
+
+```js title="astro.config.mjs" ins={3-4}
+{
+ session: {
+   // Nếu đặt thành string, sẽ được sử dụng như cookie name.
+   cookie: "my-session-cookie",
+ }
+}
+
+```
+
+```js title="astro.config.mjs" ins={4-8}
+{
+ session: {
+   // Nếu đặt thành object, sẽ được sử dụng như cookie options.
+   cookie: {
+     name: "my-session-cookie",
+     sameSite: "lax",
+     secure: true,
+   }
+ }
+}
+```
+
+### session.ttl
+
+<p>
+
+**Kiểu:** `number | undefined`<br />
+**Mặc định:** {Infinity}<br />
+
+<Since v="5.7.0" />
+</p>
+
+Time-to-live expiration period tùy chọn mặc định cho session values, tính bằng giây.
+
+Theo mặc định, session values persist cho đến khi chúng bị xóa hoặc session bị destroy, và không tự động expire vì một khoảng thời gian cụ thể đã trôi qua.
+Đặt `session.ttl` để thêm default expiration period cho session values của bạn. Truyền tùy chọn `ttl` cho [`session.set()`](/vi/reference/api-reference/#set) sẽ override global default
+cho entry riêng lẻ đó.
+
+```js title="astro.config.mjs" ins={3-4}
+{
+ session: {
+   // Đặt default expiration period 1 giờ (3600 giây)
+   ttl: 3600,
+ }
+}
+```
+
+:::note
+Đặt giá trị cho `ttl` không tự động xóa giá trị khỏi storage sau khi time limit đã qua.
+
+Values từ storage sẽ chỉ bị xóa khi có nỗ lực truy cập chúng sau khi period `ttl` đã expire. Lúc này, session value sẽ là undefined và chỉ khi đó giá trị mới bị xóa.
+
+Các drivers riêng lẻ cũng có thể hỗ trợ tùy chọn `ttl` sẽ tự động xóa sessions sau thời gian quy định. Xem tài liệu driver bạn đã chọn để biết thêm thông tin.
+:::
+
+## Tùy Chọn Dev Toolbar
+
+### devToolbar.enabled
+
+<p>
+
+**Kiểu:** `boolean`<br />
+**Mặc định:** `true`
+
+</p>
+
+Có kích hoạt Astro Dev Toolbar hay không. Toolbar này cho phép bạn inspect page islands của mình, xem audits hữu ích về performance và accessibility, và nhiều hơn nữa.
+
+Tùy chọn này có phạm vi cho toàn bộ dự án, để chỉ tắt toolbar cho bản thân bạn, chạy `npm run astro preferences disable devToolbar`. Để tắt toolbar cho tất cả dự án Astro của bạn, chạy `npm run astro preferences disable devToolbar --global`.
+
+## Tùy Chọn Prefetch
+
+<p>
+
+**Kiểu:** `boolean | object`
+
+</p>
+
+Kích hoạt prefetching cho links trên site của bạn để cung cấp page transitions nhanh hơn.
+(Được kích hoạt mặc định trên các trang sử dụng `<ClientRouter />` router. Đặt `prefetch: false` để opt out khỏi hành vi này.)
+
+Cấu hình này tự động thêm prefetch script vào mọi trang trong dự án
+cho bạn quyền truy cập vào attribute `data-astro-prefetch`.
+Thêm attribute này vào bất kỳ `<a />` link nào trên trang của bạn để kích hoạt prefetching cho trang đó.
+
+```html
+<a href="/about" data-astro-prefetch>About</a>
+```
+
+Tùy chỉnh thêm hành vi prefetching mặc định sử dụng tùy chọn [`prefetch.defaultStrategy`](#prefetchdefaultstrategy) và [`prefetch.prefetchAll`](#prefetchprefetchall).
+
+Xem [Hướng dẫn Prefetch](/vi/guides/prefetch/) để biết thêm thông tin.
+
+### prefetch.prefetchAll
+
+<p>
+
+**Kiểu:** `boolean`
+
+</p>
+
+Kích hoạt prefetching cho tất cả links, bao gồm những link không có attribute `data-astro-prefetch`.
+Giá trị này mặc định là `true` khi sử dụng `<ClientRouter />` router. Nếu không, giá trị mặc định là `false`.
+
+```js
+prefetch: {
+	prefetchAll: true;
+}
+```
+
+Khi đặt thành `true`, bạn có thể tắt prefetching riêng lẻ bằng cách đặt `data-astro-prefetch="false"` trên bất kỳ links riêng lẻ nào.
+
+```html
+<a href="/about" data-astro-prefetch="false">About</a>
+```
+
+### prefetch.defaultStrategy
+
+<p>
+
+**Kiểu:** `'tap' | 'hover' | 'viewport' | 'load'`<br />
+**Mặc định:** `'hover'`
+
+</p>
+
+Default prefetch strategy để sử dụng khi attribute `data-astro-prefetch` được đặt trên link không có value.
+
+- `'tap'`: Prefetch ngay trước khi bạn click vào link.
+- `'hover'`: Prefetch khi bạn hover hoặc focus vào link. (mặc định)
+- `'viewport'`: Prefetch khi links vào viewport.
+- `'load'`: Prefetch tất cả links trên trang sau khi trang được load.
+
+Bạn có thể override giá trị mặc định này và chọn strategy khác cho bất kỳ link riêng lẻ nào bằng cách đặt giá trị trên attribute.
+
+```html
+<a href="/about" data-astro-prefetch="viewport">About</a>
+```
+
+## Tùy Chọn Image
+
+### image.endpoint
+
+<p>
+
+**Kiểu:** `Object`<br />
+**Mặc định:** `{route: '/_image', entrypoint: undefined}`<br />
+
+<Since v="3.1.0" />
+</p>
+
+Đặt endpoint để sử dụng cho image optimization trong dev và SSR. Thuộc tính `entrypoint` có thể được đặt thành `undefined` để sử dụng default image endpoint.
+
+```js
+{
+  image: {
+    // Ví dụ: Sử dụng custom image endpoint tại `/custom_endpoint`
+    endpoint: {
+		 	route: '/custom_endpoint',
+		 	entrypoint: 'src/my_endpoint.ts',
+		},
+  },
+}
+```
+
+### image.service
+
+<p>
+
+**Kiểu:** `Object`<br />
+**Mặc định:** `{entrypoint: 'astro/assets/services/sharp', config?: {}}`<br />
+
+<Since v="2.1.0" />
+</p>
+
+Đặt image service nào được sử dụng cho Astro's assets support.
+
+Giá trị nên là object với entrypoint cho image service cần sử dụng và tùy chọn, config object để truyền cho service.
+
+Service entrypoint có thể là một trong các included services, hoặc third-party package.
+
+```js
+{
+  image: {
+    // Ví dụ: Kích hoạt Sharp-based image service với custom config
+    service: {
+			 entrypoint: 'astro/assets/services/sharp',
+			 config: {
+				 limitInputPixels: false,
+      },
+		 },
+  },
+}
+```
+
+#### image.service.config.limitInputPixels
+
+<p>
+
+**Kiểu:** `number | boolean`<br />
+**Mặc định:** `true`<br />
+
+<Since v="4.1.0" />
+</p>
+
+Có giới hạn kích thước của images mà Sharp image service sẽ xử lý hay không.
+
+Đặt `false` để bypass default image size limit cho Sharp image service và xử lý large images.
+
+### image.domains
+
+<p>
+
+**Kiểu:** `Array<string>`<br />
+**Mặc định:** `[]`<br />
+
+<Since v="2.10.10" />
+</p>
+
+Định nghĩa danh sách các permitted image source domains cho remote image optimization. Không có remote images nào khác sẽ được optimized bởi Astro.
+
+Tùy chọn này yêu cầu array của individual domain names dưới dạng strings. Wildcards không được phép. Thay vào đó, sử dụng [`image.remotePatterns`](#imageremotepatterns) để định nghĩa danh sách các allowed source URL patterns.
+
+```js
+// astro.config.mjs
+{
+  image: {
+    // Ví dụ: Cho phép remote image optimization từ single domain
+    domains: ['astro.build'],
+  },
+}
+```
+
+### image.remotePatterns
+
+<p>
+
+**Kiểu:** `Array<RemotePattern>`<br />
+**Mặc định:** `[]`<br />
+
+<Since v="2.10.10" />
+</p>
+
+Định nghĩa danh sách các permitted image source URL patterns cho remote image optimization.
+
+`remotePatterns` có thể được cấu hình với bốn thuộc tính:
+
+1. protocol
+2. hostname
+3. port
+4. pathname
+
+```js
+{
+  image: {
+    // Ví dụ: cho phép xử lý tất cả images từ aws s3 bucket của bạn
+    remotePatterns: [{
+      protocol: 'https',
+      hostname: '**.amazonaws.com',
+    }],
+  },
+}
+```
+
+Bạn có thể sử dụng wildcards để định nghĩa các permitted `hostname` và `pathname` values như mô tả bên dưới. Nếu không, chỉ các exact values được cung cấp sẽ được cấu hình:
+`hostname`:
+
+- Bắt đầu với '\*\*.' để cho phép tất cả subdomains ('endsWith').
+- Bắt đầu với '\*.' để chỉ cho phép một level của subdomain.
+
+`pathname`:
+
+- Kết thúc với '/\*\*' để cho phép tất cả sub-routes ('startsWith').
+- Kết thúc với '/\*' để chỉ cho phép một level của sub-route.
+
+### image.experimentalLayout
+
+<p>
+
+**Kiểu:** `ImageLayout`<br />
+**Mặc định:** `undefined`
+
+</p>
+
+Default layout type cho responsive images. Có thể được override bởi prop `layout` trên image component.
+Yêu cầu flag `experimental.responsiveImages` được kích hoạt.
+
+- `constrained` - Image sẽ scale để fit container, duy trì aspect ratio, nhưng sẽ không vượt quá dimensions đã chỉ định.
+- `fixed` - Image sẽ duy trì dimensions gốc.
+- `full-width` - Image sẽ scale để fit container, duy trì aspect ratio.
+
+### image.experimentalObjectFit
+
+<p>
+
+**Kiểu:** `ImageFit`<br />
+**Mặc định:** `"cover"`
+
+</p>
+
+Default object-fit value cho responsive images. Có thể được override bởi prop `fit` trên image component.
+Yêu cầu flag `experimental.responsiveImages` được kích hoạt.
+
+### image.experimentalObjectPosition
+
+<p>
+
+**Kiểu:** `string`<br />
+**Mặc định:** `"center"`
+
+</p>
+
+Default object-position value cho responsive images. Có thể được override bởi prop `position` trên image component.
+Yêu cầu flag `experimental.responsiveImages` được kích hoạt.
+
+### image.experimentalBreakpoints
+
+<p>
+
+**Kiểu:** `Array<number>`<br />
+**Mặc định:** `[640, 750, 828, 1080, 1280, 1668, 2048, 2560] | [640, 750, 828, 960, 1080, 1280, 1668, 1920, 2048, 2560, 3200, 3840, 4480, 5120, 6016]`
+
+</p>
+
+Các breakpoints được sử dụng để tạo responsive images. Yêu cầu flag `experimental.responsiveImages` được kích hoạt. Danh sách đầy đủ thường không được sử dụng,
+nhưng được lọc theo source và output size. Defaults được sử dụng phụ thuộc vào việc local hay remote image service được sử dụng. Với remote services
+danh sách toàn diện hơn được sử dụng, vì chỉ các sizes cần thiết được tạo. Với local services, danh sách ngắn hơn để giảm số lượng images được tạo.
+
+### image.experimentalDefaultStyles
+
+<p>
+
+**Kiểu:** `boolean`<br />
+**Mặc định:** `true`
+
+</p>
+
+Có tự động thêm global styles để đảm bảo experimental images resize đúng cách hay không. Điều này được kích hoạt mặc định, nhưng có thể tắt nếu bạn muốn tự quản lý styles.
+Tùy chọn này chỉ được sử dụng khi flag `experimental.responsiveImages` được kích hoạt.
+
+## Tùy Chọn Markdown
+
+### markdown.shikiConfig
+
+<p>
+
+**Kiểu:** `Partial<ShikiConfig>`
+
+</p>
+
+Shiki là default syntax highlighter của chúng tôi. Bạn có thể cấu hình tất cả tùy chọn qua object `markdown.shikiConfig`:
+
+```js title="astro.config.mjs"
+import { defineConfig } from 'astro/config';
+
+export default defineConfig({
+	markdown: {
+		shikiConfig: {
+			// Chọn từ Shiki's built-in themes (hoặc thêm theme riêng)
+			// https://shiki.style/themes
+			theme: 'dracula',
+			// Ngoài ra, cung cấp nhiều themes
+			// Xem ghi chú bên dưới để sử dụng dual light/dark themes
+			themes: {
+				light: 'github-light',
+				dark: 'github-dark',
+			},
+			// Tắt default colors
+			// https://shiki.style/guide/dual-themes#without-default-color
+			// (Thêm vào v4.12.0)
+			defaultColor: false,
+			// Thêm custom languages
+			// Lưu ý: Shiki có vô số langs built-in, bao gồm .astro!
+			// https://shiki.style/languages
+			langs: [],
+			// Thêm custom aliases cho languages
+			// Map alias thành Shiki language ID: https://shiki.style/languages#bundled-languages
+			// https://shiki.style/guide/load-lang#custom-language-aliases
+			langAlias: {
+				cjs: 'javascript',
+			},
+			// Kích hoạt word wrap để ngăn horizontal scrolling
+			wrap: true,
+			// Thêm custom transformers: https://shiki.style/guide/transformers
+			// Tìm common transformers: https://shiki.style/packages/transformers
+			transformers: [],
+		},
+	},
+});
+```
+
+Xem [hướng dẫn code syntax highlighting](/vi/guides/syntax-highlighting/) để sử dụng và ví dụ.
+
+### markdown.syntaxHighlight
+
+<p>
+
+**Kiểu:** `SyntaxHighlightConfig | SyntaxHighlightConfigType | false`<br />
+**Mặc định:** `{ type: 'shiki', excludeLangs: ['math'] }`
+
+</p>
+
+Syntax highlighter nào để sử dụng cho Markdown code blocks (\`\`\`), nếu có. Điều này xác định CSS classes mà Astro sẽ áp dụng cho Markdown code blocks của bạn.
+
+- `shiki` - sử dụng [Shiki](https://shiki.style) highlighter (`github-dark` theme được cấu hình mặc định)
+- `prism` - sử dụng [Prism](https://prismjs.com/) highlighter và [cung cấp Prism stylesheet riêng của bạn](/vi/guides/syntax-highlighting/#add-a-prism-stylesheet)
+- `false` - không áp dụng syntax highlighting.
+
+```js
+{
+  markdown: {
+    // Ví dụ: Chuyển sang sử dụng prism cho syntax highlighting trong Markdown
+    syntaxHighlight: 'prism',
+  }
+}
+```
+
+Để kiểm soát syntax highlighting nhiều hơn, bạn có thể chỉ định configuration object với các thuộc tính được liệt kê bên dưới.
+
+#### markdown.syntaxHighlight.type
+
+<p>
+
+**Kiểu:** `'shiki' | 'prism'`<br />
+**Mặc định:** `'shiki'`<br />
+
+<Since v="5.5.0" />
+</p>
+
+Default CSS classes để áp dụng cho Markdown code blocks.
+(Nếu không cần cấu hình syntax highlighting nào khác, bạn có thể đặt `markdown.syntaxHighlight` trực tiếp thành `shiki`, `prism`, hoặc `false`.)
+
+#### markdown.syntaxHighlight.excludeLangs
+
+<p>
+
+**Kiểu:** `Array<string>`<br />
+**Mặc định:** `['math']`<br />
+
+<Since v="5.5.0" />
+</p>
+
+Array các languages để loại trừ khỏi default syntax highlighting được chỉ định trong `markdown.syntaxHighlight.type`.
+Điều này có thể hữu ích khi sử dụng tools tạo diagrams từ Markdown code blocks, như Mermaid.js và D2.
+
+```js title="astro.config.mjs"
+import { defineConfig } from 'astro/config';
+
+export default defineConfig({
+	markdown: {
+		syntaxHighlight: {
+			type: 'shiki',
+			excludeLangs: ['mermaid', 'math'],
+		},
+	},
+});
+```
+
+### markdown.remarkPlugins
+
+<p>
+
+**Kiểu:** `RemarkPlugins`
+
+</p>
+
+Truyền [remark plugins](https://github.com/remarkjs/remark) để tùy chỉnh cách Markdown được build. Bạn có thể import và áp dụng plugin function (khuyến nghị), hoặc truyền plugin name dưới dạng string.
+
+```js
+import remarkToc from 'remark-toc';
+{
+	markdown: {
+		remarkPlugins: [[remarkToc, { heading: 'contents' }]];
+	}
+}
+```
+
+### markdown.rehypePlugins
+
+<p>
+
+**Kiểu:** `RehypePlugins`
+
+</p>
+
+Truyền [rehype plugins](https://github.com/remarkjs/remark-rehype) để tùy chỉnh cách output HTML của Markdown được xử lý. Bạn có thể import và áp dụng plugin function (khuyến nghị), hoặc truyền plugin name dưới dạng string.
+
+```js
+import { rehypeAccessibleEmojis } from 'rehype-accessible-emojis';
+{
+	markdown: {
+		rehypePlugins: [rehypeAccessibleEmojis];
+	}
+}
+```
+
+### markdown.gfm
+
+<p>
+
+**Kiểu:** `boolean`<br />
+**Mặc định:** `true`<br />
+
+<Since v="2.0.0" />
+</p>
+
+Astro sử dụng [GitHub-flavored Markdown](https://github.com/remarkjs/remark-gfm) mặc định. Để tắt điều này, đặt flag `gfm` thành `false`:
+
+```js
+{
+  markdown: {
+    gfm: false,
+  }
+}
+```
+
+### markdown.smartypants
+
+<p>
+
+**Kiểu:** `boolean`<br />
+**Mặc định:** `true`<br />
+
+<Since v="2.0.0" />
+</p>
+
+Astro sử dụng [SmartyPants formatter](https://daringfireball.net/projects/smartypants/) mặc định. Để tắt điều này, đặt flag `smartypants` thành `false`:
+
+```js
+{
+  markdown: {
+    smartypants: false,
+  }
+}
+```
+
+### markdown.remarkRehype
+
+<p>
+
+**Kiểu:** `RemarkRehype`
+
+</p>
+
+Truyền tùy chọn cho [remark-rehype](https://github.com/remarkjs/remark-rehype#api).
+
+```js
+{
+  markdown: {
+    // Ví dụ: Dịch footnotes text sang ngôn ngữ khác, đây là giá trị English mặc định
+    remarkRehype: { footnoteLabel: "Footnotes", footnoteBackLabel: "Back to reference 1"},
+  },
+};
+```
+
+## i18n
+
+<p>
+
+**Kiểu:** `object`<br />
+
+<Since v="3.5.0" />
+</p>
+
+Cấu hình i18n routing và cho phép bạn chỉ định một số tùy chọn customization.
+
+Xem hướng dẫn của chúng tôi để biết thêm thông tin về [internationalization trong Astro](/vi/guides/internationalization/)
+
+### i18n.locales
+
+<p>
+
+**Kiểu:** `Locales`<br />
+
+<Since v="3.5.0" />
+</p>
+
+Danh sách tất cả locales được hỗ trợ bởi website. Đây là field bắt buộc.
+
+Languages có thể được liệt kê dưới dạng individual codes (vd `['en', 'es', 'pt-br']`) hoặc mapped vào shared `path` của codes (vd `{ path: "english", codes: ["en", "en-US"]}`). Các codes này sẽ được sử dụng để xác định URL structure của deployed site.
+
+Không có format hoặc syntax cụ thể nào của language code được enforce, nhưng project folders chứa content files của bạn phải khớp chính xác với các items `locales` trong danh sách. Trong trường hợp nhiều `codes` trỏ đến custom URL path prefix, lưu trữ content files của bạn trong folder có cùng tên với `path` đã cấu hình.
+
+### i18n.defaultLocale
+
+<p>
+
+**Kiểu:** `string`<br />
+
+<Since v="3.5.0" />
+</p>
+
+Default locale của website/application của bạn, là một trong các `locales` đã chỉ định. Đây là field bắt buộc.
+
+Không có format hoặc syntax cụ thể nào của language được enforce, nhưng chúng tôi đề xuất sử dụng lower-case và hyphens khi cần (vd "es", "pt-br") để có tính tương thích lớn nhất.
+
+### i18n.fallback
+
+<p>
+
+**Kiểu:** `Record<string, string>`<br />
+
+<Since v="3.5.0" />
+</p>
+
+Fallback strategy khi navigate đến các trang không tồn tại (vd một trang đã dịch chưa được tạo).
+
+Sử dụng object này để khai báo fallback `locale` route cho mỗi language bạn hỗ trợ. Nếu không có fallback nào được chỉ định, thì các trang không có sẵn sẽ trả về 404.
+
+##### Ví dụ
+
+Ví dụ sau cấu hình content fallback strategy để redirect các trang không có sẵn trong `/pt-br/` đến phiên bản `es` của chúng, và các trang không có sẵn trong `/fr/` đến phiên bản `en` của chúng. Các trang `/es/` không có sẵn sẽ trả về 404.
+
+```js
+export default defineConfig({
+	i18n: {
+		defaultLocale: 'en',
+		locales: ['en', 'fr', 'pt-br', 'es'],
+		fallback: {
+			pt: 'es',
+			fr: 'en',
+		},
+	},
+});
+```
+
+### i18n.routing
+
+<p>
+
+**Kiểu:** `object | "manual"`<br />
+**Mặc định:** `object`<br />
+
+<Since v="3.7.0" />
+</p>
+
+Kiểm soát routing strategy để xác định URLs của site. Đặt điều này dựa trên cấu hình folder/URL path cho default language của bạn.
+
+```js
+export default defineConfig({
+	i18n: {
+		defaultLocale: 'en',
+		locales: ['en', 'fr'],
+		routing: {
+			prefixDefaultLocale: false,
+			redirectToDefaultLocale: true,
+			fallbackType: 'redirect',
+		},
+	},
+});
+```
+
+Từ 4.6.0, tùy chọn này cũng có thể được đặt thành `manual`. Khi routing strategy này được kích hoạt, Astro sẽ **tắt** i18n middleware của nó và không có tùy chọn `routing` nào khác (vd `prefixDefaultLocale`) có thể được cấu hình. Bạn sẽ chịu trách nhiệm viết routing logic riêng của mình, hoặc thực thi Astro's i18n middleware thủ công cùng với middleware riêng của bạn.
+
+```js
+export default defineConfig({
+	i18n: {
+		defaultLocale: 'en',
+		locales: ['en', 'fr'],
+		routing: 'manual',
+	},
+});
+```
+
+#### i18n.routing.prefixDefaultLocale
+
+<p>
+
+**Kiểu:** `boolean`<br />
+**Mặc định:** `false`<br />
+
+<Since v="3.7.0" />
+</p>
+
+Khi `false`, chỉ non-default languages sẽ hiển thị language prefix.
+`defaultLocale` sẽ không hiển thị language prefix và content files không tồn tại trong localized folder.
+URLs sẽ có dạng `example.com/[locale]/content/` cho tất cả non-default languages, nhưng `example.com/content/` cho default locale.
+
+Khi `true`, tất cả URLs sẽ hiển thị language prefix.
+URLs sẽ có dạng `example.com/[locale]/content/` cho mọi route, bao gồm default language.
+Localized folders được sử dụng cho mọi language, bao gồm default.
+
+```js
+export default defineConfig({
+	i18n: {
+		defaultLocale: 'en',
+		locales: ['en', 'fr', 'pt-br', 'es'],
+		routing: {
+			prefixDefaultLocale: true,
+		},
+	},
+});
+```
+
+#### i18n.routing.redirectToDefaultLocale
+
+<p>
+
+**Kiểu:** `boolean`<br />
+**Mặc định:** `true`<br />
+
+<Since v="4.2.0" />
+</p>
+
+Cấu hình có redirect home URL (`/`) được tạo bởi `src/pages/index.astro`
+đến `/[defaultLocale]` khi `prefixDefaultLocale: true` được đặt hay không.
+
+Đặt `redirectToDefaultLocale: false` để tắt automatic redirection này ở root của site:
+
+```js
+// astro.config.mjs
+export default defineConfig({
+	i18n: {
+		defaultLocale: 'en',
+		locales: ['en', 'fr'],
+		routing: {
+			prefixDefaultLocale: true,
+			redirectToDefaultLocale: false,
+		},
+	},
+});
+```
+
+#### i18n.routing.fallbackType
+
+<p>
+
+**Kiểu:** `"redirect" | "rewrite"`<br />
+**Mặc định:** `"redirect"`<br />
+
+<Since v="4.15.0" />
+</p>
+
+Khi [`i18n.fallback`](#i18nfallback) được cấu hình để tránh hiển thị 404 page cho missing page routes, tùy chọn này kiểm soát việc [redirect](/vi/guides/routing/#redirects) đến fallback page, hay [rewrite](/vi/guides/routing/#rewrites) nội dung của fallback page tại chỗ.
+
+Theo mặc định, Astro's i18n routing tạo các trang redirect visitors của bạn đến destination mới dựa trên fallback configuration của bạn. Browser sẽ refresh và hiển thị destination address trong URL bar.
+
+Khi `i18n.routing.fallback: "rewrite"` được cấu hình, Astro sẽ tạo các trang render nội dung của fallback page trên URL gốc, được yêu cầu.
+
+Với cấu hình sau, nếu bạn có file `src/pages/vi/about.astro` nhưng không có `src/pages/fr/about.astro`, lệnh `astro build` sẽ tạo `dist/fr/about.html` với cùng nội dung như trang `dist/vi/about.html`.
+Site visitor của bạn sẽ thấy phiên bản English của trang tại `https://example.com/fr/about/` và sẽ không bị redirected.
+
+```js
+//astro.config.mjs
+export default defineConfig({
+	i18n: {
+		defaultLocale: 'en',
+		locales: ['en', 'fr'],
+		routing: {
+			prefixDefaultLocale: false,
+			fallbackType: 'rewrite',
+		},
+		fallback: {
+			fr: 'en',
+		},
+	},
+});
+```
+
+### i18n.domains
+
+<p>
+
+**Kiểu:** `Record<string, string>`<br />
+**Mặc định:** `{}`<br />
+
+<Since v="4.3.0" />
+</p>
+
+Cấu hình URL pattern của một hoặc nhiều supported languages để sử dụng custom domain (hoặc sub-domain).
+
+Khi locale được mapped vào domain, `/[locale]/` path prefix sẽ không được sử dụng.
+Tuy nhiên, localized folders trong `src/pages/` vẫn được yêu cầu, bao gồm cho `defaultLocale` đã cấu hình của bạn.
+
+Bất kỳ locale nào khác không được cấu hình sẽ mặc định thành localized path-based URL theo `prefixDefaultLocale` strategy của bạn (vd `https://example.com/[locale]/blog`).
+
+```js
+//astro.config.mjs
+export default defineConfig({
+	site: 'https://example.com',
+	output: 'server', // bắt buộc, không có prerendered pages
+	adapter: node({
+		mode: 'standalone',
+	}),
+	i18n: {
+		defaultLocale: 'en',
+		locales: ['en', 'fr', 'pt-br', 'es'],
+		prefixDefaultLocale: false,
+		domains: {
+			fr: 'https://fr.example.com',
+			es: 'https://example.es',
+		},
+	},
+});
+```
+
+Cả page routes được built và URLs được trả về bởi `astro:i18n` helper functions [`getAbsoluteLocaleUrl()`](/vi/reference/modules/astro-i18n/#getabsolutelocaleurl) và [`getAbsoluteLocaleUrlList()`](/vi/reference/modules/astro-i18n/#getabsolutelocaleurllist) sẽ sử dụng các tùy chọn được đặt trong `i18n.domains`.
+
+Xem [Internationalization Guide](/vi/guides/internationalization/#domains) để biết thêm chi tiết, bao gồm các limitations của tính năng này.
+
+## env
+
+<p>
+
+**Kiểu:** `object`<br />
+**Mặc định:** `{}`<br />
+
+<Since v="5.0.0" />
+</p>
+
+Tùy chọn cấu hình cho type-safe environment variables.
+
+Xem hướng dẫn của chúng tôi để biết thêm thông tin về [environment variables trong Astro](/vi/guides/environment-variables/).
+
+### env.schema
+
+<p>
+
+**Kiểu:** `EnvSchema`<br />
+**Mặc định:** `{}`<br />
+
+<Since v="5.0.0" />
+</p>
+
+Object sử dụng `envField` để định nghĩa data type và properties của environment variables của bạn: `context` (client hoặc server), `access` (public hoặc secret), `default` value để sử dụng, và có phải environment variable này `optional` hay không (mặc định `false`).
+
+```js
+// astro.config.mjs
+import { defineConfig, envField } from 'astro/config';
+
+export default defineConfig({
+	env: {
+		schema: {
+			API_URL: envField.string({ context: 'client', access: 'public', optional: true }),
+			PORT: envField.number({ context: 'server', access: 'public', default: 4321 }),
+			API_SECRET: envField.string({ context: 'server', access: 'secret' }),
+		},
+	},
+});
+```
+
+`envField` hỗ trợ bốn data types: string, number, enum, và boolean. `context` và `access` là thuộc tính bắt buộc cho tất cả data types. Sau đây hiển thị danh sách đầy đủ các thuộc tính có sẵn cho mỗi data type:
+
+```js
+import { envField } from 'astro/config';
+
+envField.string({
+	// context & access
+	optional: true,
+	default: 'foo',
+	max: 20,
+	min: 1,
+	length: 13,
+	url: true,
+	includes: 'oo',
+	startsWith: 'f',
+	endsWith: 'o',
+});
+envField.number({
+	// context & access
+	optional: true,
+	default: 15,
+	gt: 2,
+	min: 1,
+	lt: 3,
+	max: 4,
+	int: true,
+});
+envField.boolean({
+	// context & access
+	optional: true,
+	default: true,
+});
+envField.enum({
+	// context & access
+	values: ['foo', 'bar', 'baz'], // bắt buộc
+	optional: true,
+	default: 'baz',
+});
+```
+
+### env.validateSecrets
+
+<p>
+
+**Kiểu:** `boolean`<br />
+**Mặc định:** `false`<br />
+
+<Since v="5.0.0" />
+</p>
+
+Có validate secrets trên server khi starting dev server hoặc chạy build hay không.
+
+Theo mặc định, chỉ public variables được validated trên server khi starting dev server hoặc build, và private variables được validated tại runtime only. Nếu được kích hoạt, private variables cũng sẽ được kiểm tra khi start. Điều này hữu ích trong một số continuous integration (CI) pipelines để đảm bảo tất cả secrets của bạn được đặt đúng cách trước khi deploying.
+
+```js
+// astro.config.mjs
+import { defineConfig, envField } from 'astro/config';
+
+export default defineConfig({
+	env: {
+		schema: {
+			// ...
+		},
+		validateSecrets: true,
+	},
+});
+```

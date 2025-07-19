@@ -1,0 +1,28 @@
+---
+title: Triển khai trang Astro của bạn lên Render
+description: Cách triển khai trang Astro của bạn lên web sử dụng Render.
+sidebar:
+  label: Render
+type: deploy
+i18nReady: true
+---
+import { Steps } from '@astrojs/starlight/components';
+
+Bạn có thể triển khai dự án Astro của mình lên [Render](https://render.com/), một dịch vụ xây dựng website với chứng chỉ TLS miễn phí, CDN toàn cầu, bảo vệ DDoS, mạng riêng và tự động triển khai từ Git.
+
+## Cách triển khai
+
+<Steps>
+1. Tạo một [tài khoản render.com](https://dashboard.render.com/) và đăng nhập
+
+2. Nhấn nút **New +** từ bảng điều khiển của bạn và chọn **Static Site**
+
+3. Kết nối đến kho [GitHub](https://github.com/) hoặc [GitLab](https://about.gitlab.com/) của bạn, hoặc nhập URL công khai của một kho public
+
+4. Đặt tên cho website, chọn nhánh và chỉ định lệnh build cùng thư mục xuất bản
+
+   - **Build Command:** `npm run build`
+   - **Publish Directory:** `dist`, cho các trang tĩnh; `dist/client` nếu bạn có bất kỳ trang nào được render theo yêu cầu.
+
+5. Nhấn nút **Create Static Site**
+</Steps>

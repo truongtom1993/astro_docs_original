@@ -1,0 +1,40 @@
+---
+title: Sử dụng DAM với Astro
+description: Cách sử dụng Trình Quản Lý Tài Sản Kỹ Thuật Số (DAM) để thêm hình ảnh và video vào Astro
+sidebar:
+  label: Tổng quan về Quản Lý Tài Sản Kỹ Thuật Số
+i18nReady: true
+---
+import MediaGuidesNav from '~/components/MediaGuidesNav.astro';
+import ReadMore from '~/components/ReadMore.astro';
+import Badge from "~/components/Badge.astro"
+
+**Sẵn sàng kết nối Trình Quản Lý Tài Sản Kỹ Thuật Số (DAM) headless vào dự án Astro của bạn?** Hãy làm theo một trong các hướng dẫn của chúng tôi để tích hợp hệ thống lưu trữ media.
+
+:::tip
+Tìm [các tích hợp do cộng đồng duy trì](https://astro.build/integrations/) để kết nối DAM hoặc hệ thống lưu trữ media với dự án của bạn trong thư mục tích hợp của chúng tôi.
+:::
+
+## Hướng dẫn Media Được Lưu Trữ
+
+Lưu ý rằng nhiều trang trong số này là **bản nháp**: chúng là tập hợp các tài nguyên đang chờ sự đóng góp của bạn!
+
+<MediaGuidesNav />
+
+## Tại sao nên sử dụng DAM hoặc media được lưu trữ?
+
+Sử dụng DAM, hay Trình Quản Lý Tài Sản Kỹ Thuật Số, giúp cá nhân, nhóm và tổ chức quản lý các tài sản hình ảnh và video từ một vị trí trung tâm tương tự như một [CMS](/vi/guides/cms/).
+
+Sự khác biệt nằm ở loại nội dung được quản lý: một DAM chủ yếu quản lý hình ảnh, video, các tài sản media khác như mô hình 3D, và bất kỳ metadata nào liên quan đến các tài sản đó.
+
+Điều này đặc biệt hữu ích khi bạn sử dụng một nguồn tài sản duy nhất cho nhiều website hoặc ứng dụng di động khác nhau. Điều này quan trọng nếu bạn là thành viên của một tổ chức yêu cầu nhiều nhóm sử dụng cùng một tài sản, hoặc đang tích hợp vào các hệ thống nội dung khác như PIM (Trình Quản Lý Thông Tin Sản Phẩm) để kết nối tài sản với sản phẩm.
+
+## Hệ thống media được lưu trữ hoặc DAM nào phù hợp với Astro?
+
+Tương tự như khi sử dụng CMS, vì Astro đảm nhận _việc trình bày_ nội dung của bạn, bạn sẽ muốn dùng một DAM headless cho phép bạn lấy và tương tác với tài sản thông qua API hoặc SDK.
+
+Một số DAM headless, như Cloudinary, cung cấp [tích hợp](/vi/guides/integrations-guide/) cho Astro cho phép bạn dễ dàng lấy tài sản cũng như hiển thị chúng trên website hoặc ứng dụng của bạn.
+
+## Tôi có thể sử dụng Astro mà không cần hệ thống media được lưu trữ hoặc DAM không?
+
+Có! Astro cung cấp các phương thức tích hợp sẵn để [lưu trữ hình ảnh](/vi/guides/images/#where-to-store-images), bao gồm cả hỗ trợ tham chiếu hình ảnh từ xa.

@@ -1,0 +1,128 @@
+---
+title: Turso & Astro
+description: Xây dựng cục bộ với tệp SQLite và triển khai toàn cầu bằng Turso.
+sidebar:
+  label: Turso
+type: backend
+service: Turso
+stub: false
+i18nReady: true
+---
+import PackageManagerTabs from '~/components/tabs/PackageManagerTabs.astro'
+
+[Turso](https://turso.tech) là một cơ sở dữ liệu phân tán được xây dựng trên libSQL, một nhánh của SQLite. Nó được tối ưu hóa cho độ trễ truy vấn thấp, giúp phù hợp với các ứng dụng toàn cầu.
+
+## Khởi tạo Turso trong Astro
+
+### Yêu cầu cần thiết
+
+- [Turso CLI](https://docs.turso.tech/cli/introduction) đã được cài đặt và đăng nhập
+- Một Cơ sở dữ liệu [Turso](https://turso.tech) với schema
+- URL cơ sở dữ liệu của bạn
+- Một Access Token
+
+### Cấu hình biến môi trường
+
+Lấy URL cơ sở dữ liệu của bạn bằng lệnh sau:
+
+```bash
+turso db show <database-name> --url
+```
+
+Tạo token xác thực cho cơ sở dữ liệu:
+
+```bash
+turso db tokens create <database-name>
+```
+
+Thêm kết quả đầu ra từ hai lệnh trên vào tệp `.env` ở thư mục gốc dự án của bạn. Nếu tệp này chưa tồn tại, hãy tạo mới.
+
+```ini title=".env"
+TURSO_DATABASE_URL=libsql://...
+TURSO_AUTH_TOKEN=
+```
+
+:::caution
+Không sử dụng tiền tố `PUBLIC_` khi tạo các [biến môi trường](/vi/guides/environment-variables/) riêng tư này. Điều này sẽ làm lộ các giá trị này trên client.
+:::
+
+### Cài đặt LibSQL Client
+
+Cài đặt `@libsql/client` để kết nối Turso với Astro:
+
+<PackageManagerTabs>
+  <Fragment slot="npm">
+    ```shell
+    npm install @libsql/client
+    ```
+  </Fragment>
+  <Fragment slot="pnpm">
+    ```shell
+    pnpm add @libsql/client
+    ```
+  </Fragment>
+  <Fragment slot="yarn">
+    ```shell
+    yarn add @libsql/client
+    ```
+  </Fragment>
+</PackageManagerTabs>
+
+### Khởi tạo client mới
+
+Tạo tệp `turso.ts` trong thư mục `src` và gọi `createClient`, truyền vào `TURSO_DATABASE_URL` và `TURSO_AUTH_TOKEN`:
+
+```ts title="src/turso.ts"
+import { createClient } from "@libsql/client/web";
+
+export const turso = createClient({
+  url: import.meta.env.TURSO_DATABASE_URL,
+  authToken: import.meta.env.TURSO_AUTH_TOKEN,
+});
+```
+
+## Truy vấn cơ sở dữ liệu của bạn
+
+Để truy xuất thông tin từ cơ sở dữ liệu, hãy import `turso` và [thực thi một truy vấn SQL](https://docs.turso.tech/sdk/ts/reference#simple-query) bên trong bất kỳ component `.astro` nào.
+
+Ví dụ sau sẽ lấy tất cả các `posts` từ bảng của bạn, sau đó hiển thị danh sách tiêu đề trong component `<BlogIndex />`:
+
+```astro title="src/components/BlogIndex.astro"
+---
+import { turso } from '../turso'
+
+const { rows } = await turso.execute('SELECT * FROM posts')
+---
+
+<ul>
+  {rows.map((post) => (
+    <li>{post.title}</li>
+  ))}
+</ul>
+```
+
+### SQL Placeholder
+
+Phương thức `execute()` có thể nhận [một object để truyền biến vào câu lệnh SQL](https://docs.turso.tech/sdk/ts/reference#placeholders), như `slug` hoặc phân trang.
+
+Ví dụ sau sẽ lấy một bản ghi từ bảng `posts` với điều kiện `WHERE` `slug` là giá trị lấy từ `Astro.params`, sau đó hiển thị tiêu đề bài viết.
+
+```astro title="src/pages/index.astro"
+---
+import { turso } from '../turso'
+
+const { slug } = Astro.params
+
+const { rows } = await turso.execute({
+  sql: 'SELECT * FROM posts WHERE slug = ?',
+  args: [slug!]
+})
+---
+
+<h1>{rows[0].title}</h1>
+```
+
+## Tài nguyên Turso
+- [Tài liệu Turso](https://docs.turso.tech)
+- [Turso trên GitHub](https://github.com/tursodatabase)
+- [Sử dụng Turso để phục vụ nội dung blog Astro Render phía Server](https://blog.turso.tech/using-turso-to-serve-a-server-side-rendered-astro-blogs-content-58caa6188bd5)

@@ -1,0 +1,684 @@
+---
+title: Tài liệu tham khảo API ứng dụng Dev Toolbar
+i18nReady: true
+---
+
+import Since from '~/components/Since.astro';
+
+import RecipeLinks from '~/components/RecipeLinks.astro';
+
+API ứng dụng Dev Toolbar của Astro cho phép bạn tạo [Astro Integrations](/vi/reference/integrations-reference/) để thêm ứng dụng vào Astro Dev Toolbar. Điều này cho phép bạn thêm các tính năng mới và tích hợp với dịch vụ bên thứ ba.
+
+<RecipeLinks slugs={['en/recipes/making-toolbar-apps']} />
+
+## Thiết lập tích hợp ứng dụng toolbar
+
+Các integration có thể thêm ứng dụng vào dev toolbar trong [hook `astro:config:setup`](/vi/reference/integrations-reference/#astroconfigsetup).
+
+```ts title="my-integration.js" {8-13}
+/**
+ * @type {() => import('astro').AstroIntegration}
+ */
+export default () => ({
+	name: 'my-integration',
+	hooks: {
+		'astro:config:setup': ({ addDevToolbarApp }) => {
+			addDevToolbarApp({
+				id: 'my-app',
+				name: 'My App',
+				icon: '<svg>...</svg>',
+				entrypoint: './my-app.js',
+			});
+		},
+	},
+});
+```
+
+### `addDevToolbarApp()`
+
+Một function có sẵn trong [hook `astro:config:setup`](/vi/reference/integrations-reference/#astroconfigsetup) để thêm ứng dụng dev toolbar. Nó nhận một object với các thuộc tính bắt buộc sau để định nghĩa ứng dụng toolbar: [`id`](#id), [`name`](#name), [`icon`](#icon), và [`entrypoint`](#entrypoint).
+
+### `id`
+
+Một định danh duy nhất cho ứng dụng. Điều này sẽ được sử dụng để nhận dạng duy nhất ứng dụng trong các hook và event.
+
+```ts title="my-integration.js" {2}
+{
+  id: 'my-app',
+  // ...
+}
+```
+
+### `name`
+
+Tên của ứng dụng. Điều này sẽ được hiển thị cho người dùng mỗi khi ứng dụng cần được tham chiếu bằng tên có thể đọc được.
+
+```ts title="my-integration.js" {3}
+{
+  // ...
+  name: 'My App',
+  // ...
+}
+```
+
+### `icon`
+
+Icon được sử dụng để hiển thị ứng dụng trong toolbar. Điều này có thể là một icon từ [danh sách icon](#icons), hoặc một chuỗi chứa markup SVG của icon.
+
+```ts title="my-integration.js" {3}
+{
+  // ...
+  icon: '<svg>...</svg>', // hoặc ví dụ 'astro:logo'
+  // ...
+}
+```
+
+### `entrypoint`
+
+Đường dẫn đến file xuất ứng dụng dev toolbar.
+
+```ts title="my-integration.js" {3}
+{
+  // ...
+  entrypoint: './my-app.js',
+}
+```
+
+<p>
+	<Since v='5.0.0' />
+</p>
+
+Function này cũng chấp nhận một `URL` làm `entrypoint`:
+
+```ts title="my-integration.js" "new URL("./my-app.js", import.meta.url)"
+/**
+ * @type {() => import('astro').AstroIntegration}
+ */
+export default () => ({
+	name: 'my-integration',
+	hooks: {
+		'astro:config:setup': ({ addDevToolbarApp }) => {
+			addDevToolbarApp({
+				id: 'my-app',
+				name: 'My App',
+				icon: '<svg>...</svg>',
+				entrypoint: new URL('./my-app.js', import.meta.url),
+			});
+		},
+	},
+});
+```
+
+## Cấu trúc của một ứng dụng Dev Toolbar
+
+Một ứng dụng Dev Toolbar là một file `.js` hoặc `.ts` mặc định export một object sử dụng function [`defineToolbarApp()`](#definetoolbarapp) có sẵn từ module `astro/toolbar`.
+
+```ts title="src/my-app.js"
+import { defineToolbarApp } from 'astro/toolbar';
+
+export default defineToolbarApp({
+	init(canvas) {
+		const text = document.createTextNode('Hello World!');
+		canvas.appendChild(text);
+	},
+	beforeTogglingOff() {
+		const confirmation = window.confirm('Really exit?');
+		return confirmation;
+	},
+});
+```
+
+### `defineToolbarApp()`
+
+<p>
+	<Since v='4.7.0' />
+</p>
+
+Một function định nghĩa logic của ứng dụng toolbar khi nó được tải và tắt.
+
+Function này nhận một object với function [`init()`](#init) sẽ được gọi khi ứng dụng dev toolbar được tải. Nó cũng có thể nhận function [`beforeTogglingOff()`](#beforetogglingoff) sẽ chạy khi ứng dụng toolbar được click để tắt trạng thái hoạt động.
+
+### `init()`
+
+**Signature:** `init(canvas: ShadowRoot, app: ToolbarAppEventTarget, server: ToolbarServerHelpers) => void`
+
+Mặc dù không bắt buộc, hầu hết ứng dụng sẽ sử dụng function này để định nghĩa hành vi cốt lõi của ứng dụng. Function này sẽ chỉ được gọi một lần khi ứng dụng được tải, có thể là khi trình duyệt rảnh rỗi hoặc khi người dùng click vào ứng dụng trong UI, tùy thuộc vào cái nào đến trước.
+
+Function nhận ba tham số để định nghĩa logic ứng dụng của bạn: [`canvas`](#canvas) (để render elements lên màn hình), [`app`](#app) (để gửi và nhận các event phía client từ dev toolbar), và [`server`](#server) (để giao tiếp với server).
+
+#### `canvas`
+
+Một [ShadowRoot](https://developer.mozilla.org/en-US/docs/Web/API/ShadowRoot) tiêu chuẩn mà ứng dụng có thể sử dụng để render UI của nó. Elements có thể được tạo và thêm vào ShadowRoot bằng API DOM tiêu chuẩn.
+
+Mỗi ứng dụng nhận được ShadowRoot riêng dành riêng để render UI của nó. Ngoài ra, element cha được định vị bằng `position: absolute;` nên UI ứng dụng sẽ không ảnh hưởng đến layout của trang Astro.
+
+```ts title="src/my-app.js" {3}
+export default defineToolbarApp({
+	init(canvas) {
+		canvas.appendChild(document.createTextNode('Hello World!'));
+	},
+});
+```
+
+#### `app`
+
+<p>
+	<Since v='4.7.0' />
+</p>
+
+Một [`EventTarget`](https://developer.mozilla.org/en-US/docs/Web/API/EventTarget) tiêu chuẩn với một vài [helper bổ sung cho các event phía client](#client-side-events) có thể được sử dụng để gửi và nhận event từ Dev toolbar.
+
+```ts title="src/my-app.js" {3-6}
+export default defineToolbarApp({
+	init(canvas, app) {
+		app.onToggled(({ state }) => {
+			const text = document.createTextNode(`The app is now ${state ? 'enabled' : 'disabled'}!`);
+			canvas.appendChild(text);
+		});
+	},
+});
+```
+
+#### `server`
+
+<p>
+	<Since v='4.7.0' />
+</p>
+
+Một object có thể được sử dụng để [giao tiếp với server](#client-server-communication).
+
+```ts title="src/my-app.js" {3-7}
+export default defineToolbarApp({
+	init(canvas, app, server) {
+		server.send('my-message', { message: 'Hello!' });
+
+		server.on('server-message', data => {
+			console.log(data.message);
+		});
+	},
+});
+```
+
+### `beforeTogglingOff()`
+
+**Signature:** `beforeTogglingOff(canvas: ShadowRoot): boolean | void`
+
+<Since v='4.7.0' />
+<br />
+
+Function tùy chọn này sẽ được gọi khi người dùng click vào icon ứng dụng trong UI để tắt ứng dụng. Function này có thể được sử dụng, ví dụ, để thực hiện các thao tác dọn dẹp, hoặc để yêu cầu xác nhận từ người dùng trước khi tắt ứng dụng.
+
+Nếu giá trị falsy được trả về, việc tắt sẽ bị hủy và ứng dụng sẽ tiếp tục được bật.
+
+```ts title="src/my-app.js" {3-6}
+export default defineToolbarApp({
+	// ...
+	beforeTogglingOff() {
+		const confirmation = window.confirm('Are you sure you want to disable this app?');
+		return confirmation;
+	},
+});
+```
+
+#### canvas
+
+ShadowRoot của ứng dụng, có thể được sử dụng để render bất kỳ UI nào cần thiết trước khi đóng. Giống như [tham số `canvas` của function `init`](#canvas).
+
+## Client-side Events
+
+Ngoài các phương thức tiêu chuẩn của `EventTarget` ([`addEventListener`](https://developer.mozilla.org/en-US/docs/Web/API/EventTarget), [`dispatchEvent`](https://developer.mozilla.org/en-US/docs/Web/API/EventTarget/dispatchEvent), [`removeEventListener`](https://developer.mozilla.org/en-US/docs/Web/API/EventTarget/removeEventListener) v.v.), object [`app`](#app) cũng có các phương thức sau:
+
+### `onToggled()`
+
+**Signature:** `onToggled(callback: (options: {state: boolean})) => void`
+
+<Since v='4.7.0' />
+<br />
+
+Đăng ký một callback được gọi khi người dùng click vào icon ứng dụng trong UI để bật hoặc tắt ứng dụng.
+
+```ts title="src/my-app.js"
+app.onToggled(options => {
+	console.log(`The app is now ${options.state ? 'enabled' : 'disabled'}!`);
+});
+```
+
+### `onToolbarPlacementUpdated()`
+
+**Signature:** `onToolbarPlacementUpdated(callback: (options: {placement: 'bottom-left' | 'bottom-center' | 'bottom-right'})) => void`
+
+<Since v='4.7.0' />
+<br />
+
+Event này được kích hoạt khi người dùng thay đổi vị trí của Dev Toolbar. Điều này có thể được sử dụng, ví dụ, để định vị lại UI của ứng dụng khi toolbar được di chuyển.
+
+```ts title="src/my-app.js"
+app.onToolbarPlacementUpdated(options => {
+	console.log(`The toolbar is now placed at ${options.placement}!`);
+});
+```
+
+### `toggleState()`
+
+**Signature:** `toggleState(options: {state: boolean}) => void`
+
+<Since v='4.7.0' />
+<br />
+
+Thay đổi trạng thái của ứng dụng. Điều này có thể được sử dụng để bật hoặc tắt ứng dụng theo chương trình, ví dụ, khi người dùng click vào một nút trong UI của ứng dụng.
+
+```ts title="src/my-app.js"
+app.toggleState({ state: false });
+```
+
+### `toggleNotification()`
+
+**Signature:** `toggleNotification(options: {state?: boolean, level?: 'error' | 'warning' | 'info'}) => void`
+
+<Since v='4.7.0' />
+<br />
+
+Bật/tắt thông báo trên icon ứng dụng. Điều này có thể được sử dụng để thông báo cho người dùng rằng ứng dụng cần sự chú ý, hoặc xóa thông báo hiện tại.
+
+```ts title="src/my-app.js"
+app.toggleNotification({
+	state: true,
+	level: 'warning',
+});
+```
+
+#### `state: boolean`
+
+Cho biết ứng dụng có thông báo cho người dùng hay không. Khi `true`, icon ứng dụng sẽ được làm nổi bật. Ngược lại, khi `false`, việc làm nổi bật sẽ bị xóa. Nếu thuộc tính này không được chỉ định, `true` sẽ được giả định.
+
+#### `level: 'error' | 'warning' | 'info'`
+
+Cho biết mức độ của thông báo. Điều này sẽ được sử dụng để xác định màu sắc và hình dạng (vòng tròn hồng đậm, tam giác vàng, hoặc hình vuông xanh) của việc làm nổi bật trên icon ứng dụng. Nếu thuộc tính này không được chỉ định, `'error'` sẽ được giả định.
+
+## Giao tiếp Client-Server
+
+Sử dụng [các phương thức của Vite cho giao tiếp client-server](https://vite.dev/guide/api-plugin.html#client-server-communication), các ứng dụng Dev Toolbar và server có thể giao tiếp với nhau. Để tạo thuận lợi cho việc gửi và nhận tin nhắn tùy chỉnh, các phương thức helper được cung cấp để sử dụng cả trong ứng dụng toolbar của bạn (trên client) và trong integration của bạn (trên server).
+
+### Trên client
+
+Trong ứng dụng của bạn, sử dụng [object `server` trên hook `init()`](#server) để gửi và nhận tin nhắn đến và từ server.
+
+```ts title="src/my-app.js" {3-7} "server"
+export default defineToolbarApp({
+	init(canvas, app, server) {
+		server.send('my-message', { message: 'Hello!' });
+
+		server.on('server-message', data => {
+			console.log(data.message);
+		});
+	},
+});
+```
+
+#### `send()`
+
+**Signature:** `send<T>(event: stringify, data: T) => void`
+
+<Since v='4.7.0' />
+
+Gửi dữ liệu đến server từ logic được định nghĩa trong ứng dụng toolbar của bạn.
+
+```ts title="src/my-app.js"
+init(canvas, app, server) {
+  server.send('my-app:my-message', { message: 'Hello!' });
+}
+```
+
+Khi gửi tin nhắn từ client đến server, thực hành tốt là thêm tiền tố tên event với ID ứng dụng hoặc các namespace khác để tránh xung đột với các ứng dụng khác hoặc integration khác có thể đang lắng nghe tin nhắn.
+
+#### `on()`
+
+**Signature:** `on<T>(event: string, callback: (data: T) => void) => void`
+
+<Since v='4.7.0' />
+<br />
+
+Đăng ký một callback được gọi khi server gửi tin nhắn với event được chỉ định.
+
+```ts title="src/my-app.js"
+init(canvas, app, server) {
+  server.on('server-message', (data) => {
+    console.log(data.message);
+  });
+}
+```
+
+### Trên server
+
+Trong một integration, chẳng hạn như [integration thêm ứng dụng toolbar của bạn](#toolbar-app-integration-setup), sử dụng [hook `astro:server:setup`](/vi/reference/integrations-reference/#astroserversetup) để truy cập object `toolbar` để gửi và nhận tin nhắn đến và từ ứng dụng của bạn.
+
+```ts title="my-integration.js" {5}
+export default () => ({
+	name: 'my-integration',
+	hooks: {
+		'astro:config:setup': ({ addDevToolbarApp }) => {},
+		'astro:server:setup': ({ toolbar }) => {},
+	},
+});
+```
+
+#### `send()`
+
+**Signature:** `send<T>(event: string, data: T) => void`
+
+<Since v='4.7.0' />
+<br />
+
+Gửi dữ liệu đến client.
+
+```ts title="my-integration.js"
+'astro:server:setup': ({ toolbar }) => {
+  toolbar.send('server-message', { message: 'Hello!' });
+},
+```
+
+#### `on()`
+
+**Signature:** `on<T>(event: string, callback: (data: T) => void) => void`
+
+<Since v='4.7.0' />
+<br />
+
+Đăng ký một callback được gọi khi client gửi tin nhắn với event được chỉ định.
+
+```ts title="my-integration.js"
+'astro:server:setup': ({ toolbar }) => {
+  toolbar.on('my-app:my-message', (data) => {
+    console.log(data.message);
+  });
+},
+```
+
+#### `onInitialized()`
+
+**Signature:** `onInitialized(appId: string, callback: () => void) => void`
+
+<Since v='4.7.0' />
+<br />
+
+Đăng ký một callback được gọi khi ứng dụng được khởi tạo.
+
+```ts title="my-integration.js"
+'astro:server:setup': ({ toolbar }) => {
+  toolbar.onInitialized('my-app', () => {
+    console.log('The app is now initialized!');
+  });
+},
+```
+
+:::note
+Event `connection` tích hợp từ Vite kích hoạt **trước khi** các ứng dụng Dev Toolbar được khởi tạo và do đó không thể được sử dụng trực tiếp bởi các ứng dụng. Sử dụng phương thức `onInitialized` để đảm bảo rằng ứng dụng đã được khởi tạo đầy đủ trước khi gửi tin nhắn đến nó.
+:::
+
+#### `onAppToggled()`
+
+**Signature:** `onAppToggled(appId: string, callback: (options: {state: boolean}) => void) => void`
+
+<Since v='4.7.0' />
+<br />
+
+Đăng ký một callback được gọi khi người dùng click vào icon ứng dụng trong UI để bật hoặc tắt ứng dụng.
+
+```ts title="my-integration.js"
+'astro:server:setup': ({ toolbar }) => {
+  toolbar.onAppToggled('my-app', ({ state }) => {
+    console.log(`The app is now ${state ? 'enabled' : 'disabled'}!`);
+  });
+},
+```
+
+## Thư viện Component
+
+Dev Toolbar bao gồm một bộ web component có thể được sử dụng để xây dựng ứng dụng với giao diện nhất quán.
+
+### `astro-dev-toolbar-window`
+
+Hiển thị một cửa sổ.
+
+Slot của component sẽ được sử dụng làm nội dung của cửa sổ.
+
+```html
+<astro-dev-toolbar-window>
+	<p>My content</p>
+</astro-dev-toolbar-window>
+```
+
+Khi xây dựng cửa sổ bằng JavaScript, nội dung slot phải nằm trong light DOM của component.
+
+```js
+const myWindow = document.createElement('astro-dev-toolbar-window');
+const myContent = document.createElement('p');
+myContent.textContent = 'My content';
+
+// sử dụng appendChild trực tiếp trên `window`, không phải `myWindow.shadowRoot`
+myWindow.appendChild(myContent);
+```
+
+### `astro-dev-toolbar-button`
+
+Hiển thị một nút.
+
+Slot của component sẽ được sử dụng làm nội dung của nút.
+
+```js
+const myButton = document.createElement('astro-dev-toolbar-button');
+myButton.textContent = 'Click me!';
+myButton.buttonStyle = 'purple';
+myButton.size = 'medium';
+
+myButton.addEventListener('click', () => {
+	console.log('Clicked!');
+});
+```
+
+#### `size`
+
+Kích thước của nút (`small`, `medium`, `large`).
+
+#### `button-style`
+
+Kiểu của nút (`ghost`, `outline`, `purple`, `gray`, `red`, `green`, `yellow`, `blue`). Khi sử dụng `ghost`, chính nút sẽ không nhìn thấy và chỉ nội dung của nút sẽ được hiển thị.
+
+Trong JavaScript, đặt thuộc tính này bằng thuộc tính `buttonStyle` để tránh xung đột với thuộc tính `style` native.
+
+#### `button-border-radius`
+
+<p>
+	<Since v='4.8.0' />
+</p>
+
+Border radius của nút (`normal`, `rounded`). Khi sử dụng `rounded`, nút sẽ có các góc bo tròn và padding đồng nhất trên tất cả các mặt.
+
+Trong JavaScript, đặt thuộc tính này bằng thuộc tính `buttonBorderRadius`.
+
+### `astro-dev-toolbar-badge`
+
+Hiển thị một badge.
+
+Slot của component sẽ được sử dụng làm nội dung của badge.
+
+```html
+<astro-dev-toolbar-badge>My badge</astro-dev-toolbar-badge>
+```
+
+#### `size`
+
+Kích thước của badge (`small`, `large`).
+
+#### `badge-style`
+
+Kiểu (màu sắc) của badge (`purple`, `gray`, `red`, `green`, `yellow`, `blue`).
+
+Trong JavaScript, đặt thuộc tính này bằng thuộc tính `badgeStyle` để tránh xung đột với thuộc tính `style` native.
+
+### `astro-dev-toolbar-card`
+
+Hiển thị một card. Chỉ định thuộc tính `link` tùy chọn để làm cho card hoạt động như một element `<a>`.
+
+Khi tạo card bằng JavaScript, thuộc tính `clickAction` có thể được chỉ định để làm cho card hoạt động như một element `<button>`.
+
+Slot của component sẽ được sử dụng làm nội dung của card.
+
+```html
+<astro-dev-toolbar-card icon="astro:logo" link="https://github.com/withastro/astro/issues/new/choose">Report an issue</astro-dev-toolbar-card>
+```
+
+#### `card-style`
+
+Kiểu của card (`purple`, `gray`, `red`, `green`, `yellow`, `blue`). Màu sắc chỉ được áp dụng cho border của card khi hover.
+
+Trong JavaScript, đặt thuộc tính này bằng `cardStyle`.
+
+### `astro-dev-toolbar-toggle`
+
+Hiển thị một element toggle, hoạt động như một checkbox. Element này về cơ bản là một wrapper đơn giản xung quanh element `<input type="checkbox">` native. Element checkbox có thể được truy cập bằng thuộc tính `input`.
+
+```ts
+const toggle = document.createElement('astro-dev-toolbar-toggle');
+
+toggle.input.addEventListener('change', evt => {
+	console.log(`The toggle is now ${evt.currentTarget.checked ? 'enabled' : 'disabled'}!`);
+});
+```
+
+### `astro-dev-toolbar-radio-checkbox`
+
+<p>
+	<Since v='4.8.0' />
+</p>
+
+Hiển thị một radio checkbox. Tương tự như component `astro-dev-toolbar-toggle`, element này là một wrapper đơn giản xung quanh element `<input type="radio">` native. Element radio có thể được truy cập bằng thuộc tính `input`.
+
+```ts
+const radio = document.createElement('astro-dev-toolbar-radio-checkbox');
+
+radio.input.addEventListener('change', evt => {
+	console.log(`The radio is now ${evt.currentTarget.checked ? 'enabled' : 'disabled'}!`);
+});
+```
+
+#### `toggle-style`
+
+Kiểu của toggle (`purple`, `gray`, `red`, `green`, `yellow`, `blue`).
+
+Trong JavaScript, đặt thuộc tính này bằng thuộc tính `toggleStyle`.
+
+### `astro-dev-toolbar-highlight`
+
+Có thể được sử dụng để làm nổi bật một element trên trang. Trong hầu hết các trường hợp, bạn sẽ muốn định vị và thay đổi kích thước element này bằng các thuộc tính CSS `top`, `left`, `width` và `height` để khớp với element bạn muốn làm nổi bật.
+
+```html
+<!-- Làm nổi bật toàn bộ trang -->
+<astro-dev-toolbar-highlight style="top: 0; left: 0; width: 100%; height: 100%;"></astro-dev-toolbar-highlight>
+```
+
+```ts
+const elementToHighlight = document.querySelector('h1');
+const rect = elementToHighlight.getBoundingClientRect();
+
+const highlight = document.createElement('astro-dev-toolbar-highlight');
+
+highlight.style.top = `${Math.max(rect.top + window.scrollY - 10, 0)}px`;
+highlight.style.left = `${Math.max(rect.left + window.scrollX - 10, 0)}px`;
+highlight.style.width = `${rect.width + 15}px`;
+highlight.style.height = `${rect.height + 15}px`;
+highlight.icon = 'astro:logo';
+```
+
+#### `style`
+
+Kiểu của việc làm nổi bật (`purple`, `gray`, `red`, `green`, `yellow`, `blue`).
+
+#### `icon`
+
+Một [icon](#icons) để hiển thị ở góc trên bên phải của việc làm nổi bật.
+
+### `astro-dev-toolbar-tooltip`
+
+Hiển thị một tooltip với các phần khác nhau. Component này được đặt thành `display: none;` theo mặc định và có thể được hiển thị bằng thuộc tính `data-show="true"`.
+
+Các phần được định nghĩa bằng thuộc tính `sections`. Thuộc tính này là một mảng các object với hình dạng sau:
+
+```ts
+{
+	title?: string; // Tiêu đề của phần
+	inlineTitle?: string; // Tiêu đề của phần, hiển thị inline bên cạnh tiêu đề
+	icon?: Icon; // Icon của phần
+	content?: string; // Nội dung của phần
+	clickAction?: () => void | Promise<void>; // Hành động thực hiện khi click vào phần
+	clickDescription?: string; // Mô tả hành động thực hiện khi click vào phần
+}
+```
+
+```ts
+const tooltip = document.createElement('astro-dev-toolbar-tooltip');
+
+tooltip.sections = [
+	{
+		title: 'My section',
+		icon: 'astro:logo',
+		content: 'My content',
+		clickAction: () => {
+			console.log('Clicked!');
+		},
+		clickDescription: 'Click me!',
+	},
+];
+```
+
+Component này thường được kết hợp với component `astro-dev-toolbar-highlight` để hiển thị tooltip khi hover vào element được làm nổi bật:
+
+```ts
+const highlight = document.createElement('astro-dev-toolbar-highlight');
+
+// Định vị highlight...
+
+const tooltip = document.createElement('astro-dev-toolbar-tooltip');
+
+// Thêm sections vào tooltip...
+
+highlight.addEventListener('mouseover', () => {
+	tooltip.dataset.show = 'true';
+});
+
+highlight.addEventListener('mouseout', () => {
+	tooltip.dataset.show = 'false';
+});
+```
+
+### `astro-dev-toolbar-icon`
+
+Hiển thị một icon. Một icon từ [danh sách icon](#icons) có thể được chỉ định bằng thuộc tính `icon`, hoặc markup SVG của icon có thể được truyền như một slot.
+
+```html
+<astro-dev-toolbar-icon icon="astro:logo" />
+```
+
+```html
+<astro-dev-toolbar-icon>
+	<svg>...</svg>
+</astro-dev-toolbar-icon>
+```
+
+#### Icons
+
+Hiện tại, các icon sau đây có sẵn và có thể được sử dụng trong bất kỳ component nào chấp nhận icon:
+
+- `astro:logo`
+- `warning`
+- `arrow-down`
+- `bug`
+- `file-search`
+- `check-circle`
+- `gear`
+- `lightbulb`
+- `checkmark`
+- `dots-three`
+- `copy`
+
+Tất cả các icon trên đều có `fill="currentColor"` được đặt theo mặc định và sẽ kế thừa màu sắc từ element cha.

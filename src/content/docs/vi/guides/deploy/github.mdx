@@ -1,0 +1,168 @@
+---
+title: Triển khai trang web Astro lên GitHub Pages
+description: Cách triển khai trang web Astro lên web bằng GitHub Pages.
+sidebar:
+  label: GitHub Pages
+type: deploy
+i18nReady: true
+---
+import { Steps } from '@astrojs/starlight/components';
+
+Bạn có thể sử dụng [GitHub Pages](https://pages.github.com/) để lưu trữ trang web Astro trực tiếp từ một repository trên [GitHub.com](https://github.com/).
+
+## Cách triển khai
+
+Bạn có thể triển khai trang web Astro lên GitHub Pages bằng cách sử dụng [GitHub Actions](https://github.com/features/actions) để tự động xây dựng và triển khai trang web của bạn. Để làm điều này, mã nguồn của bạn phải được lưu trữ trên GitHub.
+
+Astro duy trì action chính thức `withastro/action` để triển khai dự án của bạn với rất ít cấu hình. Làm theo hướng dẫn bên dưới để triển khai trang web Astro lên GitHub pages, và xem [README của package](https://github.com/withastro/action) nếu bạn cần thêm thông tin.
+
+## Cấu hình Astro cho GitHub Pages
+
+### Triển khai lên URL `github.io`
+
+Đặt các tùy chọn [`site`](/vi/reference/configuration-reference/#site) và [`base`](/vi/reference/configuration-reference/#base) trong `astro.config.mjs`.
+    
+```js title="astro.config.mjs" ins={4-5}
+import { defineConfig } from 'astro/config'
+
+export default defineConfig({
+  site: 'https://astronaut.github.io',
+  base: 'my-repo',
+})
+```
+
+#### `site`
+
+Giá trị cho `site` phải là một trong những cái sau:
+
+- URL sau dựa trên tên người dùng của bạn: `https://<username>.github.io`
+- URL ngẫu nhiên được tạo tự động cho [trang riêng tư của GitHub Organization](https://docs.github.com/vi/enterprise-cloud@latest/pages/getting-started-with-github-pages/changing-the-visibility-of-your-github-pages-site): `https://<random-string>.pages.github.io/`
+
+#### `base`
+
+Giá trị cho `base` có thể được yêu cầu để Astro coi tên repository của bạn (ví dụ: `/my-repo`) là gốc của trang web.
+
+:::note
+  Không đặt tham số `base` nếu:
+
+- Trang của bạn được phục vụ từ thư mục gốc.
+- Repository của bạn nằm tại `https://github.com/<USERNAME>/<USERNAME>.github.io`.
+:::
+
+Giá trị cho `base` phải là tên repository của bạn bắt đầu bằng dấu gạch chéo, ví dụ `/my-blog`. Điều này để Astro hiểu rằng gốc trang web của bạn là `/my-repo`, thay vì mặc định `/`.
+
+:::caution
+    Khi giá trị này được cấu hình, tất cả các liên kết trang nội bộ của bạn phải có tiền tố với giá trị `base`:
+
+```astro ins="/my-repo"
+<a href="/my-repo/about">Giới thiệu</a>
+```
+
+Xem thêm về [cấu hình giá trị `base`](/vi/reference/configuration-reference/#base)
+:::
+
+### Sử dụng GitHub pages với domain tùy chỉnh
+
+:::tip[Thiết lập domain tùy chỉnh]
+Bạn có thể thiết lập domain tùy chỉnh bằng cách thêm file `./public/CNAME` sau vào dự án: 
+
+```js title="public/CNAME"
+sub.mydomain.com
+```
+
+Điều này sẽ triển khai trang web của bạn tại domain tùy chỉnh thay vì `user.github.io`. Đừng quên [cấu hình DNS cho nhà cung cấp domain](https://docs.github.com/vi/pages/configuring-a-custom-domain-for-your-github-pages-site/managing-a-custom-domain-for-your-github-pages-site#configuring-a-subdomain).   
+:::
+
+Để cấu hình Astro sử dụng GitHub pages với domain tùy chỉnh, đặt domain của bạn làm giá trị cho `site`. Không đặt giá trị cho `base`:
+
+```js title="astro.config.mjs" ins={4}
+import { defineConfig } from 'astro/config'
+
+export default defineConfig({
+  site: 'https://example.com',
+})
+```
+
+## Cấu hình GitHub Action
+
+<Steps>
+1. Tạo file mới trong dự án tại `.github/workflows/deploy.yml` và dán YAML bên dưới.
+
+    ```yaml title="deploy.yml"
+    name: Deploy to GitHub Pages
+
+    on:
+      # Kích hoạt workflow mỗi khi bạn push lên nhánh `main`
+      # Sử dụng tên nhánh khác? Thay thế `main` bằng tên nhánh của bạn
+      push:
+        branches: [ main ]
+      # Cho phép bạn chạy workflow này thủ công từ tab Actions trên GitHub.
+      workflow_dispatch:
+      
+    # Cho phép job này clone repo và tạo page deployment
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+
+    jobs:
+      build:
+        runs-on: ubuntu-latest
+        steps:
+          - name: Checkout your repository using git
+            uses: actions/checkout@v4
+          - name: Install, build, and upload your site
+            uses: withastro/action@v3
+            # with:
+              # path: . # Vị trí gốc của dự án Astro trong repository. (tùy chọn)
+              # node-version: 20 # Phiên bản Node cụ thể để xây dựng trang web. Mặc định là 20. (tùy chọn)
+              # package-manager: pnpm@latest # Trình quản lý package Node để cài đặt dependencies và xây dựng trang web. Tự động phát hiện dựa trên lockfile. (tùy chọn)
+
+      deploy:
+        needs: build
+        runs-on: ubuntu-latest
+        environment:
+          name: github-pages
+          url: ${{ steps.deployment.outputs.page_url }}
+        steps:
+          - name: Deploy to GitHub Pages
+            id: deployment
+            uses: actions/deploy-pages@v4
+    ```
+
+    :::note
+    Action astro nhận một số đầu vào tùy chọn. Có thể cung cấp bằng cách bỏ comment dòng `with:` và đầu vào bạn muốn sử dụng.
+    :::
+    
+    :::caution
+    [Action](https://github.com/withastro/action) chính thức của Astro quét lockfile để phát hiện trình quản lý package ưa thích (`npm`, `yarn`, `pnpm`, hoặc `bun`). Bạn nên commit file được tạo tự động `package-lock.json`, `yarn.lock`, `pnpm-lock.yaml`, hoặc `bun.lockb` vào repository.
+    :::
+
+2. (Tùy chọn) Nếu bạn truyền biến môi trường cho dự án Astro trong quá trình phát triển cục bộ hoặc khi xem trước bản build, bạn sẽ cần định nghĩa bất kỳ biến công khai nào trong file `deploy.yml` để chúng được xử lý khi triển khai lên GitHub Pages. (Xem [tài liệu GitHub về setting secrets](https://docs.github.com/vi/actions/writing-workflows/choosing-what-your-workflow-does/store-information-in-variables#creating-configuration-variables-for-a-repository) để thêm biến môi trường riêng tư.)
+
+   ```yaml title="deploy.yml"
+   jobs:
+      build:
+        runs-on: ubuntu-latest
+        steps:
+          - name: Checkout your repository using git
+            uses: actions/checkout@v4
+          - name: Install, build, and upload your site
+            uses: withastro/action@v3
+            env:
+              # Sử dụng dấu nháy đơn cho giá trị biến
+              PUBLIC_EVM_WALLET_ADDRESS: '0x4bFc229A40d41698154336aFF864f61083E76659'
+   ```
+
+3. Trên GitHub, đi đến tab **Settings** của repository và tìm phần **Pages** trong settings.
+
+4. Chọn **GitHub Actions** làm **Source** của trang web.  
+
+5. Commit file workflow mới và push lên GitHub.  
+</Steps>
+  
+Trang web của bạn bây giờ đã được xuất bản! Khi bạn push thay đổi vào repository dự án Astro, GitHub Action sẽ tự động triển khai chúng cho bạn.
+
+## Ví dụ
+
+- [Github Pages Deployment](https://github.com/hkbertoson/github-pages)

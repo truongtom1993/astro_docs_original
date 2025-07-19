@@ -1,0 +1,61 @@
+---
+title: Triển khai trang Astro của bạn lên Zeabur
+description: Cách triển khai trang Astro của bạn lên web trên Zeabur.
+sidebar:
+  label: Zeabur
+type: deploy
+i18nReady: true
+---
+import { Steps } from '@astrojs/starlight/components';
+
+[Zeabur](https://zeabur.com) cung cấp dịch vụ lưu trữ cho các ứng dụng web full-stack. Các trang Astro có thể được lưu trữ dưới dạng SSR hoặc xuất tĩnh.
+
+Hướng dẫn này bao gồm các bước triển khai lên Zeabur thông qua giao diện website.
+
+## Cấu hình dự án
+
+### Trang tĩnh
+
+Astro mặc định xuất ra một trang tĩnh. Bạn không cần cấu hình thêm để triển khai một trang Astro tĩnh lên Zeabur. 
+
+### Adapter cho SSR
+
+Để bật SSR trong dự án Astro của bạn và triển khai trên Zeabur:
+
+<Steps>
+1. Cài đặt [adapter `@zeabur/astro-adapter`](https://www.npmjs.com/package/@zeabur/astro-adapter) vào dependencies của dự án bằng trình quản lý gói bạn thích. Nếu bạn dùng npm hoặc không chắc chắn, hãy chạy lệnh sau trong terminal:
+
+    ```bash
+      npm install @zeabur/astro-adapter
+    ```
+
+2. Thêm hai dòng mới vào file cấu hình dự án `astro.config.mjs`.
+
+    ```js title="astro.config.mjs" ins={2, 5-6}
+    import { defineConfig } from 'astro/config';
+    import zeabur from '@zeabur/astro-adapter/serverless';
+
+    export default defineConfig({
+      output: 'server',
+      adapter: zeabur(),
+    });
+    ```
+</Steps>
+
+## Cách triển khai
+
+Bạn có thể triển khai trang Astro của mình lên Zeabur nếu dự án được lưu trữ trên GitHub.
+
+<Steps>
+1. Nhấn <kbd>Tạo dự án mới</kbd> trong [bảng điều khiển Zeabur](https://dash.zeabur.com).
+
+2. Cấu hình kết nối GitHub và nhập repository.
+
+3. Zeabur sẽ tự động phát hiện dự án của bạn là dự án Astro và tiến hành build bằng lệnh `astro build`.
+
+4. Sau khi build xong, bạn có thể liên kết tên miền với trang web và truy cập nó.
+</Steps>
+
+Sau khi dự án của bạn đã được nhập và triển khai, mọi lần đẩy code mới lên các nhánh sẽ tạo ra các bản build mới.
+
+Tìm hiểu thêm trong [Hướng dẫn triển khai của Zeabur](https://zeabur.com/docs/get-started/).

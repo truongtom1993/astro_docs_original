@@ -1,0 +1,398 @@
+---
+title: API Astro Lập trình (thử nghiệm)
+i18nReady: true
+---
+
+import Since from '~/components/Since.astro';
+
+Nếu bạn cần kiểm soát nhiều hơn khi chạy Astro, gói `"astro"` xuất các API để chạy lập trình các lệnh CLI.
+
+Các API này đang thử nghiệm và chữ ký API của chúng có thể thay đổi. Mọi cập nhật sẽ được đề cập trong [nhật ký thay đổi Astro](https://github.com/withastro/astro/blob/main/packages/astro/CHANGELOG.md) và thông tin bên dưới sẽ luôn hiển thị thông tin cập nhật nhất, hiện hành.
+
+## `AstroInlineConfig`
+
+Loại `AstroInlineConfig` được sử dụng bởi tất cả các API lệnh bên dưới. Nó mở rộng từ loại [cấu hình Astro](/vi/reference/configuration-reference/) của người dùng:
+
+```ts
+interface AstroInlineConfig extends AstroUserConfig {
+	configFile?: string | false;
+	mode?: string;
+	logLevel?: 'debug' | 'info' | 'warn' | 'error' | 'silent';
+}
+```
+
+### `configFile`
+
+<p>
+
+**Loại:** `string | false`<br />
+**Mặc định:** `undefined`
+
+</p>
+
+Đường dẫn tùy chỉnh đến tệp cấu hình Astro.
+
+Nếu giá trị này là undefined (mặc định) hoặc không được đặt, Astro sẽ tìm kiếm tệp `astro.config.(js,mjs,ts,mts)` liên quan đến `root` và tải tệp cấu hình nếu tìm thấy.
+
+Nếu đường dẫn tương đối được đặt, nó sẽ được giải quyết dựa trên tùy chọn `root`.
+
+Đặt thành `false` để vô hiệu hóa việc tải bất kỳ tệp cấu hình nào.
+
+Cấu hình nội tuyến được truyền trong đối tượng này sẽ có mức độ ưu tiên cao nhất khi hợp nhất với cấu hình người dùng đã tải.
+
+### `mode`
+
+<p>
+
+**Loại:** `string`<br />
+**Mặc định:** `"development"` khi chạy `astro dev`, `"production"` khi chạy `astro build`<br />
+
+<Since v="5.0.0" />
+</p>
+
+Chế độ được sử dụng khi phát triển hoặc xây dựng trang web của bạn (ví dụ: `"production"`, `"testing"`).
+
+Giá trị này được truyền cho Vite sử dụng [cờ `--mode`](/vi/reference/cli-reference/#--mode-string) khi các lệnh `astro build` hoặc `astro dev` được chạy để xác định giá trị của `import.meta.env.MODE`. Điều này cũng xác định các tệp `.env` nào được tải và do đó các giá trị của `astro:env`. Xem [trang biến môi trường](/vi/guides/environment-variables/) để biết thêm chi tiết.
+
+Để xuất bản phiên bản dựa trên phát triển, bạn có thể chạy `astro build` với [cờ `--devOutput`](/vi/reference/cli-reference/#--devoutput).
+
+### `logLevel`
+
+<p>
+
+**Loại:** `"debug" | "info" | "warn" | "error" | "silent"`<br />
+**Mặc định:** `"info"`
+
+</p>
+
+Mức độ ghi nhật ký để lọc các tin nhắn được ghi bởi Astro.
+
+- `"debug"`: Ghi nhật ký tất cả, bao gồm chẩn đoán gỡ lỗi nhiều noise.
+- `"info"`: Ghi nhật ký tin nhắn thông tin, cảnh báo và lỗi.
+- `"warn"`: Ghi nhật ký cảnh báo và lỗi.
+- `"error"`: Chỉ ghi nhật ký lỗi.
+- `"silent"`: Không ghi nhật ký.
+
+## `dev()`
+
+<p>
+
+**Loại:** `(inlineConfig: AstroInlineConfig) => Promise<DevServer>`
+
+</p>
+
+Tương tự như [`astro dev`](/vi/reference/cli-reference/#astro-dev), nó chạy máy chủ phát triển Astro.
+
+```js
+import { dev } from 'astro';
+
+const devServer = await dev({
+	root: './my-project',
+});
+
+// Dừng máy chủ nếu cần
+await devServer.stop();
+```
+
+### `DevServer`
+
+```ts
+export interface DevServer {
+	address: AddressInfo;
+	handle: (req: http.IncomingMessage, res: http.ServerResponse<http.IncomingMessage>) => void;
+	watcher: vite.FSWatcher;
+	stop(): Promise<void>;
+}
+```
+
+#### `address`
+
+<p>
+
+**Loại:** `AddressInfo`
+
+</p>
+
+Địa chỉ mà máy chủ dev đang lắng nghe.
+
+Thuộc tính này chứa giá trị được trả về bởi phương thức [`net.Server#address()` của Node](https://nodejs.org/api/net.html#serveraddress).
+
+#### `handle()`
+
+<p>
+
+**Loại:** `(req: http.IncomingMessage, res: http.ServerResponse<http.IncomingMessage>) => void`
+
+</p>
+
+Một handle cho các yêu cầu HTTP Node thô. Bạn có thể gọi `handle()` với [`http.IncomingMessage`](https://nodejs.org/api/http.html#class-httpincomingmessage) và [`http.ServerResponse`](https://nodejs.org/api/http.html#class-httpserverresponse) thay vì gửi yêu cầu qua mạng.
+
+#### `watcher`
+
+<p>
+
+**Loại:** `vite.FSWatcher`
+
+</p>
+
+[Trình theo dõi tệp Chokidar](https://github.com/paulmillr/chokidar#getting-started) như được hiển thị bởi [máy chủ phát triển Vite](https://vite.dev/guide/api-javascript#vitedevserver).
+
+#### `stop()`
+
+<p>
+
+**Loại:** `Promise<void>`
+
+</p>
+
+Dừng máy chủ phát triển. Điều này đóng tất cả các kết nối không hoạt động và dừng lắng nghe kết nối mới.
+
+Trả về `Promise` được giải quyết khi tất cả các yêu cầu đang chờ xử lý đã được hoàn thành và tất cả các kết nối không hoạt động đã được đóng.
+
+## `build()`
+
+<p>
+
+**Loại:** `(inlineConfig: AstroInlineConfig, options?: BuildOptions) => Promise<void>`
+
+</p>
+
+Tương tự như [`astro build`](/vi/reference/cli-reference/#astro-build), nó xây dựng trang web của bạn để triển khai.
+
+```js
+import { build } from 'astro';
+
+await build({
+	root: './my-project',
+});
+```
+
+### `BuildOptions`
+
+```ts
+export interface BuildOptions {
+	devOutput?: boolean;
+	teardownCompiler?: boolean;
+}
+```
+
+#### `devOutput`
+
+<p>
+
+**Loại:** `boolean`<br />
+**Mặc định:** `false`
+
+<Since v="5.4.0" />
+</p>
+
+Xuất bản phiên bản dựa trên phát triển tương tự như mã được chuyển đổi trong `astro dev`. Điều này có thể hữu ích để kiểm tra các vấn đề chỉ xây dựng với thông tin gỡ lỗi bổ sung được bao gồm.
+
+#### `teardownCompiler`
+
+<p>
+
+**Loại:** `boolean`<br />
+**Mặc định:** `true`
+
+<Since v="5.4.0" />
+</p>
+
+Tháo dỡ instance WASM compiler sau khi xây dựng. Điều này có thể cải thiện hiệu suất khi xây dựng một lần nhưng có thể gây ra hiệu suất giảm nếu xây dựng nhiều lần liên tiếp.
+
+Khi xây dựng nhiều dự án trong cùng một lần thực thi (ví dụ: trong quá trình kiểm thử), việc vô hiệu hóa tùy chọn này có thể tăng hiệu suất đáng kể và giảm sử dụng bộ nhớ cao điểm với chi phí sử dụng bộ nhớ duy trì cao hơn.
+
+## `preview()`
+
+<p>
+
+**Loại:** `(inlineConfig: AstroInlineConfig) => Promise<PreviewServer>`
+
+</p>
+
+Tương tự như [`astro preview`](/vi/reference/cli-reference/#astro-preview), nó khởi động máy chủ cục bộ để phục vụ đầu ra xây dựng của bạn.
+
+Nếu không có adapter nào được đặt trong cấu hình, máy chủ xem trước sẽ chỉ phục vụ các tệp tĩnh đã xây dựng.
+Nếu adapter được đặt trong cấu hình, máy chủ xem trước được cung cấp bởi adapter. Các adapter không bắt buộc phải cung cấp máy chủ xem trước, vì vậy tính năng này có thể không khả dụng tùy thuộc vào adapter bạn chọn.
+
+```js
+import { preview } from 'astro';
+
+const previewServer = await preview({
+	root: './my-project',
+});
+
+// Dừng máy chủ nếu cần
+await previewServer.stop();
+```
+
+### `PreviewServer`
+
+```ts
+export interface PreviewServer {
+	host?: string;
+	port: number;
+	closed(): Promise<void>;
+	stop(): Promise<void>;
+}
+```
+
+#### `host`
+
+<p>
+
+**Loại:** `string`
+
+</p>
+
+Host mà máy chủ đang lắng nghe kết nối.
+
+Các adapter được phép để trường này không được đặt. Giá trị của `host` là cụ thể theo triển khai.
+
+#### `port`
+
+<p>
+
+**Loại:** `number`
+
+</p>
+
+Cổng mà máy chủ đang lắng nghe kết nối.
+
+#### `stop()`
+
+<p>
+
+**Loại:** `Promise<void>`
+
+</p>
+
+Yêu cầu máy chủ xem trước đóng, dừng chấp nhận yêu cầu và ngắt kết nối không hoạt động.
+
+`Promise` được trả về sẽ được giải quyết khi yêu cầu đóng đã được gửi. Điều này không có nghĩa là máy chủ đã đóng. Sử dụng phương thức [`closed()`](#closed) nếu bạn cần đảm bảo máy chủ đã đóng hoàn toàn.
+
+#### `closed()`
+
+<p>
+
+**Loại:** `Promise<void>`
+
+</p>
+
+Trả về `Promise` sẽ được giải quyết khi máy chủ được đóng và từ chối nếu có lỗi xảy ra trên máy chủ.
+
+## `sync()`
+
+<p>
+
+**Loại:** `(inlineConfig: AstroInlineConfig) => Promise<void>`
+
+</p>
+
+Tương tự như [`astro sync`](/vi/reference/cli-reference/#astro-sync), nó tạo các loại TypeScript cho tất cả các module Astro.
+
+```js
+import { sync } from 'astro';
+
+await sync({
+	root: './my-project',
+});
+```
+
+## `mergeConfig()`
+
+<p>
+
+**Loại:** `<T extends AstroConfig | AstroInlineConfig>(config: T, overrides: DeepPartial<T>) => T`
+
+<Since v="5.4.0" />
+</p>
+
+Được nhập từ `astro/config`, hợp nhất cấu hình Astro một phần lên trên cấu hình Astro hiện có, hợp lệ.
+
+`mergeConfig()` chấp nhận đối tượng cấu hình Astro và cấu hình một phần (bất kỳ tập hợp tùy chọn cấu hình Astro hợp lệ nào), và trả về cấu hình Astro hợp lệ kết hợp cả hai giá trị sao cho:
+
+- Mảng được nối (bao gồm integrations và remark plugins).
+- Đối tượng được hợp nhất đệ quy.
+- Các tùy chọn Vite được hợp nhất bằng [hàm `mergeConfig` của Vite](https://vite.dev/guide/api-javascript#mergeconfig) với cờ `isRoot` mặc định.
+- Các tùy chọn có thể được cung cấp dưới dạng hàm được bọc thành các hàm mới hợp nhất đệ quy các giá trị trả về từ cả hai cấu hình với các quy tắc tương tự này.
+- Tất cả các tùy chọn khác ghi đè cấu hình hiện có.
+
+```ts
+import { mergeConfig } from "astro/config";
+
+mergeConfig(
+  {
+    output: 'static',
+    site: 'https://example.com',
+    integrations: [partytown()],
+    server: ({command}) => ({
+      port: command === 'dev' ? 4321 : 1234,
+    }),
+	  build: {
+		  client: './custom-client',
+	  },
+  },
+  {
+    output: 'server',
+    base: '/astro',
+    integrations: [mdx()],
+    server: ({command}) => ({
+      host: command === 'dev' ? 'localhost' : 'site.localhost',
+    }),
+	  build: {
+		  server: './custom-server',
+	  },
+  }
+);
+
+// Kết quả tương đương với:
+{
+  output: 'server',
+  site: 'https://example.com',
+  base: '/astro',
+  integrations: [partytown(), mdx()],
+  server: ({command}) => ({
+    port: command === 'dev' ? 4321 : 1234,
+    host: command === 'dev' ? 'localhost' : 'site.localhost',
+  }),
+	build: {
+		client: './custom-client',
+		server: './custom-server',
+	},
+}
+```
+
+## `validateConfig()`
+
+<p>
+
+**Loại:** `(userConfig: any, root: string, cmd: string): Promise<AstroConfig>`
+
+<Since v="5.4.0" />
+</p>
+
+Được nhập từ `astro/config`, xác thực đối tượng như thể nó được xuất từ `astro.config.mjs` và được nhập bởi Astro.
+
+Nó nhận các đối số sau:
+
+- Cấu hình cần được xác thực.
+- Thư mục gốc của dự án.
+- Lệnh Astro đang được thực thi (`build`, `dev`, `sync`, v.v.)
+
+Promise được trả về sẽ được giải quyết thành cấu hình đã xác thực, được điền với tất cả các giá trị mặc định phù hợp cho lệnh Astro đã cho.
+
+```ts
+import { validateConfig } from 'astro/config';
+
+const config = await validateConfig(
+	{
+		integrations: [partytown()],
+	},
+	'./my-project',
+	'build',
+);
+
+// các giá trị mặc định được áp dụng
+await rm(config.outDir, { recursive: true, force: true });
+```

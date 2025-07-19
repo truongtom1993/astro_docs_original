@@ -1,0 +1,30 @@
+---
+title: Intellisense thử nghiệm cho bộ sưu tập nội dung
+sidebar:
+  label: Intellisense cho bộ sưu tập
+i18nReady: true
+---
+
+import Since from '~/components/Since.astro';
+
+<p>
+
+**Kiểu:** `boolean`<br />
+**Mặc định:** `false`<br />
+
+<Since v="4.14.0" />
+</p>
+
+Kích hoạt các tính năng Intellisense (ví dụ: tự động hoàn thành mã, gợi ý nhanh) cho các mục trong bộ sưu tập nội dung của bạn trên các trình soạn thảo tương thích.
+
+Khi được bật, tính năng này sẽ tạo và thêm các schema JSON vào thư mục `.astro` trong dự án của bạn. Những tệp này có thể được sử dụng bởi máy chủ ngôn ngữ Astro để cung cấp Intellisense bên trong các tệp nội dung (`.md`, `.mdx`, `.mdoc`).
+
+```js
+{
+  experimental: {
+    contentIntellisense: true,
+  },
+}
+```
+
+Để sử dụng tính năng này với tiện ích mở rộng Astro trên VS Code, bạn cũng cần bật tùy chọn `astro.content-intellisense` trong cài đặt của VS Code. Đối với các trình soạn thảo sử dụng máy chủ ngôn ngữ Astro trực tiếp, hãy truyền tham số khởi tạo `contentIntellisense: true` để bật tính năng này.

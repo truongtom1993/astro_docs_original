@@ -1,0 +1,412 @@
+---
+title: Kiểm thử
+description: Giới thiệu về kiểm thử trong Astro
+i18nReady: true
+---
+import { Steps } from '@astrojs/starlight/components';
+import PackageManagerTabs from '~/components/tabs/PackageManagerTabs.astro';
+import Since from '~/components/Since.astro'
+
+Kiểm thử giúp bạn viết và duy trì mã Astro hoạt động tốt. Astro hỗ trợ nhiều công cụ phổ biến cho kiểm thử đơn vị, kiểm thử thành phần và kiểm thử end-to-end như Jest, Mocha, Jasmine, [Cypress](https://cypress.io) và [Playwright](https://playwright.dev). Bạn thậm chí có thể cài đặt các thư viện kiểm thử dành riêng cho framework như React Testing Library để kiểm tra các thành phần UI framework của bạn.
+
+Các framework kiểm thử cho phép bạn xác định các **khẳng định** hoặc **mong đợi** về cách mã của bạn nên hoạt động trong các tình huống cụ thể, sau đó so sánh với hành vi thực tế của mã hiện tại.
+
+## Kiểm thử đơn vị và kiểm thử tích hợp
+
+### Vitest
+
+Một framework kiểm thử đơn vị gốc Vite với hỗ trợ ESM, TypeScript và JSX được cung cấp bởi esbuild.
+
+Sử dụng hàm trợ giúp `getViteConfig()` của Astro trong [tệp cấu hình `vitest.config.ts`](https://vitest.dev/config/) để thiết lập Vitest với cấu hình của dự án Astro:
+
+```js
+// vitest.config.ts
+/// <reference types="vitest" />
+import { getViteConfig } from 'astro/config';
+
+export default getViteConfig({
+  test: {
+    // Vitest configuration options
+  },
+});
+```
+
+Theo mặc định, `getViteConfig()` sẽ cố gắng tải tệp cấu hình Astro trong dự án của bạn và áp dụng nó vào môi trường kiểm thử.
+Từ Astro 4.8 trở đi, nếu bạn cần tùy chỉnh cấu hình Astro được áp dụng trong kiểm thử, hãy truyền đối số thứ hai cho `getViteConfig()`:
+
+```js
+export default getViteConfig(
+  { test: { /* Vitest configuration options */ } },
+  {
+    site: 'https://example.com/',
+    trailingSlash: 'always',
+  },
+);
+```
+
+Xem [mẫu khởi tạo Astro + Vitest](https://github.com/withastro/astro/tree/latest/examples/with-vitest) trên GitHub.
+
+#### Vitest và Container API
+
+<p><Since v="4.9.0" /></p>
+
+Bạn có thể kiểm thử các thành phần Astro một cách tự nhiên bằng [container API](/vi/reference/container-reference/). Đầu tiên, thiết lập [`vitest` như đã hướng dẫn phía trên](#vitest), sau đó tạo tệp `.test.js` để kiểm thử thành phần của bạn:
+
+```js title="example.test.js"
+import { experimental_AstroContainer as AstroContainer } from 'astro/container';
+import { expect, test } from 'vitest';
+import Card from '../src/components/Card.astro';
+
+test('Card with slots', async () => {
+	const container = await AstroContainer.create();
+	const result = await container.renderToString(Card, {
+		slots: {
+			default: 'Card content',
+		},
+	});
+
+	expect(result).toContain('This is a card');
+	expect(result).toContain('Card content');
+});
+```
+
+## Kiểm thử end-to-end
+
+### Playwright
+
+Playwright là một framework kiểm thử end-to-end cho các ứng dụng web hiện đại. Sử dụng Playwright API với JavaScript hoặc TypeScript để kiểm thử mã Astro của bạn trên tất cả các engine trình duyệt hiện đại bao gồm Chromium, WebKit và Firefox.
+
+#### Cài đặt
+
+Bạn có thể bắt đầu và chạy kiểm thử bằng [VS Code Extension](https://playwright.dev/docs/getting-started-vscode).
+
+Ngoài ra, bạn có thể cài đặt Playwright trong dự án Astro bằng trình quản lý gói bạn chọn. Làm theo các bước CLI để chọn JavaScript/TypeScript, đặt tên thư mục kiểm thử và thêm workflow GitHub Actions tùy chọn.
+
+<PackageManagerTabs>
+  <Fragment slot="npm">
+  ```shell
+  npm init playwright@latest
+  ```
+  </Fragment>
+  <Fragment slot="pnpm">
+  ```shell
+  pnpm create playwright
+  ```
+  </Fragment>
+  <Fragment slot="yarn">
+  ```shell
+  yarn create playwright
+  ```
+  </Fragment>
+</PackageManagerTabs>
+
+#### Tạo kiểm thử Playwright đầu tiên
+
+<Steps>
+1. Chọn một trang để kiểm thử. Ví dụ này sẽ kiểm thử trang ví dụ `index.astro` dưới đây.
+
+    ```html title="src/pages/index.astro"
+    ---
+    ---
+    <html lang="en">
+      <head>
+        <title>Astro is awesome!</title>
+        <meta name="description" content="Pull content from anywhere and serve it fast with Astro's next-gen islands architecture." />
+      </head>
+      <body></body>
+    </html>
+    ```
+
+2. Tạo một thư mục mới và thêm tệp kiểm thử sau vào `src/test`. Sao chép và dán kiểm thử sau vào tệp để xác minh thông tin meta của trang là chính xác. Cập nhật giá trị của thẻ `<title>` để phù hợp với trang bạn đang kiểm thử.
+
+    ```jsx title="src/test/index.spec.ts" "Astro is awesome!"
+    import { test, expect } from '@playwright/test';
+
+    test('meta is correct', async ({ page }) => {
+      await page.goto("http://localhost:4321/");
+
+      await expect(page).toHaveTitle('Astro is awesome!');
+    });
+    ```
+
+    :::tip[Đặt `baseUrl`]
+    Bạn có thể đặt [`"baseURL": "http://localhost:4321"`](https://playwright.dev/docs/api/class-testoptions#test-options-base-url) trong tệp cấu hình `playwright.config.ts` để sử dụng `page.goto("/")` thay cho `page.goto("http://localhost:4321/")` cho URL thuận tiện hơn.
+    :::
+</Steps>
+
+#### Chạy kiểm thử Playwright
+
+Bạn có thể chạy một kiểm thử hoặc nhiều kiểm thử cùng lúc, kiểm thử trên một hoặc nhiều trình duyệt. Theo mặc định, kết quả kiểm thử sẽ hiển thị trên terminal. Ngoài ra, bạn có thể mở HTML Test Reporter để xem báo cáo đầy đủ và lọc kết quả kiểm thử.
+
+<Steps>
+1. Để chạy kiểm thử từ ví dụ trước bằng dòng lệnh, sử dụng lệnh `test`. Tùy chọn, có thể thêm tên tệp để chỉ chạy kiểm thử đó:
+
+    ```sh
+    npx playwright test index.spec.ts
+    ```
+
+2. Để xem báo cáo kiểm thử HTML đầy đủ, mở nó bằng lệnh sau:
+
+    ```sh
+    npx playwright show-report
+    ```
+</Steps>
+
+:::tip
+Hãy chạy kiểm thử trên mã sản xuất để kết quả giống với trang web đã triển khai thực tế nhất.
+:::
+
+##### Nâng cao: Khởi động web server phát triển khi kiểm thử
+
+Bạn cũng có thể để Playwright khởi động server của bạn khi chạy script kiểm thử bằng cách sử dụng tuỳ chọn [`webServer`](https://playwright.dev/docs/test-advanced#launching-a-development-web-server-during-the-tests) trong tệp cấu hình Playwright.
+
+Đây là ví dụ về cấu hình và các lệnh cần thiết khi dùng npm:
+
+<Steps>
+1. Thêm script kiểm thử vào tệp `package.json` tại thư mục gốc, ví dụ `"test:e2e": "playwright test"`.
+
+2. Trong `playwright.config.ts`, thêm đối tượng `webServer` và cập nhật giá trị command thành `npm run preview`.
+
+    ```js title="playwright.config.ts" ins={4-9} "npm run preview"
+    import { defineConfig } from '@playwright/test';
+    
+    export default defineConfig({
+      webServer: {
+        command: 'npm run preview',
+        url: 'http://localhost:4321/',
+        timeout: 120 * 1000,
+        reuseExistingServer: !process.env.CI,
+      },
+      use: {
+        baseURL: 'http://localhost:4321/',
+      },
+    });
+    ```
+
+3. Chạy `npm run build`, sau đó chạy `npm run test:e2e` để thực hiện kiểm thử Playwright.
+</Steps>
+
+Tham khảo thêm về Playwright qua các liên kết dưới đây:
+
+- [Bắt đầu với Playwright](https://playwright.dev/docs/intro)
+- [Sử dụng development server](https://playwright.dev/docs/test-webserver#configuring-a-web-server)
+
+### Cypress
+
+Cypress là công cụ kiểm thử front-end dành cho web hiện đại. Cypress cho phép bạn viết kiểm thử end-to-end cho trang Astro của mình.
+
+#### Cài đặt
+
+Bạn có thể cài đặt Cypress bằng trình quản lý gói bạn chọn. Lệnh này sẽ cài đặt Cypress như một phụ thuộc phát triển trong dự án của bạn.
+
+<PackageManagerTabs>
+  <Fragment slot="npm">
+  ```shell
+  npm install cypress --save-dev
+  ```
+  </Fragment>
+  <Fragment slot="pnpm">
+  ```shell
+  pnpm add --save-dev cypress
+  ```
+  </Fragment>
+  <Fragment slot="yarn">
+  ```shell
+  yarn add cypress --dev
+  ```
+  </Fragment>
+</PackageManagerTabs>
+
+#### Cấu hình
+
+Ở thư mục gốc dự án, tạo tệp `cypress.config.js` với nội dung sau:
+
+```js title="cypress.config.js"
+import { defineConfig } from 'cypress'
+
+export default defineConfig({
+  e2e: {
+    supportFile: false
+  }
+})
+```
+
+#### Tạo kiểm thử Cypress đầu tiên
+
+<Steps>
+1. Chọn một trang để kiểm thử. Ví dụ này sẽ kiểm thử trang ví dụ `index.astro` dưới đây.
+
+    ```html title="src/pages/index.astro"
+    ---
+    ---
+    <html lang="en">
+      <head>
+        <title>Astro is awesome!</title>
+        <meta name="description" content="Pull content from anywhere and serve it fast with Astro's next-gen islands architecture." />
+      </head>
+      <body>
+      <h1>Hello world from Astro</h1>
+      </body>
+    </html>
+    ```
+
+2. Tạo tệp `index.cy.js` trong thư mục `cypress/e2e`. Sử dụng kiểm thử sau trong tệp để xác minh tiêu đề trang và header là chính xác.
+
+    ```js title="cypress/e2e/index.cy.js"
+    it('titles are correct', () => {
+      const page = cy.visit('http://localhost:4321');
+
+      page.get('title').should('have.text', 'Astro is awesome!')
+      page.get('h1').should('have.text', 'Hello world from Astro');
+    });
+    ```
+
+    :::tip[Đặt `baseUrl`]
+    Bạn có thể đặt [`"baseUrl": "http://localhost:4321"`](https://docs.cypress.io/guides/end-to-end-testing/testing-your-app#Step-3-Configure-Cypress) trong tệp cấu hình `cypress.config.js` để dùng `cy.visit("/")` thay cho `cy.visit("http://localhost:4321/")` cho URL thuận tiện hơn.
+    :::
+</Steps>
+
+#### Chạy kiểm thử Cypress
+
+Cypress có thể được chạy từ dòng lệnh hoặc từ ứng dụng Cypress App. Ứng dụng này cung cấp giao diện trực quan để chạy và gỡ lỗi kiểm thử.
+
+Đầu tiên, khởi động server phát triển để Cypress có thể truy cập trang web của bạn.
+
+Để chạy kiểm thử từ ví dụ trước bằng dòng lệnh, thực hiện lệnh sau:
+
+```shell
+npx cypress run
+```
+
+Ngoài ra, để chạy kiểm thử bằng Cypress App, thực hiện lệnh sau:
+
+```shell
+npx cypress open
+```
+
+Khi Cypress App được mở, chọn **E2E Testing**, sau đó chọn trình duyệt để chạy kiểm thử.
+
+Khi kiểm thử hoàn thành, bạn sẽ thấy dấu kiểm xanh trong kết quả xác nhận kiểm thử đã thành công:
+
+```shell title="Output from npx cypress run"
+Running:  index.cy.js                                                                     (1 of 1)
+
+✓ titles are correct (107ms)
+
+1 passing (1s)
+```
+
+:::note[Kiểm thử thất bại]
+Để kiểm tra kiểm thử thực sự hoạt động, bạn có thể thay đổi dòng sau trong tệp `index.astro`:
+
+ ```astro title="src/pages/index.astro" del={2} ins={3}
+  <body>
+    <h1>Hello world from Astro</h1>
+    <h1>Hello from Astro</h1>
+  </body>
+```
+
+Sau đó chạy lại kiểm thử. Bạn sẽ thấy dấu "x" màu đỏ xác nhận kiểm thử đã thất bại.
+:::
+
+#### Bước tiếp theo
+
+Tham khảo thêm về Cypress qua các liên kết dưới đây:
+
+- [Giới thiệu về Cypress](https://docs.cypress.io/guides/core-concepts/introduction-to-cypress)
+- [Kiểm thử ứng dụng của bạn](https://docs.cypress.io/guides/end-to-end-testing/testing-your-app)
+
+### NightwatchJS
+
+Nightwatch.js là framework tự động kiểm thử với bộ công cụ mạnh mẽ để viết, chạy và gỡ lỗi kiểm thử trên web với hỗ trợ sẵn cho tất cả các trình duyệt chính và cả trình duyệt di động, ứng dụng di động gốc.
+
+#### Cài đặt
+
+Bạn có thể cài đặt NightwatchJS trong dự án Astro bằng trình quản lý gói bạn chọn. Làm theo các bước CLI để chọn JavaScript/TypeScript, đặt tên thư mục kiểm thử và chọn có kiểm thử thành phần, kiểm thử trên trình duyệt di động hay không.
+
+<PackageManagerTabs>
+  <Fragment slot="npm">
+  ```shell
+  npm init nightwatch@latest
+  ```
+  </Fragment>
+  <Fragment slot="pnpm">
+  ```shell
+  pnpm create nightwatch
+  ```
+  </Fragment>
+  <Fragment slot="yarn">
+  ```shell
+  yarn create nightwatch
+  ```
+  </Fragment>
+</PackageManagerTabs>
+
+#### Tạo kiểm thử Nightwatch đầu tiên
+
+<Steps>
+1. Chọn một trang để kiểm thử. Ví dụ này sẽ kiểm thử trang ví dụ `index.astro` dưới đây.
+
+    ```html title="src/pages/index.astro"
+    ---
+    ---
+    <html lang="en">
+      <head>
+        <title>Astro is awesome!</title>
+        <meta name="description" content="Pull content from anywhere and serve it fast with Astro's next-gen islands architecture." />
+      </head>
+      <body></body>
+    </html>
+    ```
+
+2. Tạo thư mục mới `src/test/` và thêm tệp kiểm thử sau:
+
+		```js title="src/test/index.js"
+		describe('Astro testing with Nightwatch', function () {
+		    before(browser => browser.navigateTo('http://localhost:4321/'));
+		
+		    it("check that the title is correct", function (browser) {
+		        browser.assert.titleEquals('Astro is awesome!')
+		    });
+		
+		    after(browser => browser.end());
+		});
+		```
+
+    :::tip[Đặt `baseUrl`]
+    Bạn có thể đặt [`"baseURL": "http://localhost:4321"`](https://nightwatchjs.org/guide/reference/settings.html#setting-the-baseurl-property) trong tệp cấu hình `nightwatch.conf.js` để dùng `browser.navigateTo("/")` thay cho `browser.navigateTo("http://localhost:4321/")` cho URL thuận tiện hơn.
+    :::
+</Steps>
+
+#### Chạy kiểm thử NightwatchJS
+
+Bạn có thể chạy một hoặc nhiều kiểm thử cùng lúc, kiểm thử trên một hoặc nhiều trình duyệt. Theo mặc định, kết quả kiểm thử sẽ hiển thị trên terminal. Ngoài ra, bạn có thể mở HTML Test Reporter để xem báo cáo và lọc kết quả kiểm thử.
+
+Bạn có thể chạy kiểm thử với [NightwatchJS VSCode Extension](https://marketplace.visualstudio.com/items?itemName=browserstackcom.nightwatch) hoặc sử dụng các bước CLI sau:
+
+<Steps>
+1. Để chạy tất cả kiểm thử, nhập lệnh sau trong terminal. Tùy chọn, bạn có thể thêm tên tệp để chỉ chạy kiểm thử đó:
+
+    ```sh
+    npx nightwatch test/index.js
+    ```
+    Ngoài ra, bạn có thể chạy kiểm thử trên trình duyệt cụ thể với tham số `--environment` hoặc `-e` trên dòng lệnh. Nếu trình duyệt chưa được cài đặt, Nightwatch sẽ tự động thiết lập bằng [Selenium Manager](https://www.selenium.dev/blog/2022/introducing-selenium-manager/):
+
+    ```sh
+    npx nightwatch test/index.ts -e firefox
+    ```
+2. Để xem báo cáo kiểm thử HTML đầy đủ, mở nó bằng lệnh sau:
+
+    ```sh
+    npx nightwatch test/index.ts --open
+    ```
+</Steps>
+
+:::tip
+Hãy chạy kiểm thử trên mã sản xuất để kết quả giống nhất với trang web đã triển khai thực tế.
+:::
+
+Tham khảo thêm về NightwatchJS qua các liên kết dưới đây:
+
+  - [Giới thiệu về Nightwatch](https://nightwatchjs.org/guide/overview/what-is-nightwatch.html)
+  - [Kiểm thử với Nightwatch](https://nightwatchjs.org/guide/writing-tests/introduction.html)

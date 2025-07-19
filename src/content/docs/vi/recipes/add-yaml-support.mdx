@@ -1,0 +1,66 @@
+---
+title: Cài đặt plugin Vite hoặc Rollup
+description: Tìm hiểu cách bạn có thể import dữ liệu YAML bằng cách thêm một plugin Rollup vào dự án của mình.
+i18nReady: true
+type: recipe
+---
+
+import { Steps } from '@astrojs/starlight/components';
+import PackageManagerTabs from '~/components/tabs/PackageManagerTabs.astro';
+
+Astro được xây dựng dựa trên Vite, và hỗ trợ cả plugin Vite lẫn Rollup. Công thức này sử dụng một plugin Rollup để thêm khả năng import tệp YAML (`.yml`) vào Astro.
+
+## Công thức
+
+<Steps>
+1. Cài đặt `@rollup/plugin-yaml`:
+
+    <PackageManagerTabs>
+        <Fragment slot="npm">
+        ```shell
+        npm install @rollup/plugin-yaml --save-dev
+        ```
+        </Fragment>
+        <Fragment slot="pnpm">
+        ```shell
+        pnpm add @rollup/plugin-yaml --save-dev
+        ```
+        </Fragment>
+        <Fragment slot="yarn">
+        ```shell
+        yarn add @rollup/plugin-yaml --dev
+        ```
+        </Fragment>
+    </PackageManagerTabs>
+
+2.  Import plugin vào `astro.config.mjs` và thêm nó vào mảng plugins của Vite:
+
+    ```js title="astro.config.mjs" ins={2,5-7}
+    import { defineConfig } from 'astro/config';
+    import yaml from '@rollup/plugin-yaml';
+
+    export default defineConfig({
+    	vite: {
+    		plugins: [yaml()],
+    	},
+    });
+    ```
+
+3.  Cuối cùng, bạn có thể import dữ liệu YAML bằng câu lệnh `import`:
+
+        ```js
+        import yml from './data.yml';
+        ```
+
+        :::note
+        Mặc dù bây giờ bạn đã có thể import dữ liệu YAML trong dự án Astro của mình, trình soạn thảo sẽ không cung cấp gợi ý kiểu cho dữ liệu đã import. Để bổ sung kiểu, hãy tạo hoặc tìm một tệp `*.d.ts` có sẵn trong thư mục `src` của dự án và thêm nội dung sau:
+        ```ts title="src/files.d.ts"
+        // Chỉ định phần mở rộng tệp mà bạn muốn import
+        declare module "*.yml" {
+          const value: any; // Thêm định nghĩa kiểu ở đây nếu muốn
+          export default value;
+        }
+        ```
+        Điều này sẽ giúp trình soạn thảo cung cấp gợi ý kiểu cho dữ liệu YAML của bạn.
+        :::
+</Steps>

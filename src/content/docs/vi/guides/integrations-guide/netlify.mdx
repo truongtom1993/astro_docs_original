@@ -1,0 +1,336 @@
+---
+type: integration
+title: '@astrojs/netlify'
+description: Tìm hiểu cách sử dụng adapter @astrojs/netlify để triển khai dự án Astro của bạn.
+sidebar:
+  label: Netlify
+githubIntegrationURL: 'https://github.com/withastro/astro/tree/main/packages/integrations/netlify/'
+category: adapter
+i18nReady: true
+---
+import PackageManagerTabs from '~/components/tabs/PackageManagerTabs.astro'
+import Since from '~/components/Since.astro';
+
+Adapter này cho phép Astro triển khai [các tuyến đường và tính năng render theo yêu cầu](/vi/guides/on-demand-rendering/) của bạn lên [Netlify](https://www.netlify.com/), bao gồm [server islands](/vi/guides/server-islands/), [actions](/vi/guides/actions/), và [sessions](/vi/guides/sessions/).
+
+Nếu bạn sử dụng Astro như một trình tạo trang web tĩnh, bạn chỉ cần adapter này nếu bạn đang sử dụng các dịch vụ Netlify bổ sung yêu cầu server (ví dụ [Netlify Image CDN](#netlify-image-cdn-support)). Nếu không, bạn không cần adapter để triển khai trang web tĩnh.
+
+Tìm hiểu cách triển khai trang web Astro của bạn trong [hướng dẫn triển khai Netlify](/vi/guides/deploy/netlify/) của chúng tôi.
+
+## Tại sao Astro Netlify
+
+[Netlify](https://www.netlify.com/) là nền tảng triển khai cho phép bạn host trang web bằng cách kết nối trực tiếp với repository GitHub của bạn. Adapter này tăng cường quá trình build Astro để chuẩn bị dự án của bạn cho việc triển khai thông qua Netlify.
+
+## Cài đặt
+
+Astro bao gồm lệnh `astro add` để tự động hóa việc thiết lập các tích hợp chính thức. Nếu bạn muốn, bạn có thể [cài đặt tích hợp thủ công](#manual-install) thay thế.
+
+Thêm adapter Netlify để bật on-demand rendering trong dự án Astro của bạn với lệnh `astro add`. 
+Điều này sẽ cài đặt `@astrojs/netlify` và thực hiện các thay đổi thích hợp cho tệp `astro.config.mjs` của bạn trong một bước.
+
+<PackageManagerTabs>
+  <Fragment slot="npm">
+  ```sh
+  npx astro add netlify
+  ```
+  </Fragment>
+  <Fragment slot="pnpm">
+  ```sh
+  pnpm astro add netlify
+  ```
+  </Fragment>
+  <Fragment slot="yarn">
+  ```sh
+  yarn astro add netlify
+  ```
+  </Fragment>
+</PackageManagerTabs>
+
+Bây giờ, bạn có thể bật [on-demand rendering cho từng trang](/vi/guides/on-demand-rendering/#enabling-on-demand-rendering), hoặc đặt cấu hình build output thành `output: 'server'` để [server-render tất cả các trang theo mặc định](/vi/guides/on-demand-rendering/#server-mode).
+
+### Cài đặt thủ công
+
+Đầu tiên, cài đặt adapter Netlify vào dependencies của dự án bằng trình quản lý gói ưa thích của bạn:
+
+<PackageManagerTabs>
+  <Fragment slot="npm">
+  ```sh
+  npm install @astrojs/netlify
+  ```
+  </Fragment>
+  <Fragment slot="pnpm">
+  ```sh
+  pnpm add @astrojs/netlify
+  ```
+  </Fragment>
+  <Fragment slot="yarn">
+  ```sh
+  yarn add @astrojs/netlify
+  ```
+  </Fragment>
+</PackageManagerTabs>
+
+Sau đó, thêm adapter vào tệp `astro.config.*` của bạn:
+
+   ```js title="astro.config.mjs" ins={2, 6}
+    import { defineConfig } from 'astro/config';
+    import netlify from '@astrojs/netlify';
+
+    export default defineConfig({
+       // ...
+       adapter: netlify(),
+    });
+   ```
+
+## Sử dụng
+
+[Đọc hướng dẫn triển khai đầy đủ tại đây.](/vi/guides/deploy/netlify/)
+
+Làm theo hướng dẫn để [build trang web cục bộ](/vi/guides/deploy/#building-your-site-locally). Sau khi build, bạn sẽ có thư mục `.netlify/` chứa cả [Netlify Functions](https://docs.netlify.com/functions/overview/) trong thư mục `.netlify/functions-internal/` và [Netlify Edge Functions](https://docs.netlify.com/edge-functions/overview/) trong thư mục `.netlify/edge-functions/`.
+
+Để triển khai trang web của bạn, cài đặt [Netlify CLI](https://docs.netlify.com/cli/get-started/) và chạy:
+
+```sh
+netlify deploy
+```
+
+[Bài đăng Blog Netlify về Astro](https://www.netlify.com/blog/how-to-deploy-astro/) và [Netlify Docs](https://docs.netlify.com/integrations/frameworks/astro/) cung cấp thêm thông tin về cách sử dụng tích hợp này để triển khai lên Netlify.
+
+### Chạy Astro middleware trên Netlify Edge Functions
+
+Bất kỳ Astro middleware nào được áp dụng cho các trang pre-rendered tại build-time, và cho các trang on-demand-rendered tại runtime.
+
+Để triển khai redirects, access control, hoặc custom response headers cho các trang pre-rendered, chạy middleware của bạn trên Netlify Edge Functions bằng cách bật tùy chọn [`edgeMiddleware`](/vi/reference/adapter-reference/#edgemiddleware):
+
+```js title="astro.config.mjs" ins={7}
+import { defineConfig } from 'astro/config';
+import netlify from '@astrojs/netlify';
+
+export default defineConfig({
+  // ...
+  adapter: netlify({
+    edgeMiddleware: true,
+  }),
+});
+```
+
+Khi `edgeMiddleware` được bật, một edge function sẽ thực thi middleware code của bạn cho tất cả requests bao gồm static assets, trang prerendered, và trang on-demand rendered.
+
+Đối với các trang on-demand rendered, đối tượng `context.locals` được serialize bằng JSON và gửi trong header cho serverless function, function này thực hiện rendering. Như một biện pháp bảo mật, serverless function sẽ từ chối phục vụ requests với response `403 Forbidden` trừ khi chúng đến từ edge function được tạo.
+
+### Truy cập edge context từ trang web của bạn
+
+Netlify Edge Functions cung cấp [context object](https://docs.netlify.com/edge-functions/api/#netlify-specific-context-object) bao gồm metadata về request như IP người dùng, dữ liệu geolocation, và cookies.
+
+Điều này có thể được truy cập thông qua đối tượng `Astro.locals.netlify.context`:
+
+```astro
+---
+const {
+  geo: { city },
+} = Astro.locals.netlify.context;
+---
+
+<h1>Hello there, friendly visitor from {city}!</h1>
+```
+
+Nếu bạn đang sử dụng TypeScript, bạn có thể có typings đúng bằng cách cập nhật `src/env.d.ts` để sử dụng `NetlifyLocals`:
+
+```ts title="src/env.d.ts"
+type NetlifyLocals = import('@astrojs/netlify').NetlifyLocals
+
+declare namespace App {
+  interface Locals extends NetlifyLocals {
+    // ...
+  }
+}
+```
+
+Điều này không có sẵn trên các trang prerendered.
+
+### Hỗ trợ Netlify Image CDN
+
+Adapter này theo mặc định sử dụng [Netlify Image CDN](https://docs.netlify.com/image-cdn/overview/) để transform hình ảnh on-the-fly mà không ảnh hưởng đến build times.
+Nó được triển khai bằng [Astro Image Service](/vi/reference/image-service-reference/) bên dưới.
+
+Để opt out khỏi tối ưu hóa remote image của Netlify's Image CDN, sử dụng tùy chọn `imageCDN`:
+
+```js title="astro.config.mjs" ins={7}
+import { defineConfig } from 'astro/config';
+import netlify from '@astrojs/netlify';
+
+export default defineConfig({
+  // ...
+  adapter: netlify({
+    imageCDN: false,
+  }),
+});
+```
+
+Nếu bạn đang sử dụng hình ảnh được host trên domain khác, bạn phải authorize domain hoặc URL patterns bằng tùy chọn cấu hình [`image.domains`](/vi/reference/configuration-reference/#imagedomains) hoặc [`image.remotePatterns`](/vi/reference/configuration-reference/#imageremotepatterns):
+
+```js title="astro.config.mjs" ins={7-9}
+import { defineConfig } from 'astro/config';
+import netlify from '@astrojs/netlify';
+
+export default defineConfig({
+    // ...
+    adapter: netlify(),
+    image: {
+      domains: ['example.com'],
+    },
+});
+```
+Để biết thêm thông tin, xem [hướng dẫn authorize remote images](/vi/guides/images/#authorizing-remote-images). Điều này không bắt buộc cho hình ảnh được host trên cùng domain với trang web của bạn.
+
+### Trang web tĩnh với Netlify Adapter
+
+Đối với trang web tĩnh (`output: 'static'`) được host trên Netlify, bạn thường không cần adapter. Tuy nhiên, một số tính năng triển khai chỉ có sẵn thông qua adapter.
+
+Trang web tĩnh sẽ cần cài đặt adapter này để sử dụng và cấu hình [image service](#netlify-image-cdn-support) của Netlify.
+
+Nếu bạn sử dụng cấu hình `redirects` trong cấu hình Astro của bạn, adapter Netlify có thể được sử dụng để dịch điều này sang định dạng `_redirects` đúng.
+
+```js title="astro.config.mjs"
+import { defineConfig } from 'astro/config';
+import netlify from '@astrojs/netlify';
+
+export default defineConfig({
+  // ...
+  adapter: netlify(),
+  redirects: {
+    '/blog/old-post': '/blog/new-post',
+  },
+});
+```
+
+Khi bạn chạy `astro build` sẽ có tệp `dist/_redirects`. Netlify sẽ sử dụng điều đó để định tuyến các trang đúng cách trong production.
+
+:::note
+Bạn vẫn có thể bao gồm tệp `public/_redirects` cho redirects thủ công. Bất kỳ redirects nào bạn chỉ định trong cấu hình redirects đều được thêm vào cuối của riêng bạn.
+:::
+
+### Sessions
+
+[API Sessions](/vi/guides/sessions/) của Astro cho phép bạn dễ dàng lưu trữ dữ liệu người dùng giữa các requests. Điều này có thể được sử dụng cho những thứ như dữ liệu và tùy chọn người dùng, giỏ hàng, và thông tin đăng nhập. Không giống như lưu trữ cookie, không có giới hạn kích thước trên dữ liệu, và nó có thể được khôi phục trên các thiết bị khác nhau.
+
+Astro tự động cấu hình [Netlify Blobs](https://docs.netlify.com/blobs/overview/) cho lưu trữ session khi sử dụng adapter Netlify. Nếu bạn muốn sử dụng session storage driver khác, bạn có thể chỉ định nó trong cấu hình Astro của bạn. Xem [tham chiếu cấu hình `session`](/vi/reference/configuration-reference/#sessiondriver) để biết thêm chi tiết.
+
+### Caching Pages
+
+Các trang on-demand rendered không có bất kỳ nội dung động nào có thể được cached để cải thiện hiệu suất và giảm sử dụng tài nguyên.
+Bật tùy chọn `cacheOnDemandPages` trong adapter sẽ cache tất cả các trang server-rendered trong tối đa một năm:
+
+```ts title="astro.config.mjs" ins={4}
+export default defineConfig({
+  // ...
+  adapter: netlify({
+    cacheOnDemandPages: true,
+  }),
+});
+```
+
+Điều này có thể được thay đổi trên cơ sở từng trang bằng cách thêm caching headers vào response của bạn:
+
+```astro title="pages/index.astro"
+---
+import Layout from '../components/Layout.astro';
+
+Astro.response.headers.set('CDN-Cache-Control', 'public, max-age=45, must-revalidate');
+---
+
+<Layout title="Astro on Netlify">
+  {new Date()}
+</Layout>
+```
+
+Với [fine-grained cache control](https://www.netlify.com/blog/swr-and-fine-grained-cache-control/), Netlify hỗ trợ
+caching headers tiêu chuẩn như `CDN-Cache-Control` hoặc `Vary`.
+Tham khảo docs để tìm hiểu về triển khai ví dụ time to live (TTL) hoặc stale while revalidate (SWR) caching: https://docs.netlify.com/platform/caching
+
+### Bao gồm hoặc loại trừ tệp khỏi Netlify Functions
+
+Khi triển khai trang web Astro với on-demand rendering lên Netlify, các functions được tạo tự động trace và bao gồm server dependencies. Tuy nhiên, bạn có thể cần tùy chỉnh tệp nào được bao gồm trong Netlify Functions của bạn.
+
+#### `includeFiles`
+
+<p>
+**Kiểu:**  `string[]`<br />
+**Mặc định:** `[]`<br />
+<Since v="5.3.0" />
+</p>
+
+Thuộc tính `includeFiles` cho phép bạn chỉ định rõ ràng các tệp bổ sung nên được bundled với function của bạn. Điều này hữu ích cho các tệp không được tự động phát hiện như dependencies, chẳng hạn như:
+- Tệp dữ liệu được load bằng operations `fs`
+- Tệp cấu hình
+- Tệp template
+
+Cung cấp mảng các tệp bổ sung để bao gồm với đường dẫn tệp tương đối với [`root`](/vi/reference/configuration-reference/#root) của dự án. Đường dẫn tuyệt đối có thể không hoạt động như mong đợi.
+
+```js title="astro.config.mjs" ins={7}
+import { defineConfig } from 'astro/config';
+import netlify from '@astrojs/netlify';
+
+export default defineConfig({
+  // ...
+  adapter: netlify({
+    includeFiles: ['./my-data.json'], // tương đối với `root`
+  }),
+});
+```
+
+#### `excludeFiles`
+
+<p>
+**Kiểu:**  `string[]`<br />
+**Mặc định:** `[]`<br />
+<Since v="5.3.0" />
+</p>
+
+Bạn có thể sử dụng thuộc tính `excludeFiles` để ngăn các tệp cụ thể được bundled mà nếu không sẽ được bao gồm. Điều này hữu ích cho:
+- Giảm kích thước bundle
+- Loại trừ binaries lớn
+- Ngăn các tệp không mong muốn được triển khai
+
+Cung cấp mảng các tệp cụ thể để loại trừ với đường dẫn tệp tương đối với [`root`](/vi/reference/configuration-reference/#root) của dự án. Đường dẫn tuyệt đối có thể không hoạt động như mong đợi.
+
+```js title="astro.config.mjs" ins={7}
+import { defineConfig } from 'astro/config';
+import netlify from '@astrojs/netlify';
+
+export default defineConfig({
+  // ...
+  adapter: netlify({
+    excludeFiles: ['./src/some_big_file.jpg'], // tương đối với `root`
+  }),
+});
+```
+
+#### Sử dụng glob patterns
+
+Cả `includeFiles` và `excludeFiles` đều hỗ trợ [glob patterns](/vi/guides/imports/#glob-patterns) để match nhiều tệp:
+
+```js title="astro.config.mjs" ins={7, 10-11}
+import { defineConfig } from 'astro/config';
+import netlify from '@astrojs/netlify';
+
+export default defineConfig({
+  adapter: netlify({
+    includeFiles: [
+      './data/**/*.json'
+    ],
+    excludeFiles: [
+      './node_modules/package/**/*',
+      './src/**/*.test.js'
+    ]
+  }),
+});
+```
+
+## Ví dụ
+
+* [Astro Netlify Edge Starter](https://github.com/sarahetter/astro-netlify-edge-starter) cung cấp ví dụ và hướng dẫn trong README.
+
+* [Duyệt các dự án Astro Netlify trên GitHub](https://github.com/search?q=path%3A**%2Fastro.config.mjs+%40astrojs%2Fnetlify\&type=code) để có thêm ví dụ!
+
+[astro-integration]: /vi/guides/integrations-guide/

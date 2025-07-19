@@ -1,0 +1,106 @@
+---
+title: Triển khai trang Astro của bạn lên Clever Cloud
+description: Cách triển khai trang Astro của bạn lên web trên Clever Cloud.
+sidebar:
+  label: Clever Cloud
+type: deploy
+i18nReady: true
+---
+import { Tabs, TabItem, Steps } from '@astrojs/starlight/components';
+
+[Clever Cloud](https://clever-cloud.com) là một nền tảng đám mây tại châu Âu cung cấp các dịch vụ tự động và có khả năng mở rộng.
+
+## Cấu hình dự án
+
+Bạn có thể triển khai cả dự án Astro tĩnh hoàn toàn và dự án render theo yêu cầu trên Clever Cloud. Bất kể chế độ `output` của bạn là (pre-rendered hay [on-demand](/vi/guides/on-demand-rendering/)), bạn đều có thể chọn triển khai dưới dạng **ứng dụng tĩnh** (sử dụng post-build hook), hoặc dưới dạng **ứng dụng Node.js**, yêu cầu một số cấu hình thủ công trong `package.json` của bạn.
+
+### Scripts
+
+Nếu bạn đang chạy một ứng dụng Node.js render theo yêu cầu, hãy cập nhật script `start` để chạy server Node. Các ứng dụng trên Clever Cloud sẽ lắng nghe trên cổng **8080**.
+
+```json title="package.json"
+"scripts": {
+  "start": "node ./dist/server/entry.mjs --host 0.0.0.0 --port 8080",
+} 
+```
+
+## Triển khai Astro từ giao diện dòng lệnh (Console)
+
+Để triển khai dự án Astro của bạn lên Clever Cloud, bạn cần **tạo một ứng dụng mới**. Trình hướng dẫn tạo ứng dụng sẽ giúp bạn qua các bước cấu hình cần thiết.
+
+<Steps>
+
+1. Từ thanh bên, nhấp vào **Create** > **An application**
+2. Chọn cách triển khai:
+
+    - **Create a brand new app**: để triển khai từ một kho lưu trữ cục bộ bằng Git
+    
+    hoặc
+    
+    - **Select a GitHub repository**: để triển khai từ GitHub
+
+3. Chọn loại ứng dụng **Node.js** hoặc **static**.
+4. Thiết lập kích thước tối thiểu cho instance và các tùy chọn mở rộng. Các trang Astro thường có thể triển khai bằng instance **Nano**. Tùy theo yêu cầu và phụ thuộc của dự án, bạn có thể cần điều chỉnh khi theo dõi các chỉ số tại trang **Overview**.
+5. Chọn **region** để triển khai instance của bạn.
+6. Bỏ qua [kết nối **Add-ons** với ứng dụng Clever của bạn](https://www.clever-cloud.com/developers/doc/addons/) trừ khi bạn sử dụng cơ sở dữ liệu hoặc Keycloak.
+7. Thêm biến môi trường (**environment variables**):
+
+    - Với **Node.js**, không cần biến môi trường đặc biệt nào để triển khai Astro nếu bạn sử dụng **npm**. Nếu bạn dùng **yarn** hoặc **pnpm**, hãy đặt các biến sau:
+
+    <Tabs>
+      <TabItem label="pnpm">
+      ```shell
+      CC_NODE_BUILD_TOOL="custom"
+      CC_PRE_BUILD_HOOK="npm install -g pnpm && pnpm install"
+      CC_CUSTOM_BUILD_TOOL="pnpm run astro telemetry disable && pnpm build"
+      ```
+      </TabItem>
+      <TabItem label="yarn">
+      ```shell
+      CC_NODE_BUILD_TOOL="yarn"
+      CC_PRE_BUILD_HOOK="yarn && yarn run astro telemetry disable && yarn build"
+      ```
+      </TabItem>
+    </Tabs>
+
+    - Với ứng dụng **static**, thêm các biến sau:
+
+    <Tabs>
+      <TabItem label="npm">
+      ```shell
+      CC_POST_BUILD_HOOK="npm run build"
+      CC_PRE_BUILD_HOOK="npm install && npm run astro telemetry disable"
+      CC_WEBROOT="/dist"
+      ```
+      </TabItem>
+      <TabItem label="pnpm">
+      ```shell
+      CC_POST_BUILD_HOOK="pnpm build"
+      CC_PRE_BUILD_HOOK="npm install -g pnpm && pnpm install && pnpm run astro telemetry disable"
+      CC_WEBROOT="/dist"
+      ```
+      </TabItem>
+      <TabItem label="yarn">
+      ```shell
+      CC_POST_BUILD_HOOK="yarn build"
+      CC_PRE_BUILD_HOOK="yarn && yarn run astro telemetry disable"
+      CC_WEBROOT="/dist"
+      ```
+      </TabItem>
+    </Tabs>
+
+
+8. **Triển khai!** Nếu bạn triển khai từ **GitHub**, quá trình triển khai sẽ bắt đầu tự động. Nếu bạn sử dụng **Git**, hãy sao chép remote và push lên nhánh **master**. 
+
+</Steps>
+
+:::tip[Other Branches]
+Để triển khai từ các nhánh khác ngoài `master`, hãy dùng `git push clever <branch>:master`.
+
+Ví dụ, nếu bạn muốn triển khai nhánh `main` cục bộ mà không cần đổi tên, sử dụng `git push clever main:master`.
+:::
+
+
+## Tài nguyên chính thức
+- [Tài liệu Clever Cloud về triển khai ứng dụng Node.js](https://www.clever-cloud.com/developers/doc/applications/javascript/nodejs/)
+- [Tài liệu Clever Cloud về triển khai Astro dưới dạng ứng dụng tĩnh](https://www.clever-cloud.com/developers/guides/astro/)

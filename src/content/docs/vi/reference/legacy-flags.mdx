@@ -1,0 +1,51 @@
+---
+title: Cờ di sản (Legacy flags)
+i18nReady: true
+---
+
+Để giúp một số người dùng di chuyển giữa các phiên bản của Astro, đôi khi chúng tôi giới thiệu các cờ `legacy`.
+
+Những cờ này cho phép bạn chọn sử dụng một số hành vi đã bị deprecated hoặc đã lỗi thời của Astro trong phiên bản mới nhất, để bạn có thể tiếp tục nâng cấp và tận dụng các bản phát hành Astro mới cho đến khi bạn có thể cập nhật hoàn toàn mã dự án của mình.
+
+import Since from '~/components/Since.astro';
+
+## Collections
+
+<p>
+
+**Kiểu:** `boolean`<br />
+**Mặc định:** `false`<br />
+
+<Since v="5.0.0" />
+</p>
+
+Bật hành vi di sản cho content collections (như đã sử dụng trong Astro v2 đến v4)
+
+```js
+// astro.config.mjs
+import { defineConfig } from 'astro/config';
+export default defineConfig({
+	legacy: {
+		collections: true,
+	},
+});
+```
+
+Nếu được bật, các collection `data` và `content` (chỉ) sẽ được xử lý bằng cách triển khai content collections di sản. Các collection có `loader` (chỉ) sẽ tiếp tục sử dụng Content Layer API thay thế. Cả hai loại collection có thể tồn tại trong cùng một dự án, mỗi loại sử dụng triển khai tương ứng của chúng.
+
+Các hạn chế sau tiếp tục tồn tại:
+
+- Bất kỳ collection di sản nào (`type: 'content'` hoặc `type: 'data'`) phải tiếp tục được đặt trong thư mục `src/content/`.
+- Những collection di sản này sẽ không được chuyển đổi để sử dụng loader `glob()` một cách ngầm định, và thay vào đó sẽ được xử lý bởi mã di sản.
+- Các collection sử dụng Content Layer API (với `loader` được định nghĩa) bị cấm trong `src/content/`, nhưng có thể tồn tại ở bất kỳ đâu khác trong dự án của bạn.
+
+Khi bạn sẵn sàng loại bỏ cờ này và di chuyển đến Content Layer API mới cho các collection di sản của mình, bạn phải định nghĩa một collection cho bất kỳ thư mục nào trong `src/content/` mà bạn muốn tiếp tục sử dụng như một collection. Việc khai báo một collection trống là đủ, và Astro sẽ tự động tạo ra một định nghĩa phù hợp cho các collection di sản của bạn:
+
+```js
+// src/content/config.ts
+import { defineCollection, z } from 'astro:content';
+
+const blog = defineCollection({});
+
+export const collections = { blog };
+```

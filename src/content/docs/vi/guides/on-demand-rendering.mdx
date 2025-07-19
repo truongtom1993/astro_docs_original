@@ -1,0 +1,288 @@
+---
+title: Kết xuất theo yêu cầu
+description: Tạo các trang và routes được kết xuất trên server theo yêu cầu với adapter.
+i18nReady: true
+---
+import PackageManagerTabs from '~/components/tabs/PackageManagerTabs.astro';
+import { Steps } from '@astrojs/starlight/components';
+import RecipeLinks from '~/components/RecipeLinks.astro';
+import IntegrationsNav from '~/components/IntegrationsNav.astro';
+import ReadMore from '~/components/ReadMore.astro';
+
+Mã dự án Astro của bạn phải được **kết xuất** thành HTML để có thể hiển thị trên web.
+
+Mặc định, các trang Astro, routes và API endpoints sẽ được pre-render tại thời điểm build thành các trang tĩnh. Tuy nhiên, bạn có thể chọn kết xuất một số hoặc tất cả routes theo yêu cầu bởi server khi route được truy cập.
+
+Các trang và routes được kết xuất theo yêu cầu được tạo cho mỗi lần truy cập và có thể được tùy chỉnh cho từng người xem. Ví dụ, một trang được kết xuất theo yêu cầu có thể hiển thị thông tin tài khoản của người dùng đã đăng nhập hoặc hiển thị dữ liệu được cập nhật mới nhất mà không cần rebuild toàn bộ site.
+
+Kết xuất theo yêu cầu trên server tại thời điểm request còn được gọi là **server-side rendering (SSR)**.
+
+## Server adapters
+
+Để kết xuất bất kỳ trang nào theo yêu cầu, bạn cần thêm một **adapter**. Mỗi adapter cho phép Astro xuất ra một script chạy dự án của bạn trên một **runtime** cụ thể: môi trường chạy code trên server để tạo trang khi chúng được yêu cầu (ví dụ: Netlify, Cloudflare).
+
+Bạn cũng có thể muốn thêm adapter ngay cả khi site của bạn hoàn toàn tĩnh và bạn không kết xuất bất kỳ trang nào theo yêu cầu. Ví dụ, [Netlify adapter](/vi/guides/integrations-guide/netlify/) kích hoạt Netlify's Image CDN, và [server islands](/vi/guides/server-islands/) yêu cầu adapter được cài đặt để sử dụng `server:defer` trên component.
+
+<IntegrationsNav category="adapter"/>
+
+Astro duy trì các adapter chính thức cho [Node.js](https://nodejs.org/), [Netlify](https://www.netlify.com/), [Vercel](https://vercel.com/), và [Cloudflare](https://www.cloudflare.com/). Bạn có thể tìm cả [adapter chính thức và cộng đồng trong thư mục integrations của chúng tôi](https://astro.build/integrations/?search=&categories%5B%5D=adapters). Chọn adapter tương ứng với [môi trường triển khai](/vi/guides/deploy/) của bạn.
+
+### Thêm Adapter
+
+Bạn có thể thêm bất kỳ [adapter integration chính thức được duy trì bởi Astro](/vi/guides/integrations-guide/#official-integrations) nào với lệnh `astro add` sau. Điều này sẽ cài đặt adapter và thực hiện các thay đổi phù hợp cho file `astro.config.mjs` của bạn trong một bước.
+
+Ví dụ, để cài đặt Netlify adapter, chạy:
+
+<PackageManagerTabs>
+  <Fragment slot="npm">
+  ```shell
+  npx astro add netlify
+  ```
+  </Fragment>
+  <Fragment slot="pnpm">
+  ```shell
+  pnpm astro add netlify
+  ```
+  </Fragment>
+  <Fragment slot="yarn">
+  ```shell
+  yarn astro add netlify
+  ```
+  </Fragment>
+</PackageManagerTabs>
+
+Bạn cũng có thể [thêm adapter thủ công bằng cách cài đặt NPM package](/vi/guides/integrations-guide/#installing-an-npm-package) (ví dụ: `@astrojs/netlify`) và cập nhật `astro.config.mjs` bằng tay.
+
+Lưu ý rằng các adapter khác nhau có thể có các cài đặt cấu hình khác nhau. Đọc tài liệu của từng adapter và áp dụng các tùy chọn cấu hình cần thiết cho adapter đã chọn trong `astro.config.mjs`
+
+## Kích hoạt kết xuất theo yêu cầu
+
+**Mặc định, toàn bộ site Astro của bạn sẽ được prerender**, và các trang HTML tĩnh sẽ được gửi đến trình duyệt. Tuy nhiên, bạn có thể chọn không prerender trên bất kỳ routes nào yêu cầu server rendering, ví dụ như trang kiểm tra cookies và hiển thị nội dung cá nhân hóa.
+
+Đầu tiên, [thêm adapter integration](#add-an-adapter) cho server runtime của bạn để kích hoạt kết xuất server theo yêu cầu trong dự án Astro.
+
+Sau đó, thêm `export const prerender = false` ở đầu trang hoặc endpoint cụ thể mà bạn muốn kết xuất theo yêu cầu. Phần còn lại của site sẽ vẫn là site tĩnh:
+
+```astro title="src/pages/page-rendered-on-demand.astro" ins={2}
+---
+export const prerender = false
+---
+<html>
+<!--
+Nội dung này sẽ được server-render theo yêu cầu!
+Chỉ cần thêm adapter integration cho server runtime!
+Tất cả các trang khác được tạo tĩnh tại thời điểm build!
+-->
+<html>
+```
+
+Ví dụ sau đây cho thấy việc chọn không prerender để hiển thị một số ngẫu nhiên mỗi khi endpoint được truy cập:
+
+```js title="src/pages/randomnumber.js" ins={1}
+export const prerender = false;
+
+export async function GET() {
+  let number = Math.random();
+  return new Response(
+    JSON.stringify({
+      number,
+      message: `Đây là một số ngẫu nhiên: ${number}`,
+    }),
+  );
+}
+```
+
+### Chế độ `'server'`
+
+Đối với **ứng dụng có tính dynamic cao**, sau khi thêm adapter, bạn có thể [đặt cấu hình build output thành `output: 'server'`](/vi/reference/configuration-reference/#output) để **server-render tất cả các trang của bạn mặc định**. Điều này tương đương với việc chọn không prerender trên mọi trang.
+
+Sau đó, nếu cần, bạn có thể chọn prerender bất kỳ trang cụ thể nào không yêu cầu server thực thi, như trang chính sách bảo mật hoặc trang giới thiệu.
+
+```astro title="src/pages/about-my-app.astro" ins={2}
+---
+export const prerender = true
+---
+<html>
+<!--
+`output: 'server'` được cấu hình, nhưng trang này là tĩnh!
+Phần còn lại của site được render theo yêu cầu!
+-->
+<html>
+```
+
+Thêm `export const prerender = true` vào bất kỳ trang hoặc route nào để prerender trang tĩnh hoặc endpoint:
+
+```js title="src/pages/myendpoint.js" ins={1}
+export const prerender = true;
+
+export async function GET() {
+  return new Response(
+    JSON.stringify({
+      message: `Đây là endpoint tĩnh của tôi`,
+    }),
+  );
+}
+```
+
+:::tip
+Bắt đầu với chế độ `'static'` mặc định cho đến khi bạn chắc chắn rằng **hầu hết hoặc tất cả** các trang của bạn sẽ được render theo yêu cầu! Điều này đảm bảo site của bạn có hiệu suất tốt nhất có thể, không phụ thuộc vào server function để render nội dung tĩnh.
+
+Chế độ output `'server'` không mang lại chức năng bổ sung nào. Nó chỉ thay đổi hành vi rendering mặc định.
+:::
+
+<ReadMore>Xem thêm về [cài đặt `output`](/vi/reference/configuration-reference/#output) trong tham chiếu cấu hình.</ReadMore>
+
+## Tính năng kết xuất theo yêu cầu
+
+### HTML streaming
+
+Với HTML streaming, một document được chia thành các chunks, gửi qua mạng theo thứ tự và được render trên trang theo thứ tự đó. Astro sử dụng HTML streaming trong kết xuất theo yêu cầu để gửi từng component đến trình duyệt khi render chúng. Điều này đảm bảo người dùng thấy HTML của bạn nhanh nhất có thể, mặc dù điều kiện mạng có thể khiến các document lớn được tải xuống chậm và việc chờ data fetches có thể chặn page rendering.
+
+<RecipeLinks slugs={["en/recipes/streaming-improve-page-performance"]}/>
+
+:::caution
+Các tính năng sửa đổi [Response headers](https://developer.mozilla.org/en-US/docs/Glossary/Response_header) chỉ khả dụng ở **page level**. (Bạn không thể sử dụng chúng bên trong components, bao gồm layout components.) Khi Astro chạy component code của bạn, nó đã gửi Response headers và chúng không thể được sửa đổi.
+:::
+
+### Cookies
+
+Một trang hoặc API endpoint được render theo yêu cầu có thể kiểm tra, đặt, lấy và xóa cookies.
+
+Ví dụ bên dưới cập nhật giá trị của cookie cho bộ đếm lượt xem trang:
+
+```astro title="src/pages/index.astro" {6,7,12}
+---
+export const prerender = false; // Không cần trong chế độ 'server'
+
+let counter = 0
+
+if (Astro.cookies.has('counter')) {
+  const cookie = Astro.cookies.get('counter')
+  const value = cookie?.number()
+  if (value !== undefined && !isNaN(value)) counter = value + 1
+}
+
+Astro.cookies.set('counter', String(counter))
+---
+<html>
+  <h1>Bộ đếm = {counter}</h1>
+</html>
+```
+
+Xem thêm chi tiết về [`Astro.cookies` và kiểu `AstroCookie`](/vi/reference/api-reference/#cookies) trong tham chiếu API.
+
+### `Response`
+
+[`Astro.response`](/vi/reference/api-reference/#response) là một object [`ResponseInit`](https://developer.mozilla.org/en-US/docs/Web/API/Response/Response#options) chuẩn. Nó có thể được sử dụng để đặt trạng thái response và headers.
+
+Ví dụ bên dưới đặt trạng thái response và status text cho trang sản phẩm khi sản phẩm không tồn tại:
+
+```astro title="src/pages/product/[id].astro" {10,11}
+---
+export const prerender = false; // Không cần trong chế độ 'server'
+
+import { getProduct } from '../api';
+
+const product = await getProduct(Astro.params.id);
+
+// Không tìm thấy sản phẩm
+if (!product) {
+  Astro.response.status = 404;
+  Astro.response.statusText = 'Không tìm thấy';
+}
+---
+<html>
+  <!-- Trang ở đây... -->
+</html>
+```
+
+#### `Astro.response.headers`
+
+Bạn có thể đặt headers bằng object `Astro.response.headers`:
+
+```astro title="src/pages/index.astro" {4}
+---
+export const prerender = false; // Không cần trong chế độ 'server'
+
+Astro.response.headers.set('Cache-Control', 'public, max-age=3600');
+---
+<html>
+  <!-- Trang ở đây... -->
+</html>
+```
+
+#### Trả về object `Response`
+
+Bạn cũng có thể trả về object [Response](https://developer.mozilla.org/en-US/docs/Web/API/Response) trực tiếp từ bất kỳ trang nào sử dụng kết xuất theo yêu cầu bằng cách thủ công hoặc với [`Astro.redirect`](/vi/reference/api-reference/#redirect).
+
+Ví dụ bên dưới tra cứu ID trong database trên trang dynamic và trả về 404 nếu sản phẩm không tồn tại, hoặc chuyển hướng người dùng đến trang khác nếu sản phẩm không còn khả dụng, hoặc hiển thị sản phẩm:
+
+```astro title="src/pages/product/[id].astro" {10-13, 18}
+---
+export const prerender = false; // Không cần trong chế độ 'server'
+
+import { getProduct } from '../api';
+
+const product = await getProduct(Astro.params.id);
+
+// Không tìm thấy sản phẩm
+if (!product) {
+  return new Response(null, {
+    status: 404,
+    statusText: 'Không tìm thấy'
+  });
+}
+
+// Sản phẩm không còn khả dụng
+if (!product.isAvailable) {
+  return Astro.redirect("/products", 301);
+}
+---
+<html>
+  <!-- Trang ở đây... -->
+</html>
+```
+
+### `Request`
+
+`Astro.request` là một object [Request](https://developer.mozilla.org/en-US/docs/Web/API/Request) chuẩn. Nó có thể được sử dụng để lấy `url`, `headers`, `method`, và thậm chí cả body của request.
+
+Bạn có thể truy cập thông tin bổ sung từ object này cho các trang không được tạo tĩnh.
+
+#### `Astro.request.headers`
+
+Headers của request có sẵn trên `Astro.request.headers`. Điều này hoạt động như [`Request.headers`](https://developer.mozilla.org/en-US/docs/Web/API/Request/headers) của trình duyệt. Nó là một object [Headers](https://developer.mozilla.org/en-US/docs/Web/API/Headers) nơi bạn có thể lấy headers như cookie.
+
+```astro title="src/pages/index.astro" {4}
+---
+export const prerender = false; // Không cần trong chế độ 'server'
+
+const cookie = Astro.request.headers.get('cookie');
+// ...
+---
+<html>
+  <!-- Trang ở đây... -->
+</html>
+```
+
+#### `Astro.request.method`
+
+HTTP method được sử dụng trong request có sẵn như `Astro.request.method`. Điều này hoạt động như [`Request.method`](https://developer.mozilla.org/en-US/docs/Web/API/Request/method) của trình duyệt. Nó trả về string đại diện cho HTTP method được sử dụng trong request.
+
+```astro title="src/pages/index.astro" {4}
+---
+export const prerender = false; // Không cần trong chế độ 'server'
+
+console.log(Astro.request.method) // GET (khi điều hướng trong trình duyệt)
+---
+```
+
+Xem thêm chi tiết về [`Astro.request`](/vi/reference/api-reference/#request) trong tham chiếu API.
+
+### Server Endpoints
+
+Server endpoint, còn được gọi là **API route**, là một function đặc biệt được export từ file `.js` hoặc `.ts` trong thư mục `src/pages/`. Là một tính năng mạnh mẽ của server-side rendering theo yêu cầu, API routes có thể thực thi code một cách an toàn trên server.
+
+Function này nhận một [endpoint context](/vi/reference/api-reference/) và trả về một [Response](https://developer.mozilla.org/en-US/docs/Web/API/Response).
+
+Để tìm hiểu thêm, xem [Hướng dẫn Endpoints](/vi/guides/endpoints/#server-endpoints-api-routes) của chúng tôi.

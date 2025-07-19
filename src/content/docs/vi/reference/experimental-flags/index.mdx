@@ -1,0 +1,23 @@
+---
+title: Cấu hình các cờ thử nghiệm
+i18nReady: true
+---
+
+Các tính năng thử nghiệm chỉ khả dụng sau khi bật một cờ trong tệp cấu hình Astro.
+
+```js title="astro.config.mjs"
+import { defineConfig } from 'astro/config';
+
+export default defineConfig({
+	experimental: {
+		// bật các cờ thử nghiệm
+		// để thử các tính năng mới
+	},
+});
+```
+
+Astro cung cấp các cờ thử nghiệm để người dùng có thể truy cập sớm vào các tính năng mới nhằm mục đích thử nghiệm và đóng góp ý kiến.
+
+Những cờ này cho phép bạn tham gia vào quá trình phát triển tính năng bằng cách báo cáo sự cố và chia sẻ ý kiến của mình. Các tính năng này không được đảm bảo ổn định và có thể bao gồm các thay đổi phá vỡ ngay cả trong các bản phát hành `patch` nhỏ trong khi tính năng vẫn đang được phát triển.
+
+Chúng tôi khuyến nghị bạn [cập nhật Astro](/vi/upgrade-astro/#upgrade-to-the-latest-version) thường xuyên và theo dõi ghi chú phát hành trong [nhật ký thay đổi của Astro](https://github.com/withastro/astro/blob/main/packages/astro/CHANGELOG.md) để biết bất kỳ thay đổi nào cần thiết đối với mã dự án của bạn. Tài liệu về tính năng thử nghiệm sẽ luôn được cập nhật cho phiên bản hiện tại đã phát hành.

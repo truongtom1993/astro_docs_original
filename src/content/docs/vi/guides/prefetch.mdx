@@ -1,0 +1,271 @@
+---
+title: Prefetch
+description: Prefetch các liên kết để điều hướng nhanh hơn giữa các trang.
+i18nReady: true
+---
+
+import { Steps } from '@astrojs/starlight/components'
+import Since from '~/components/Since.astro'
+
+Thời gian tải trang đóng vai trò quan trọng trong khả năng sử dụng và trải nghiệm tổng thể của một trang web. **Prefetching tùy chọn** của Astro mang lại lợi ích của việc điều hướng trang gần tức thì cho ứng dụng đa trang (MPA) khi khách truy cập tương tác với trang web.
+
+## Kích hoạt prefetching
+
+Bạn có thể kích hoạt prefetching với cấu hình `prefetch`:
+
+```js title="astro.config.mjs" ins={4}
+import { defineConfig } from 'astro/config';
+
+export default defineConfig({
+  prefetch: true
+});
+```
+
+Một script prefetch sẽ được thêm vào tất cả các trang của trang web. Sau đó bạn có thể thêm thuộc tính `data-astro-prefetch` vào bất kỳ liên kết `<a />` nào trên trang web để tham gia prefetching. Khi bạn hover qua liên kết, script sẽ tải trang trong nền.
+
+```html
+<a href="/about" data-astro-prefetch>
+```
+
+Lưu ý rằng prefetching chỉ hoạt động cho các liên kết trong trang web của bạn, không phải liên kết bên ngoài.
+
+## Cấu hình Prefetch
+
+Cấu hình `prefetch` cũng chấp nhận một object tùy chọn để tùy chỉnh thêm prefetching.
+
+### Chiến lược Prefetch
+
+Astro hỗ trợ 4 chiến lược prefetch cho các trường hợp sử dụng khác nhau:
+
+- `hover` (mặc định): Prefetch khi bạn hover hoặc focus vào liên kết.
+- `tap`: Prefetch ngay trước khi bạn click vào liên kết.
+- `viewport`: Prefetch khi các liên kết xuất hiện trong viewport.
+- `load`: Prefetch tất cả liên kết trên trang sau khi trang được tải.
+
+Bạn có thể chỉ định chiến lược cho một liên kết riêng lẻ bằng cách truyền nó vào thuộc tính `data-astro-prefetch`:
+
+```html
+<a href="/about" data-astro-prefetch="tap">About</a>
+```
+
+Mỗi chiến lược được tinh chỉnh để chỉ prefetch khi cần thiết và tiết kiệm băng thông cho người dùng. Ví dụ:
+
+- Nếu khách truy cập đang sử dụng [chế độ tiết kiệm dữ liệu](https://developer.mozilla.org/en-US/docs/Web/API/NetworkInformation/saveData) hoặc có [kết nối chậm](https://developer.mozilla.org/en-US/docs/Web/API/NetworkInformation/effectiveType), prefetch sẽ fallback về chiến lược `tap`.
+- Hover nhanh hoặc cuộn qua các liên kết sẽ không prefetch chúng.
+
+### Chiến lược prefetch mặc định
+
+Chiến lược prefetch mặc định khi thêm thuộc tính `data-astro-prefetch` là `hover`. Để thay đổi nó, bạn có thể cấu hình [`prefetch.defaultStrategy`](/vi/reference/configuration-reference/#prefetchdefaultstrategy) trong file `astro.config.mjs`:
+
+```js title="astro.config.mjs" ins={4-6}
+import { defineConfig } from 'astro/config';
+
+export default defineConfig({
+  prefetch: {
+    defaultStrategy: 'viewport'
+  }
+});
+```
+
+### Prefetch tất cả liên kết theo mặc định
+
+Nếu bạn muốn prefetch tất cả liên kết, bao gồm cả những liên kết không có thuộc tính `data-astro-prefetch`, bạn có thể đặt [`prefetch.prefetchAll`](/vi/reference/configuration-reference/#prefetchprefetchall) thành `true`:
+
+```js title="astro.config.mjs" ins={4-6}
+import { defineConfig } from 'astro/config';
+
+export default defineConfig({
+  prefetch: {
+    prefetchAll: true
+  }
+});
+```
+
+Sau đó bạn có thể opt-out prefetching cho các liên kết riêng lẻ bằng cách đặt `data-astro-prefetch="false"`:
+
+```html
+<a href="/about" data-astro-prefetch="false">About</a>
+```
+
+Chiến lược prefetch mặc định cho tất cả liên kết có thể được thay đổi với `prefetch.defaultStrategy` như được hiển thị trong [phần Chiến lược prefetch mặc định](#chiến-lược-prefetch-mặc-định).
+
+## Prefetch theo chương trình
+
+Vì một số điều hướng có thể không luôn xuất hiện dưới dạng liên kết `<a />`, bạn cũng có thể prefetch theo chương trình với API `prefetch()` từ module `astro:prefetch`:
+
+```astro
+<button id="btn">Click me</button>
+
+<script>
+  import { prefetch } from 'astro:prefetch';
+
+  const btn = document.getElementById('btn');
+  btn.addEventListener('click', () => {
+    prefetch('/about');
+  });
+</script>
+```
+
+API `prefetch()` bao gồm cùng một phát hiện [chế độ tiết kiệm dữ liệu](https://developer.mozilla.org/en-US/docs/Web/API/NetworkInformation/saveData) và [kết nối chậm](https://developer.mozilla.org/en-US/docs/Web/API/NetworkInformation/effectiveType) để nó chỉ prefetch khi cần thiết.
+
+Để bỏ qua phát hiện kết nối chậm, bạn có thể sử dụng tùy chọn `ignoreSlowConnection`:
+
+```js
+// Prefetch ngay cả trong chế độ tiết kiệm dữ liệu hoặc kết nối chậm
+prefetch('/about', { ignoreSlowConnection: true });
+```
+
+### `eagerness`
+
+<p>
+**Loại:** `'immediate' | 'eager' | 'moderate' | 'conservative'`<br />
+**Mặc định:** `'immediate'`<br />
+<Since v="5.6.0" />
+</p>
+
+Với flag thử nghiệm [`clientPrerender`](/vi/reference/experimental-flags/client-prerender/) được kích hoạt, bạn có thể sử dụng tùy chọn `eagerness` trên `prefetch()` để gợi ý cho trình duyệt mức độ tích cực nó nên prefetch/prerender các mục tiêu liên kết.
+
+Điều này tuân theo cùng một API được mô tả trong [Speculation Rules API](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/script/type/speculationrules#eagerness) và mặc định là `immediate` (tùy chọn tích cực nhất). Theo thứ tự giảm dần của sự tích cực, các tùy chọn khác là `eager`, `moderate`, và `conservative`.
+
+Tùy chọn `eagerness` cho phép bạn cân bằng lợi ích của việc giảm thời gian chờ với chi phí băng thông, bộ nhớ và CPU cho khách truy cập trang web. Một số trình duyệt, chẳng hạn như Chrome, có [giới hạn để bảo vệ chống lại over-speculating](https://developer.chrome.com/blog/speculation-rules-improvements#chrome-limits) (prerendering/prefetching quá nhiều liên kết).
+
+ ```astro
+---
+---
+<script>
+// Kiểm soát eagerness prefetching với `experimental.clientPrerender`
+import { prefetch } from 'astro:prefetch';
+
+// Trang này tốn nhiều tài nguyên
+prefetch('/data-heavy-dashboard', { eagerness: 'conservative' });
+
+// Trang này quan trọng đối với hành trình của khách truy cập
+prefetch('/getting-started'); // mặc định là `{ eagerness: 'immediate' }`
+
+// Trang này có thể không được truy cập
+prefetch('/terms-of-service', { eagerness: 'moderate' });
+</script>
+```
+
+Để sử dụng `prefetch()` theo chương trình với các tập hợp liên kết lớn, bạn có thể đặt `eagerness: 'moderate'` để tận dụng các chiến lược [First In, First Out (FIFO)](https://en.wikipedia.org/wiki/FIFO_(computing_and_electronics)) và heuristics của trình duyệt để cho phép trình duyệt quyết định khi nào prerender/prefetch chúng và theo thứ tự nào:
+
+```astro "{eagerness: 'moderate'}"
+<a class="link-moderate" href="/nice-link-1">A Nice Link 1</a>
+<a class="link-moderate" href="/nice-link-2">A Nice Link 2</a>
+<a class="link-moderate" href="/nice-link-3">A Nice Link 3</a>
+<a class="link-moderate" href="/nice-link-4">A Nice Link 4</a>
+...
+<a class="link-moderate" href="/nice-link-20">A Nice Link 20</a>
+
+<script>
+  import { prefetch } from 'astro:prefetch';
+
+  const linkModerate = document.getElementsByClassName('link-moderate');
+  linkModerate.forEach((link) => prefetch(link.getAttribute('href'), {eagerness: 'moderate'}));
+  
+</script>
+```
+
+Đảm bảo chỉ import `prefetch()` trong các script phía client vì nó dựa trên các API của trình duyệt.
+
+## Sử dụng với View Transitions
+
+Khi bạn sử dụng [View Transitions](/vi/guides/view-transitions/) trên một trang, prefetching cũng sẽ được kích hoạt theo mặc định. Nó đặt cấu hình mặc định là `{ prefetchAll: true }` cho phép [prefetching cho tất cả liên kết](#prefetch-tất-cả-liên-kết-theo-mặc-định) trên trang.
+
+Bạn có thể tùy chỉnh cấu hình prefetch trong `astro.config.mjs` để ghi đè mặc định. Ví dụ:
+  
+```js title="astro.config.mjs"
+import { defineConfig } from 'astro/config';
+
+export default defineConfig({
+  // Tắt prefetch hoàn toàn
+  prefetch: false
+});
+```
+
+```js title="astro.config.mjs"
+import { defineConfig } from 'astro/config';
+
+export default defineConfig({
+  // Giữ prefetch, nhưng chỉ prefetch cho các liên kết có `data-astro-prefetch`
+  prefetch: {
+    prefetchAll: false
+  }
+});
+```
+
+## Hỗ trợ trình duyệt
+
+Prefetching của Astro sử dụng [`<link rel="prefetch">`](https://developer.mozilla.org/en-US/docs/Web/HTML/Attributes/rel/prefetch) nếu được trình duyệt hỗ trợ, và fallback về [API `fetch()`](https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API) nếu không.
+
+Các trình duyệt phổ biến nhất hỗ trợ prefetching của Astro với những khác biệt nhỏ:
+
+### Chrome
+
+Chrome hỗ trợ `<link rel="prefetch">`. Prefetching hoạt động như dự định.
+
+Nó cũng hoàn toàn hỗ trợ `<script type="speculationrules">` từ [Speculation Rules API](https://developer.mozilla.org/en-US/docs/Web/API/Speculation_Rules_API), có thể được sử dụng để mô tả thêm [các chiến lược và quy tắc prefetching](#eagerness), nâng cao trải nghiệm người dùng cho người dùng Chrome của bạn. Bạn sẽ cần kích hoạt thử nghiệm [`clientPrerender`](/vi/reference/experimental-flags/client-prerender/) để sử dụng chức năng này với `prefetch()`
+
+### Firefox
+
+Firefox hỗ trợ `<link rel="prefetch">` nhưng có thể hiển thị lỗi hoặc thất bại hoàn toàn:
+
+ - Không có header cache rõ ràng (ví dụ [`Cache-Control`](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cache-Control) hoặc [`Expires`](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Expires)), prefetching sẽ báo lỗi với `NS_BINDING_ABORTED`. 
+- Ngay cả trong trường hợp có lỗi, nếu response có header [`ETag`](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/ETag) thích hợp, nó sẽ được sử dụng lại khi điều hướng.
+- Nếu không, nếu nó báo lỗi mà không có header cache khác, prefetch sẽ không hoạt động.
+
+### Safari
+
+Safari không hỗ trợ `<link rel="prefetch">` và sẽ fallback về API `fetch()` yêu cầu các header cache (ví dụ [`Cache-Control`](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cache-Control), [`Expires`](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Expires), và [`ETag`](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/ETag)) được đặt. Nếu không, prefetch sẽ không hoạt động.
+
+**Trường hợp đặc biệt:** Header `ETag` không hoạt động trong cửa sổ riêng tư.
+
+### Khuyến nghị
+
+Để hỗ trợ tốt nhất tất cả trình duyệt, hãy đảm bảo các trang của bạn có các header cache thích hợp.
+
+Đối với các trang tĩnh hoặc prerendered, header `ETag` thường được đặt tự động bởi nền tảng triển khai và dự kiến sẽ hoạt động ngay từ đầu.
+
+Đối với các trang động và server-side rendered, hãy tự đặt các header cache thích hợp dựa trên nội dung trang. Truy cập [tài liệu MDN về HTTP caching](https://developer.mozilla.org/en-US/docs/Web/HTTP/Caching) để biết thêm thông tin.
+
+## Migration từ `@astrojs/prefetch`
+
+Integration `@astrojs/prefetch` đã được deprecated trong v3.5.0 và cuối cùng sẽ bị xóa hoàn toàn. Sử dụng các hướng dẫn sau để migrate sang prefetching tích hợp của Astro thay thế cho integration này.
+
+<Steps>
+1. Xóa integration `@astrojs/prefetch` và kích hoạt cấu hình `prefetch` trong `astro.config.mjs`:
+
+    ```js title="astro.config.mjs" ins={6} del={2,5}
+    import { defineConfig } from 'astro/config';
+    import prefetch from '@astrojs/prefetch';
+
+    export default defineConfig({
+      integrations: [prefetch()],
+      prefetch: true
+    });
+    ```
+
+2. Chuyển đổi từ các tùy chọn cấu hình của `@astrojs/prefetch`:
+
+    - Integration đã deprecated sử dụng tùy chọn cấu hình `selector` để chỉ định liên kết nào nên được prefetch khi vào viewport.
+    
+      Thêm `data-astro-prefetch="viewport"` vào các liên kết riêng lẻ này thay thế.
+
+      ```html
+      <a href="/about" data-astro-prefetch="viewport">
+      ```
+
+    - Integration đã deprecated sử dụng tùy chọn cấu hình `intentSelector` để chỉ định liên kết nào nên được prefetch khi chúng được hover hoặc focus.
+    
+      Thêm `data-astro-prefetch` hoặc `data-astro-prefetch="hover"` vào các liên kết riêng lẻ này thay thế:
+
+      ```html
+      <!-- Bạn có thể bỏ qua giá trị nếu `defaultStrategy` được đặt thành `hover` (mặc định) -->
+      <a href="/about" data-astro-prefetch>
+
+      <!-- Nếu không, bạn có thể định nghĩa rõ ràng chiến lược prefetch -->
+      <a href="/about" data-astro-prefetch="hover">
+      ```
+
+    - Tùy chọn `throttles` từ `@astrojs/prefetch` không còn cần thiết vì tính năng prefetch mới sẽ tự động lên lịch và prefetch một cách tối ưu.
+</Steps>

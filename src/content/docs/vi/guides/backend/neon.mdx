@@ -1,0 +1,97 @@
+---
+title: Neon Postgres & Astro
+description: Thêm cơ sở dữ liệu Postgres serverless vào dự án Astro của bạn với Neon
+sidebar:
+  label: Neon
+type: backend
+service: Neon
+stub: false
+i18nReady: true
+---
+
+import ReadMore from '~/components/ReadMore.astro';
+
+[Neon](https://neon.tech) là một cơ sở dữ liệu Postgres serverless được quản lý hoàn toàn. Neon tách biệt lưu trữ và tính toán để cung cấp khả năng tự động mở rộng, phân nhánh, và lưu trữ không giới hạn.
+
+## Thêm Neon vào dự án Astro của bạn
+
+### Yêu cầu trước
+
+- Một tài khoản [Neon](https://console.neon.tech/signup) đã tạo dự án
+- Chuỗi kết nối cơ sở dữ liệu Neon
+- Một dự án Astro đã bật [kết xuất theo yêu cầu (SSR)](/vi/guides/on-demand-rendering/)
+
+### Cấu hình môi trường
+
+Để sử dụng Neon với Astro, bạn cần thiết lập biến môi trường cho Neon. Tạo hoặc chỉnh sửa tệp `.env` trong thư mục gốc của dự án và thêm đoạn mã sau, thay thế thông tin dự án của bạn:
+
+```ini title=".env"
+NEON_DATABASE_URL="postgresql://<user>:<password>@<endpoint_hostname>.neon.tech:<port>/<dbname>?sslmode=require"
+```
+
+Để hỗ trợ TypeScript tốt hơn, khai báo biến môi trường trong tệp `src/env.d.ts`:
+
+```typescript title="src/env.d.ts"
+// Khai báo biến môi trường cho Neon
+interface ImportMetaEnv {
+  readonly NEON_DATABASE_URL: string;
+}
+
+interface ImportMeta {
+  readonly env: ImportMetaEnv;
+}
+```
+
+<ReadMore>Tìm hiểu thêm về [biến môi trường](/vi/guides/environment-variables/) và tệp `.env` trong Astro.</ReadMore>
+
+### Cài đặt các phụ thuộc
+
+Cài đặt gói `@neondatabase/serverless` để kết nối với Neon:
+
+```bash
+npm install @neondatabase/serverless
+```
+
+### Tạo client Neon
+
+Tạo một tệp mới `src/lib/neon.ts` với đoạn mã sau để khởi tạo client Neon của bạn:
+
+```typescript title="src/lib/neon.ts"
+import { neon } from '@neondatabase/serverless';
+
+export const sql = neon(import.meta.env.NEON_DATABASE_URL);
+```
+
+## Truy vấn cơ sở dữ liệu Neon của bạn
+
+Bây giờ bạn có thể sử dụng client Neon để truy vấn cơ sở dữ liệu từ bất kỳ component `.astro` nào. Ví dụ sau sẽ lấy thời gian hiện tại từ cơ sở dữ liệu Postgres:
+
+```astro title="src/pages/index.astro"
+---
+import { sql } from '../lib/neon';
+
+const response =  await  sql`SELECT NOW() as current_time`;
+const currentTime = response[0].current_time;
+---
+
+<h1>Thời gian hiện tại</h1>
+<p>Thời gian là: {currentTime}</p>
+```
+
+## Phân nhánh cơ sở dữ liệu với Neon
+
+Tính năng phân nhánh của Neon cho phép bạn tạo các bản sao của cơ sở dữ liệu để phát triển hoặc kiểm thử. Sử dụng tính năng này trong dự án Astro của bạn bằng cách tạo các biến môi trường khác nhau cho từng nhánh:
+
+```ini title=".env.development"
+NEON_DATABASE_URL=your_development_branch_url
+```
+
+```ini title=".env.production"
+NEON_DATABASE_URL=your_production_branch_url
+```
+
+## Tài nguyên
+
+- [Tài liệu Neon](https://neon.tech/docs/introduction)
+- [GitHub driver serverless của Neon](https://github.com/neondatabase/serverless)
+- [Kết nối một trang web hoặc ứng dụng Astro với Neon Postgres](https://neon.tech/docs/guides/astro)

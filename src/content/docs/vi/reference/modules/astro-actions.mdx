@@ -1,0 +1,349 @@
+---
+title: Tham chiếu Actions API
+sidebar:
+  label: 'astro:actions'
+i18nReady: true
+tableOfContents:
+  minHeadingLevel: 2
+  maxHeadingLevel: 6
+---
+
+import Since from '~/components/Since.astro';
+import ReadMore from '~/components/ReadMore.astro';
+ 
+<p>
+<Since v="4.15.0" />
+</p>
+ 
+Actions giúp bạn xây dựng backend an toàn kiểu mà bạn có thể gọi từ mã phía client và biểu mẫu HTML. Tất cả tiện ích để định nghĩa và gọi actions đều được cung cấp bởi module `astro:actions`. Để xem ví dụ và hướng dẫn sử dụng, [xem hướng dẫn Actions](/vi/guides/actions/).
+ 
+## Import từ `astro:actions`
+ 
+```js
+import {
+  actions,
+  defineAction,
+  isInputError,
+  isActionError,
+  ActionError,
+ } from 'astro:actions';
+```
+ 
+### `defineAction()`
+ 
+<p>
+<Since v="4.15.0" />
+</p>
+ 
+Tiện ích `defineAction()` được sử dụng để định nghĩa actions mới từ file `src/actions/index.ts`. Hàm này nhận vào một hàm [`handler()`](#handler-property) chứa logic phía server để thực thi, và thuộc tính tùy chọn [`input`](#input-validator) để xác thực tham số đầu vào khi chạy.
+ 
+```ts title="src/actions/index.ts"
+import { defineAction } from 'astro:actions';
+import { z } from 'astro:schema';
+ 
+export const server = {
+  getGreeting: defineAction({
+    input: z.object({
+      name: z.string(),
+    }),
+    handler: async (input, context) => {
+      return `Hello, ${input.name}!`
+    }
+  })
+}
+```
+ 
+#### Thuộc tính `handler()`
+ 
+<p>
+ 
+**Kiểu:** `(input, context) => any`
+</p>
+ 
+`defineAction()` yêu cầu một hàm `handler()` chứa logic phía server để chạy khi action được gọi. Dữ liệu trả về từ handler sẽ được tự động tuần tự hóa và gửi tới phía gọi.
+ 
+Hàm `handler()` được gọi với đầu vào của người dùng là đối số đầu tiên. Nếu đã đặt bộ xác thực [`input`](#input-validator), dữ liệu đầu vào sẽ được xác thực trước khi chuyển vào handler. Đối số thứ hai là một đối tượng `context` chứa hầu hết [ngữ cảnh endpoint tiêu chuẩn của Astro](/vi/reference/api-reference/), ngoại trừ  `getActionResult()`, `callAction()`, và `redirect()`.
+ 
+Giá trị trả về được phân tích bằng thư viện [devalue](https://github.com/Rich-Harris/devalue). Thư viện này hỗ trợ các giá trị JSON và các instance của `Date()`, `Map()`, `Set()`, và `URL()`.
+ 
+#### Bộ xác thực `input`
+ 
+<p>
+ 
+**Kiểu:** `ZodType | undefined`
+</p>
+ 
+Thuộc tính tùy chọn `input` nhận vào một bộ xác thực Zod (ví dụ như Zod object, Zod discriminated union) để xác thực đầu vào của handler khi chạy. Nếu xác thực thất bại, [một lỗi `BAD_REQUEST`](#actionerror) sẽ được trả về và `handler` sẽ không được gọi.
+ 
+Nếu bỏ qua `input`, handler sẽ nhận đầu vào kiểu `unknown` đối với các yêu cầu JSON và kiểu `FormData` đối với các yêu cầu từ biểu mẫu.
+ 
+##### Sử dụng với `accept: 'form'`
+ 
+Nếu action của bạn nhận dữ liệu từ biểu mẫu, hãy dùng validator `z.object()` để tự động chuyển dữ liệu biểu mẫu thành một object có kiểu rõ ràng. Các validator sau được hỗ trợ cho các trường dữ liệu của biểu mẫu:
+ 
+- Trường kiểu `number` có thể xác thực bằng `z.number()`
+- Trường kiểu `checkbox` có thể xác thực bằng `z.coerce.boolean()`
+- Trường kiểu `file` có thể xác thực bằng `z.instanceof(File)`
+- Nhiều trường cùng tên có thể xác thực bằng `z.array(/* validator */)`
+- Các trường khác có thể xác thực bằng `z.string()`
+ 
+Các hàm mở rộng như `.refine()`, `.transform()`, và `.pipe()` cũng được hỗ trợ trên validator `z.object()`.
+ 
+Để áp dụng một nhóm các validator khác nhau, hãy sử dụng wrapper `z.discriminatedUnion()` để thu hẹp kiểu dựa trên một trường cụ thể của biểu mẫu. Ví dụ sau nhận một biểu mẫu gửi lên để "create" hoặc "update" một người dùng, dùng trường tên `type` để xác định object cần xác thực:
+ 
+```ts
+import { defineAction } from 'astro:actions';
+import { z } from 'astro:schema';
+ 
+export const server = {
+  changeUser: defineAction({
+    accept: 'form',
+    input: z.discriminatedUnion('type', [
+      z.object({
+        // Khớp khi trường `type` có giá trị là `create`
+        type: z.literal('create'),
+        name: z.string(),
+        email: z.string().email(),
+      }),
+      z.object({
+        // Khớp khi trường `type` có giá trị là `update`
+        type: z.literal('update'),
+        id: z.number(),
+        name: z.string(),
+        email: z.string().email(),
+      }),
+    ]),
+    async handler(input) {
+      if (input.type === 'create') {
+        // input là { type: 'create', name: string, email: string }
+      } else {
+        // input là { type: 'update', id: number, name: string, email: string }
+      }
+    },
+  }),
+};
+```
+ 
+### `isInputError()`
+ 
+<p>
+ 
+**Kiểu:** <code>(error?: unknown | <a href="#actionerror">ActionError</a>) => boolean</code><br/>
+<Since v="4.15.0" />
+</p>
+ 
+Tiện ích `isInputError()` được dùng để kiểm tra xem một `ActionError` có phải là lỗi xác thực dữ liệu đầu vào không. Khi validator `input` là `z.object()`, lỗi đầu vào sẽ bao gồm một object `fields` với các thông báo lỗi nhóm theo tên trường.
+ 
+<ReadMore>Xem [hướng dẫn lỗi đầu vào biểu mẫu](/vi/guides/actions/#displaying-form-input-errors) để biết thêm về cách dùng `isInputError()`.</ReadMore>
+ 
+### `isActionError()`
+ 
+<p>
+ 
+**Kiểu:** <code>(error?: unknown | <a href="#actionerror">ActionError</a>) => boolean</code><br/>
+<Since v="4.15.0" />
+</p>
+ 
+Tiện ích `isActionError()` được dùng để kiểm tra xem action của bạn có phát sinh một `ActionError` trong [thuộc tính handler](/vi/reference/modules/astro-actions/#handler-property) hay không. Điều này hữu ích khi cần thu hẹp kiểu của một lỗi tổng quát trong khối `try / catch`.
+ 
+ 
+### `ActionError`
+ 
+<p>
+<Since v="4.15.0" />
+</p>
+ 
+Hàm tạo `ActionError()` được dùng để tạo lỗi được ném ra bởi `handler` của action. Hàm này nhận thuộc tính `code` mô tả lỗi xảy ra (ví dụ: `"UNAUTHORIZED"`), và thuộc tính tùy chọn `message` với thông tin chi tiết hơn.
+ 
+#### `code`
+ 
+<p>
+<Since v="4.15.0" />
+</p>
+ 
+Thuộc tính `code` nhận phiên bản dễ đọc của tất cả các mã trạng thái HTTP. Các mã sau được hỗ trợ:
+ 
+- `BAD_REQUEST` (400): Client gửi dữ liệu không hợp lệ. Lỗi này được ném ra khi validator `input` của action thất bại.
+- `UNAUTHORIZED` (401): Client không có thông tin xác thực hợp lệ.
+- `FORBIDDEN` (403): Client không được phép truy cập tài nguyên.
+- `NOT_FOUND` (404): Server không tìm thấy tài nguyên yêu cầu.
+- `METHOD_NOT_SUPPORTED` (405): Server không hỗ trợ phương thức được yêu cầu.
+- `TIMEOUT` (408): Server bị hết thời gian xử lý yêu cầu.
+- `CONFLICT` (409): Server không thể cập nhật tài nguyên do có xung đột.
+- `PRECONDITION_FAILED` (412): Server không đáp ứng điều kiện tiên quyết của yêu cầu.
+- `PAYLOAD_TOO_LARGE` (413): Server không thể xử lý yêu cầu vì payload quá lớn.
+- `UNSUPPORTED_MEDIA_TYPE` (415): Server không hỗ trợ loại media của yêu cầu. Lưu ý: Actions đã kiểm tra [header `Content-Type`](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Type) cho các yêu cầu JSON và biểu mẫu, nên thường không cần tự ném mã này.
+- `UNPROCESSABLE_CONTENT` (422): Server không thể xử lý yêu cầu do lỗi ngữ nghĩa.
+- `TOO_MANY_REQUESTS` (429): Server đã vượt quá giới hạn tốc độ nhất định.
+- `CLIENT_CLOSED_REQUEST` (499): Client đã đóng kết nối trước khi server trả lời.
+- `INTERNAL_SERVER_ERROR` (500): Server gặp lỗi không mong muốn.
+- `NOT_IMPLEMENTED` (501): Server không hỗ trợ tính năng được yêu cầu.
+- `BAD_GATEWAY` (502): Server nhận phản hồi không hợp lệ từ server khác.
+- `SERVICE_UNAVAILABLE` (503): Server tạm thời không khả dụng.
+- `GATEWAY_TIMEOUT` (504): Server nhận báo hết thời gian chờ từ server khác.
+ 
+#### `message`
+ 
+<p>
+<Since v="4.15.0" />
+</p>
+ 
+Thuộc tính `message` nhận một chuỗi. (ví dụ: "Người dùng phải đăng nhập.")
+ 
+### `getActionContext()`
+ 
+<p>
+ 
+**Kiểu:** `(context: APIContext) => ActionMiddlewareContext`
+<Since v="5.0.0" />
+</p>
+ 
+`getActionContext()` là một hàm được gọi từ handler middleware của bạn để lấy thông tin về các yêu cầu action gửi vào.
+ 
+Hàm này trả về một object `action` với thông tin về yêu cầu, cùng các hàm `setActionResult()` và `serializeActionResult()` để lập trình đặt giá trị trả về bởi `Astro.getActionResult()`.
+ 
+`getActionContext()` cho phép bạn lập trình lấy và đặt kết quả action qua middleware, giúp bạn lưu trữ kết quả từ biểu mẫu HTML, kiểm tra bảo mật bổ sung cho các yêu cầu action, v.v.
+ 
+```ts title="src/middleware.ts" {5}
+import { defineMiddleware } from 'astro:middleware';
+import { getActionContext } from 'astro:actions';
+ 
+export const onRequest = defineMiddleware(async (context, next) => {
+  const { action, setActionResult, serializeActionResult } = getActionContext(context);
+  if (action?.calledFrom === 'form') {
+    const result = await action.handler();
+    setActionResult(action.name, serializeActionResult(result));
+  }
+  return next();
+});
+```
+ 
+#### `action`
+ 
+<p>
+ 
+**Kiểu:** `{ calledFrom: 'rpc' | 'form', name: string, handler: () => Promise<SafeResult<any, any>> } | undefined`
+</p>
+ 
+`action` là một object chứa thông tin về một yêu cầu action gửi đến.
+ 
+ Nó có sẵn từ `getActionContext()`, cung cấp tên action, handler, và biết được action được gọi từ hàm RPC phía client (ví dụ: `actions.newsletter()`) hay từ action biểu mẫu HTML.
+ 
+```ts title="src/middleware.ts" {6}
+import { defineMiddleware } from 'astro:middleware';
+import { getActionContext } from 'astro:actions';
+ 
+export const onRequest = defineMiddleware(async (context, next) => {
+  const { action, setActionResult, serializeActionResult } = getActionContext(context);
+  if (action?.calledFrom === 'rpc' && action.name.startsWith('private')) {
+    // Kiểm tra token phiên làm việc hợp lệ
+  }
+  // ...
+});
+```
+ 
+#### `setActionResult()`
+ 
+<p>
+ 
+**Kiểu:** `(actionName: string, actionResult: SerializedActionResult) => void`
+</p>
+ 
+`setActionResult()` là một hàm để lập trình đặt giá trị trả về bởi `Astro.getActionResult()` trong middleware. Hàm này nhận tên action và một kết quả action đã được tuần tự hóa bởi [`serializeActionResult()`](#serializeactionresult).
+ 
+Điều này hữu ích khi bạn gọi actions từ biểu mẫu HTML để lưu trữ và tải lại kết quả từ một phiên làm việc.
+ 
+```ts title="src/middleware.ts" {8}
+import { defineMiddleware } from 'astro:middleware';
+import { getActionContext } from 'astro:actions';
+export const onRequest = defineMiddleware(async (context, next) => {
+  const { action, setActionResult, serializeActionResult } = getActionContext(context);
+  if (action?.calledFrom === 'form') {
+    const result = await action.handler();
+    // ... xử lý kết quả action
+    setActionResult(action.name, serializeActionResult(result));
+  }
+  return next();
+});
+```
+ 
+<ReadMore>Xem [hướng dẫn phiên nâng cao](/vi/guides/actions/#advanced-persist-action-results-with-a-session) để xem ví dụ triển khai với Netlify Blob.</ReadMore>
+ 
+#### `serializeActionResult()`
+ 
+<p>
+ 
+**Kiểu:** `(result: SafeResult<any, any>) => SerializedActionResult`
+</p>
+ 
+`serializeActionResult()` sẽ tuần tự hóa một kết quả action thành JSON để lưu trữ. Điều này cần thiết để xử lý đúng các giá trị không phải JSON như `Map` hoặc `Date` cũng như đối tượng `ActionError`.
+ 
+Gọi hàm này khi tuần tự hóa kết quả action để truyền cho `setActionResult()`:
+ 
+```ts title="src/middleware.ts" {8}
+import { defineMiddleware } from 'astro:middleware';
+import { getActionContext } from 'astro:actions';
+ 
+export const onRequest = defineMiddleware(async (context, next) => {
+  const { action, setActionResult, serializeActionResult } = getActionContext(context);
+  if (action) {
+    const result = await action.handler();
+    setActionResult(action.name, serializeActionResult(result));
+  }
+  // ...
+});
+```
+ 
+#### `deserializeActionResult()`
+ 
+<p>
+ 
+**Kiểu:** `(result: SerializedActionResult) => SafeResult<any, any>`
+</p>
+ 
+`deserializeActionResult()` sẽ đảo ngược hiệu ứng của `serializeActionResult()` và trả về kết quả action về trạng thái ban đầu. Điều này hữu ích để truy cập các object `data` và `error` trên một kết quả action đã được tuần tự hóa.
+ 
+### `getActionPath()`
+ 
+<p>
+ 
+**Kiểu:** `(action: ActionClient<any, any, any>) => string`
+<Since v="5.1.0" />
+</p>
+ 
+Tiện ích `getActionPath()` nhận một action và trả về đường dẫn URL để bạn có thể thực hiện gọi action trực tiếp bằng thao tác `fetch()`. Điều này cho phép bạn cung cấp thông tin như các header tùy chỉnh khi gọi action. Sau đó, bạn có thể [xử lý dữ liệu trả về theo định dạng tùy chỉnh](/vi/guides/actions/#handling-returned-data) như khi gọi action trực tiếp.
+ 
+Ví dụ sau cho thấy cách gọi action `like` đã định nghĩa và truyền header `Authorization` kèm tùy chọn [`keepalive`](https://developer.mozilla.org/en-US/docs/Web/API/Request/keepalive):
+ 
+```astro title="src/components/my-component.astro" {8,11}
+<script>
+import { actions, getActionPath } from 'astro:actions'
+ 
+await fetch(getActionPath(actions.like), {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+    Authorization: 'Bearer YOUR_TOKEN'
+  },
+  body: JSON.stringify({ id: 'YOUR_ID' }),
+  keepalive: true
+})
+</script>
+```
+ 
+Ví dụ này cho thấy cách gọi cùng một action `like` bằng API [`sendBeacon`](https://developer.mozilla.org/en-US/docs/Web/API/Navigator/sendBeacon):
+ 
+```astro title="src/components/my-component.astro" {5} "sendBeacon"
+<script>
+import { actions, getActionPath } from 'astro:actions'
+ 
+navigator.sendBeacon(
+  getActionPath(actions.like),
+  new Blob([JSON.stringify({ id: 'YOUR_ID' })], {
+    type: 'application/json'
+  })
+)
+</script>
+``
+
+`

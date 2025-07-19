@@ -1,0 +1,86 @@
+---
+title: Thanh công cụ phát triển
+description: Hướng dẫn sử dụng thanh công cụ phát triển trong Astro
+i18nReady: true
+---
+import RecipeLinks from "~/components/RecipeLinks.astro";
+
+Khi máy chủ phát triển đang chạy, Astro bao gồm một thanh công cụ phát triển ở cuối mỗi trang trong bản xem trước trình duyệt cục bộ của bạn.
+
+Thanh công cụ này bao gồm một số công cụ hữu ích để gỡ lỗi và kiểm tra trang web của bạn trong quá trình phát triển và có thể được [mở rộng với nhiều ứng dụng thanh công cụ phát triển khác](#extending-the-dev-toolbar) có trong thư mục tích hợp. Bạn thậm chí có thể [xây dựng ứng dụng thanh công cụ của riêng mình](/vi/recipes/making-toolbar-apps/) bằng cách sử dụng [API Thanh công cụ phát triển](/vi/reference/dev-toolbar-app-reference/)!
+
+Thanh công cụ này được bật theo mặc định và xuất hiện khi bạn di chuột qua cuối trang. Đây chỉ là công cụ phát triển và sẽ không xuất hiện trên trang web đã xuất bản của bạn.
+
+## Ứng dụng tích hợp sẵn
+
+### Menu Astro
+
+Ứng dụng Menu Astro cung cấp quyền truy cập dễ dàng vào các thông tin khác nhau về dự án hiện tại và liên kết đến các tài nguyên bổ sung. Đáng chú ý, nó cung cấp quyền truy cập một cú nhấp chuột vào tài liệu Astro, kho lưu trữ GitHub và máy chủ Discord.
+
+Ứng dụng này cũng bao gồm nút "Sao chép thông tin gỡ lỗi" sẽ chạy lệnh [`astro info`](/vi/reference/cli-reference/#astro-info) và sao chép đầu ra vào clipboard của bạn. Điều này có thể hữu ích khi yêu cầu trợ giúp hoặc báo cáo sự cố.
+
+### Kiểm tra
+
+Ứng dụng Kiểm tra cung cấp thông tin về bất kỳ [đảo](/vi/concepts/islands/) nào trên trang hiện tại. Điều này sẽ hiển thị cho bạn các thuộc tính được truyền cho mỗi đảo và chỉ thị máy khách đang được sử dụng để hiển thị chúng.
+
+### Kiểm toán
+
+Ứng dụng Kiểm toán tự động chạy một loạt kiểm toán trên trang hiện tại, kiểm tra các vấn đề hiệu suất và khả năng truy cập phổ biến nhất. Khi phát hiện sự cố, một dấu chấm đỏ sẽ xuất hiện trong thanh công cụ. Nhấp vào ứng dụng sẽ hiển thị danh sách kết quả từ cuộc kiểm toán và sẽ làm nổi bật các phần tử liên quan trực tiếp trong trang.
+
+:::note
+Các cuộc kiểm toán hiệu suất và khả năng truy cập cơ bản được thực hiện bởi thanh công cụ phát triển không thể thay thế cho các công cụ chuyên dụng như [Pa11y](https://pa11y.org/) hoặc [Lighthouse](https://developers.google.com/web/tools/lighthouse), hoặc thậm chí tốt hơn là con người!
+
+Thanh công cụ phát triển nhằm cung cấp một cách nhanh chóng và dễ dàng để phát hiện các vấn đề phổ biến trong quá trình phát triển, mà không cần chuyển đổi ngữ cảnh sang một công cụ khác.
+:::
+
+### Cài đặt
+
+Ứng dụng Cài đặt cho phép bạn cấu hình các tùy chọn cho thanh công cụ phát triển, chẳng hạn như ghi nhật ký chi tiết, tắt thông báo và điều chỉnh vị trí của nó trên màn hình.
+
+## Mở rộng thanh công cụ phát triển
+
+Tích hợp Astro có thể thêm ứng dụng mới vào thanh công cụ phát triển, cho phép bạn mở rộng nó với các công cụ tùy chỉnh dành riêng cho dự án của bạn. Bạn có thể tìm [thêm ứng dụng công cụ phát triển để cài đặt trong thư mục tích hợp](https://astro.build/integrations/?search=&categories%5B%5D=toolbar) hoặc sử dụng [Menu Astro](#astro-menu).
+
+Cài đặt các tích hợp ứng dụng thanh công cụ phát triển bổ sung trong dự án của bạn giống như bất kỳ [tích hợp Astro](/vi/guides/integrations-guide/) khác theo hướng dẫn cài đặt riêng của nó.
+
+<RecipeLinks slugs={["en/recipes/making-toolbar-apps"]} />
+
+## Tắt thanh công cụ phát triển
+
+Thanh công cụ phát triển được bật theo mặc định cho mọi trang web. Bạn có thể chọn tắt nó cho từng dự án và/hoặc người dùng cụ thể khi cần thiết.
+
+### Theo dự án
+
+Để tắt thanh công cụ phát triển cho tất cả mọi người làm việc trên một dự án, hãy đặt `devToolbar: false` trong [tệp cấu hình Astro](/vi/reference/configuration-reference/#devtoolbarenabled).
+
+```js title="astro.config.mjs" ins={4-6}
+import { defineConfig } from "astro/config";
+
+export default defineConfig({
+  devToolbar: {
+    enabled: false
+  }
+});
+```
+
+Để bật lại thanh công cụ phát triển, hãy xóa các dòng này khỏi cấu hình của bạn hoặc đặt `enabled: true`.
+
+### Theo người dùng
+
+Để tắt thanh công cụ phát triển cho chính bạn trên một dự án cụ thể, hãy chạy lệnh [`astro preferences`](/vi/reference/cli-reference/#astro-preferences).
+
+```shell
+astro preferences disable devToolbar
+```
+
+Để tắt thanh công cụ phát triển trong tất cả các dự án Astro cho một người dùng trên máy hiện tại, hãy thêm cờ `--global` khi chạy `astro-preferences`:
+
+```shell
+astro preferences disable --global devToolbar
+```
+
+Thanh công cụ phát triển có thể được bật sau đó với:
+
+```shell
+astro preferences enable devToolbar
+```

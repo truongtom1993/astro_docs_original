@@ -1,0 +1,80 @@
+---
+title: Triển khai trang Astro của bạn lên Fleek
+description: Cách triển khai trang Astro của bạn lên web trên Fleek.
+sidebar:
+  label: Fleek
+type: deploy
+i18nReady: true
+---
+
+import { Steps } from '@astrojs/starlight/components';
+import ReadMore from '~/components/ReadMore.astro';
+
+Bạn có thể sử dụng [Fleek](http://fleek.xyz/) để triển khai một trang Astro tĩnh lên mạng phi tập trung tối ưu hóa biên của họ.
+
+Hướng dẫn này cung cấp hướng dẫn chi tiết về cách triển khai trang Astro của bạn lên Fleek bằng giao diện Fleek UI và CLI.
+
+## Cấu hình dự án
+
+Dự án Astro của bạn có thể được triển khai lên Fleek dưới dạng trang tĩnh.
+
+## Cách triển khai
+
+Bạn có thể triển khai lên Fleek thông qua giao diện web UI hoặc sử dụng CLI (giao diện dòng lệnh) của Fleek.
+
+### Triển khai bằng giao diện nền tảng (Platform UI)
+
+<Steps>
+1. Tạo tài khoản [Fleek](https://app.fleek.xyz).
+
+2. Đẩy mã nguồn của bạn lên kho Git trực tuyến (GitHub).
+
+3. Nhập dự án của bạn vào Fleek.
+
+4. Fleek sẽ tự động phát hiện Astro và bạn có thể cấu hình các thiết lập phù hợp.
+
+5. Ứng dụng của bạn đã được triển khai!
+</Steps>
+
+
+### Fleek CLI
+
+<Steps>
+1. Cài đặt Fleek CLI.
+
+    ```bash
+    # Bạn cần có Nodejs >= 18.18.2
+    npm install -g @fleek-platform/cli
+    ```
+2. Đăng nhập vào tài khoản Fleek của bạn từ terminal.
+
+    ```bash
+    fleek login
+    ```
+
+3. Chạy lệnh build để tạo các file tĩnh. Theo mặc định, chúng sẽ nằm trong thư mục `dist/`.
+
+    ```bash
+    npm run build
+    ```
+
+4. Khởi tạo dự án của bạn. Việc này sẽ tạo ra một file cấu hình.
+
+    ```bash
+    fleek sites init
+    ```
+
+5. Bạn sẽ được hỏi muốn tạo một trang Fleek mới hoặc sử dụng trang có sẵn. Đặt tên cho trang và chọn thư mục chứa dự án của bạn.
+
+6. Triển khai trang của bạn.
+
+    ```bash
+    fleek sites deploy
+    ```
+
+</Steps>
+
+## Tìm hiểu thêm
+
+<ReadMore>[Triển khai trang từ Fleek UI](https://fleek.xyz/docs/platform/deployments/)</ReadMore>
+<ReadMore>[Triển khai trang từ Fleek CLI](https://fleek.xyz/docs/cli/hosting/)</ReadMore>

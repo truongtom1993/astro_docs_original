@@ -1,0 +1,123 @@
+---
+title: Triển khai trang Astro của bạn lên GitLab Pages
+description: Cách triển khai trang Astro của bạn lên web bằng GitLab Pages.
+sidebar:
+  label: GitLab Pages
+type: deploy
+i18nReady: true
+---
+import { Steps } from '@astrojs/starlight/components';
+
+Bạn có thể sử dụng [GitLab Pages](https://docs.gitlab.com/ee/user/project/pages/) để lưu trữ một trang Astro cho các dự án, nhóm hoặc tài khoản người dùng [GitLab](https://about.gitlab.com/) của bạn.
+
+:::tip[Looking for an example?]
+Tham khảo [dự án ví dụ Astro chính thức trên GitLab Pages](https://gitlab.com/pages/astro)!
+:::
+
+## Cách triển khai
+
+Bạn có thể triển khai một trang Astro lên GitLab Pages bằng cách sử dụng GitLab CI/CD để tự động build và triển khai trang của bạn. Để làm được điều này, mã nguồn của bạn phải được lưu trữ trên GitLab và bạn cần thực hiện các thay đổi sau cho dự án Astro của mình:
+
+<Steps>
+
+1. Thiết lập các tùy chọn [`site`](/vi/reference/configuration-reference/#site) và [`base`](/vi/reference/configuration-reference/#base) trong `astro.config.mjs`.
+
+    ```js title="astro.config.mjs" ins={4-5}
+    import { defineConfig } from 'astro/config';
+
+    export default defineConfig({
+      site: 'https://<username>.gitlab.io',
+      base: '/<my-repo>',
+      outDir: 'public',
+      publicDir: 'static',
+    });
+    ```
+
+    `site`
+
+    Giá trị cho `site` phải là một trong các URL sau:
+
+    - URL dựa trên tên người dùng của bạn: `https://<username>.gitlab.io`
+    - URL dựa trên tên nhóm của bạn: `https://<groupname>.gitlab.io`
+    - Tên miền tùy chỉnh nếu bạn đã cấu hình nó trong phần cài đặt dự án GitLab của mình: `https://example.com`
+
+    Đối với các phiên bản GitLab tự quản lý, thay thế `gitlab.io` bằng tên miền Pages của phiên bản của bạn.
+
+    `base`
+
+    Có thể cần thiết lập giá trị cho `base` để Astro xem tên kho lưu trữ của bạn (ví dụ: `/my-repo`) là gốc của trang web.
+
+    :::note
+      Đừng đặt tham số `base` nếu trang của bạn được phục vụ từ thư mục gốc.
+    :::
+
+    Giá trị cho `base` nên là tên kho lưu trữ của bạn bắt đầu bằng dấu gạch chéo, ví dụ `/my-blog`. Điều này giúp Astro hiểu rằng gốc của trang web là `/my-repo` thay vì mặc định là `/`.
+
+    :::caution
+        Khi giá trị này được thiết lập, tất cả các liên kết nội bộ trên trang của bạn phải được thêm tiền tố với giá trị `base` của bạn:
+
+      ```astro ins="/my-repo"
+      <a href="/my-repo/about">About</a>
+      ```
+
+    Xem thêm về [cách cấu hình giá trị `base`](/vi/reference/configuration-reference/#base)
+    :::
+
+
+2. Đổi tên thư mục `public/` thành `static/`.
+
+3. Thiết lập `outDir: 'public'` trong `astro.config.mjs`. Thiết lập này yêu cầu Astro xuất kết quả build tĩnh vào một thư mục có tên là `public`, đây là thư mục mà GitLab Pages yêu cầu để lộ các tệp tin.
+
+   Nếu bạn đang sử dụng thư mục [`public/`](/vi/basics/project-structure/#public) làm nguồn tệp tĩnh trong dự án Astro, hãy đổi tên nó và sử dụng tên thư mục mới này trong `astro.config.mjs` cho giá trị của `publicDir`.
+
+   Ví dụ, đây là các thiết lập đúng cho `astro.config.mjs` khi thư mục `public/` được đổi tên thành `static/`:
+
+   ```js title="astro.config.mjs" ins={4-5}
+   import { defineConfig } from 'astro/config';
+   
+   export default defineConfig({
+     outDir: 'public',
+     publicDir: 'static',
+   });
+   ```
+
+4. Thay đổi thư mục xuất build trong `.gitignore`. Trong ví dụ này chúng ta cần thay đổi từ `dist/` thành `public/`:
+
+    ```diff  title=".gitignore"
+    # build output
+    -dist/
+    +public/
+    ```
+
+5. Tạo một tệp có tên là `.gitlab-ci.yml` ở thư mục gốc của dự án với nội dung bên dưới. Tệp này sẽ build và triển khai trang của bạn mỗi khi bạn thay đổi nội dung:
+
+   ```yaml title=".gitlab-ci.yml"
+   pages:
+     # Docker image sẽ được sử dụng để build ứng dụng của bạn
+     image: node:lts
+
+     before_script:
+       - npm ci
+
+     script:
+       # Chỉ định các bước để build ứng dụng tại đây
+       - npm run build
+
+     artifacts:
+       paths:
+         # Thư mục chứa các tệp đã build để xuất bản.
+         # Thư mục này phải có tên là "public".
+         - public
+
+     only:
+       # Chỉ build và deploy khi có push lên các nhánh dưới đây
+       - main
+   ```
+
+6. Commit các thay đổi và đẩy lên GitLab.
+
+7. Trên GitLab, vào menu **Deploy** của kho lưu trữ và chọn **Pages**. Tại đây bạn sẽ thấy URL đầy đủ của trang GitLab Pages. Để đảm bảo sử dụng đúng định dạng URL `https://username.gitlab.io/my-repo`, hãy bỏ chọn thiết lập **Use unique domain** trên trang này.
+
+</Steps>
+
+Trang web của bạn bây giờ đã được xuất bản! Khi bạn đẩy các thay đổi lên kho lưu trữ của dự án Astro, pipeline CI/CD của GitLab sẽ tự động triển khai các thay đổi đó cho bạn.

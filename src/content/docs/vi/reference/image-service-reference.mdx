@@ -1,0 +1,792 @@
+---
+title: API Dịch vụ Hình ảnh
+i18nReady: true
+---
+
+import Since from '~/components/Since.astro';
+
+`astro:assets` được thiết kế để giúp bất kỳ dịch vụ tối ưu hóa hình ảnh nào dễ dàng xây dựng dịch vụ trên nền tảng Astro.
+
+## Dịch vụ Hình ảnh là gì?
+
+Astro cung cấp hai loại dịch vụ hình ảnh: Local và External.
+
+- **Dịch vụ Local** xử lý chuyển đổi hình ảnh trực tiếp tại thời điểm build cho các trang web tĩnh, hoặc tại runtime cả trong chế độ phát triển và để render theo yêu cầu. Chúng thường là wrapper xung quanh các thư viện như Sharp, ImageMagick, hoặc Squoosh. Trong chế độ dev và trong các route production được render theo yêu cầu, các dịch vụ local sử dụng một API endpoint để thực hiện chuyển đổi.
+- **Dịch vụ External** trỏ đến các URL và có thể hỗ trợ các dịch vụ như Cloudinary, Vercel, hoặc bất kỳ máy chủ tuân thủ [RIAPI](https://github.com/riapi/riapi) nào.
+
+## Xây dựng bằng API Dịch vụ Hình ảnh
+
+Định nghĩa dịch vụ có dạng một object được export default với các phương thức bắt buộc khác nhau ("hooks").
+
+Dịch vụ External cung cấp `getURL()` trỏ đến `src` của thẻ `<img>` đầu ra.
+
+Dịch vụ Local cung cấp phương thức `transform()` để thực hiện chuyển đổi trên hình ảnh của bạn, và các phương thức `getURL()` và `parseURL()` để sử dụng endpoint cho chế độ dev và khi render theo yêu cầu.
+
+Cả hai loại dịch vụ đều có thể cung cấp `getHTMLAttributes()` để xác định các thuộc tính khác của thẻ `<img>` đầu ra và `validateOptions()` để xác thực và bổ sung các tùy chọn được truyền vào.
+
+### Dịch vụ External
+
+Dịch vụ external trỏ đến một URL từ xa để được sử dụng làm thuộc tính `src` của thẻ `<img>` cuối cùng. URL từ xa này chịu trách nhiệm tải xuống, chuyển đổi và trả về hình ảnh.
+
+```js
+import type { ExternalImageService, ImageTransform, AstroConfig } from "astro";
+
+const service: ExternalImageService = {
+  validateOptions(options: ImageTransform, imageConfig: AstroConfig['image']) {
+    const serviceConfig = imageConfig.service.config;
+
+    // Buộc người dùng đặt max width.
+    if (options.width > serviceConfig.maxWidth) {
+      console.warn(`Image width ${options.width} exceeds max width ${serviceConfig.maxWidth}. Falling back to max width.`);
+      options.width = serviceConfig.maxWidth;
+    }
+
+    return options;
+  },
+  getURL(options, imageConfig) {
+    return `https://mysupercdn.com/${options.src}?q=${options.quality}&w=${options.width}&h=${options.height}`;
+  },
+  getHTMLAttributes(options, imageConfig) {
+    const { src, format, quality, ...attributes } = options;
+		return {
+			...attributes,
+			loading: options.loading ?? 'lazy',
+			decoding: options.decoding ?? 'async',
+		};
+	}
+};
+
+
+export default service;
+```
+
+### Dịch vụ Local
+
+Để tạo dịch vụ local của riêng bạn, bạn có thể trỏ đến [endpoint tích hợp](https://github.com/withastro/astro/blob/main/packages/astro/src/assets/endpoint/generic.ts) (`/_image`), hoặc bạn có thể tạo thêm endpoint của riêng mình có thể gọi các phương thức của dịch vụ.
+
+```js
+import type { LocalImageService, AstroConfig } from "astro";
+
+const service: LocalImageService = {
+  getURL(options: ImageTransform, imageConfig: AstroConfig['image']) {
+    const searchParams = new URLSearchParams();
+		searchParams.append('href', typeof options.src === "string" ? options.src : options.src.src);
+		options.width && searchParams.append('w', options.width.toString());
+		options.height && searchParams.append('h', options.height.toString());
+		options.quality && searchParams.append('q', options.quality.toString());
+		options.format && searchParams.append('f', options.format);
+    return `/my_custom_endpoint_that_transforms_images?${searchParams}`;
+    // Hoặc sử dụng endpoint tích hợp, sẽ gọi các hàm parseURL và transform của bạn:
+    // return `/_image?${searchParams}`;
+  },
+  parseURL(url: URL, imageConfig) {
+    return {
+      src: params.get('href')!,
+      width: params.has('w') ? parseInt(params.get('w')!) : undefined,
+      height: params.has('h') ? parseInt(params.get('h')!) : undefined,
+			format: params.get('f'),
+      quality: params.get('q'),
+    };
+  },
+  transform(buffer: Uint8Array, options: { src: string, [key: string]: any }, imageConfig): { data: Uint8Array, format: OutputFormat } {
+    const { buffer } = mySuperLibraryThatEncodesImages(options);
+    return {
+      data: buffer,
+      format: options.format,
+    };
+  },
+  getHTMLAttributes(options, imageConfig) {
+		let targetWidth = options.width;
+		let targetHeight = options.height;
+		if (typeof options.src === "object") {
+			const aspectRatio = options.src.width / options.src.height;
+
+			if (targetHeight && !targetWidth) {
+				targetWidth = Math.round(targetHeight * aspectRatio);
+			} else if (targetWidth && !targetHeight) {
+				targetHeight = Math.round(targetWidth / aspectRatio);
+			}
+		}
+
+		const { src, width, height, format, quality, ...attributes } = options;
+
+		return {
+			...attributes,
+			width: targetWidth,
+			height: targetHeight,
+			loading: attributes.loading ?? 'lazy',
+			decoding: attributes.decoding ?? 'async',
+		};
+	},
+  propertiesToHash: ['src', 'width', 'height', 'format', 'quality'],
+};
+export default service;
+```
+
+Tại thời điểm build cho các trang web tĩnh và route được pre-render, cả `<Image />` và `getImage(options)` đều gọi hàm `transform()`. Chúng truyền các tùy chọn thông qua thuộc tính component hoặc một argument `options` tương ứng. Các hình ảnh được chuyển đổi sẽ được build vào thư mục `dist/_astro`. Tên file của chúng sẽ chứa hash của các thuộc tính được truyền vào `propertiesToHash`. Thuộc tính này là tùy chọn và sẽ mặc định là `['src', 'width', 'height', 'format', 'quality']`. Nếu dịch vụ hình ảnh tùy chỉnh của bạn có thêm tùy chọn thay đổi hình ảnh được tạo, hãy thêm chúng vào mảng.
+
+Trong chế độ dev và khi sử dụng adapter để render theo yêu cầu, Astro không biết trước hình ảnh nào cần được tối ưu hóa. Astro sử dụng một GET endpoint (mặc định là `/_image`) để xử lý hình ảnh tại runtime. `<Image />` và `getImage()` truyền các tùy chọn của chúng vào `getURL()`, sẽ trả về URL endpoint. Sau đó, endpoint gọi `parseURL()` và truyền các thuộc tính kết quả vào `transform()`.
+
+#### getConfiguredImageService & imageConfig
+
+Nếu bạn triển khai endpoint của riêng mình như một Astro endpoint, bạn có thể sử dụng `getConfiguredImageService` và `imageConfig` để gọi các phương thức `parseURL` và `transform` của dịch vụ và cung cấp cấu hình hình ảnh.
+
+Để truy cập cấu hình dịch vụ hình ảnh ([`image.service.config`](/vi/reference/configuration-reference/#imageservice)), bạn có thể sử dụng `imageConfig.service.config`.
+
+```ts title="src/api/my_custom_endpoint_that_transforms_images.ts"
+import type { APIRoute } from 'astro';
+import { getConfiguredImageService, imageConfig } from 'astro:assets';
+
+export const GET: APIRoute = async ({ request }) => {
+	const imageService = await getConfiguredImageService();
+
+	const imageTransform = imageService.parseURL(new URL(request.url), imageConfig);
+	// ... fetch hình ảnh từ imageTransform.src và lưu trữ trong inputBuffer
+	const { data, format } = await imageService.transform(inputBuffer, imageTransform, imageConfig);
+	return new Response(data, {
+		status: 200,
+		headers: {
+			'Content-Type': mime.getType(format) || '',
+		},
+	});
+};
+```
+
+[Xem endpoint tích hợp](https://github.com/withastro/astro/blob/main/packages/astro/src/assets/endpoint/generic.ts) để có ví dụ đầy đủ.
+
+## Hooks
+
+### `getURL()`
+
+**Bắt buộc cho dịch vụ local và external**
+
+`getURL(options: ImageTransform, imageConfig: AstroConfig['image']): string`
+
+Với dịch vụ local, hook này trả về URL của endpoint tạo hình ảnh của bạn (cho render theo yêu cầu và trong chế độ dev). Nó không được sử dụng trong quá trình build. Endpoint local mà `getURL()` trỏ đến có thể gọi cả `parseURL()` và `transform()`.
+
+Với dịch vụ external, hook này trả về URL cuối cùng của hình ảnh.
+
+Với cả hai loại dịch vụ, `options` là các thuộc tính được người dùng truyền vào làm thuộc tính của component `<Image />` hoặc làm tùy chọn cho `getImage()`. Chúng có kiểu như sau:
+
+```ts
+export type ImageTransform = {
+	// ESM imported images | remote/public image paths
+	src: ImageMetadata | string;
+	width?: number;
+	height?: number;
+	widths?: number[] | undefined;
+	densities?: (number | `${number}x`)[] | undefined;
+	quality?: ImageQuality;
+	format?: OutputFormat;
+	alt?: string;
+	[key: string]: any;
+};
+```
+
+### `parseURL()`
+
+**Bắt buộc cho dịch vụ local; không có cho dịch vụ external**
+
+`parseURL(url: URL, imageConfig: AstroConfig['image']): { src: string, [key: string]: any}`
+
+Hook này phân tích các URL được tạo bởi `getURL()` trở lại thành object với các thuộc tính khác nhau để được sử dụng bởi `transform` (cho render theo yêu cầu và trong chế độ dev). Nó không được sử dụng trong quá trình build.
+
+### `transform()`
+
+**Chỉ bắt buộc cho dịch vụ local; không có cho dịch vụ external**
+
+`transform(buffer: Uint8Array, options: { src: string, [key: string]: any }, imageConfig: AstroConfig['image']): { data: Uint8Array, format: OutputFormat }`
+
+Hook này chuyển đổi và trả về hình ảnh và được gọi trong quá trình build để tạo các file asset cuối cùng.
+
+Bạn phải trả về `format` để đảm bảo MIME type phù hợp được phục vụ cho người dùng cho render theo yêu cầu và chế độ phát triển.
+
+### `getHTMLAttributes()`
+
+**Tùy chọn cho cả dịch vụ local và external**
+
+`getHTMLAttributes(options: ImageTransform, imageConfig: AstroConfig['image']): Record<string, any>`
+
+Hook này trả về tất cả các thuộc tính bổ sung được sử dụng để render hình ảnh dưới dạng HTML, dựa trên các tham số do người dùng truyền vào (`options`).
+
+### `getSrcSet()`
+
+<p>
+	<Since v='3.3.0' />
+</p>
+
+**Tùy chọn cho cả dịch vụ local và external.**
+
+`getSrcSet?: (options: ImageTransform, imageConfig: AstroConfig['image']): SrcSetValue[] | Promise<SrcSetValue[]>;`
+
+Hook này tạo ra nhiều biến thể của hình ảnh được chỉ định, ví dụ để tạo thuộc tính `srcset` trên `<img>` hoặc `source` của `<picture>`.
+
+Hook này trả về một mảng các object với các thuộc tính sau:
+
+```ts
+export type SrcSetValue = {
+	transform: ImageTransform;
+	descriptor?: string;
+	attributes?: Record<string, any>;
+};
+```
+
+### `validateOptions()`
+
+**Tùy chọn cho cả dịch vụ local và external**
+
+`validateOptions(options: ImageTransform, imageConfig: AstroConfig['image']): ImageTransform`
+
+Hook này cho phép bạn xác thực và bổ sung các tùy chọn do người dùng truyền vào. Điều này hữu ích để đặt tùy chọn mặc định, hoặc thông báo cho người dùng rằng một tham số bắt buộc.
+
+[Xem cách `validateOptions()` được sử dụng trong các dịch vụ tích hợp của Astro](https://github.com/withastro/astro/blob/0ab6bad7dffd413c975ab00e545f8bc150f6a92f/packages/astro/src/assets/services/service.ts#L124).
+
+## Cấu hình người dùng
+
+Cấu hình dịch vụ hình ảnh để sử dụng trong `astro.config.mjs`. Cấu hình có dạng như sau:
+
+```js title="astro.config.mjs"
+import { defineConfig } from 'astro/config';
+
+export default defineConfig({
+	image: {
+		service: {
+			entrypoint: 'your-entrypoint', // 'astro/assets/services/sharp' | string,
+			config: {
+				// ... cấu hình dịch vụ cụ thể. Tùy chọn.
+			},
+		},
+	},
+});
+```
+
+## Tiện ích
+
+Astro cung cấp một số hàm helper có thể được sử dụng để phát triển dịch vụ hình ảnh tùy chỉnh. Các tiện ích này có thể được import từ `astro/assets/utils`:
+
+```ts
+import {
+	isRemoteAllowed,
+	matchHostname,
+	matchPathname,
+	matchPattern,
+	matchPort,
+	matchProtocol,
+	isESMImportedImage,
+	isRemoteImage,
+	resolveSrc,
+	imageMetadata,
+	emitESMImage,
+	getOrigQueryParams,
+	inferRemoteSize,
+	propsToFilename,
+	hashTransform,
+} from 'astro/assets/utils';
+```
+
+### `isRemoteAllowed()`
+
+<p>
+**Type:** `(src: string, { domains, remotePatterns }: {domains: string[], remotePatterns: RemotePattern[] }): boolean`<br />
+<Since v="4.0.0" />
+</p>
+
+Xác định xem một tài nguyên từ xa được xác định bởi URL nguồn của nó có được phép dựa trên các domain và remote pattern đã chỉ định hay không.
+
+```ts
+import { isRemoteAllowed } from 'astro/assets/utils';
+
+const testImageURL = 'https://example.com/images/test.jpg';
+const domains = ['example.com', 'anotherdomain.com'];
+const remotePatterns = [
+	{ protocol: 'https', hostname: 'images.example.com', pathname: '/**' }, // Cho phép bất kỳ path nào dưới hostname này
+];
+
+const url = new URL(testImageURL);
+const isAllowed = isRemoteAllowed(url.href, { domains, remotePatterns });
+
+console.log(`Hình ảnh từ xa có được phép? ${isAllowed}`);
+```
+
+### `matchHostname()`
+
+<p>
+	**Type:** `(url: URL, hostname?: string, allowWildcard = false): boolean`
+	<br />
+	<Since v='4.0.0' />
+</p>
+
+Khớp hostname của URL đã cho với hostname được chỉ định, với hỗ trợ tùy chọn cho wildcard pattern.
+
+```ts
+import { matchHostname } from 'astro/assets/utils';
+
+const testURL = new URL('https://sub.example.com/path/to/resource');
+
+// Ví dụ sử dụng matchHostname
+const hostnameToMatch = 'example.com';
+
+// Khớp không có wildcard
+const isMatchWithoutWildcard = matchHostname(testURL, hostnameToMatch);
+console.log(`Hostname có khớp không có wildcard? ${isMatchWithoutWildcard}`); // Output: false
+
+// Khớp có wildcard
+const isMatchWithWildcard = matchHostname(testURL, hostnameToMatch, true);
+console.log(`Hostname có khớp có wildcard? ${isMatchWithWildcard}`); // Output: true
+```
+
+### `matchPathname()`
+
+<p>
+	**Type:** `(url: URL, pathname?: string, allowWildcard = false): boolean`
+	<br />
+	<Since v='4.0.0' />
+</p>
+
+Khớp pathname của URL đã cho với pattern được chỉ định, với hỗ trợ tùy chọn cho wildcard.
+
+```ts
+import { matchPathname } from 'astro/assets/utils';
+
+const testURL = new URL('https://example.com/images/photo.jpg');
+
+// Ví dụ pathname để khớp
+const pathnameToMatch = '/images/photo.jpg';
+
+// Khớp không có wildcard
+const isMatchWithoutWildcard = matchPathname(testURL, pathnameToMatch);
+console.log(`Pathname có khớp không có wildcard? ${isMatchWithoutWildcard}`); // Output: true
+
+// Khớp có wildcard
+const wildcardPathname = '/images/*';
+const isMatchWithWildcard = matchPathname(testURL, wildcardPathname, true);
+console.log(`Pathname có khớp có wildcard? ${isMatchWithWildcard}`); // Output: true
+```
+
+### `matchPattern()`
+
+<p>
+	**Type:** `(url: URL, remotePattern: RemotePattern): boolean`
+	<br />
+	<Since v='4.0.0' />
+</p>
+
+Đánh giá xem URL đã cho có khớp với remote pattern được chỉ định dựa trên protocol, hostname, port và pathname hay không.
+
+```ts
+import { matchPattern } from 'astro/assets/utils';
+
+const testURL = new URL('https://images.example.com/photos/test.jpg');
+
+// Định nghĩa remote pattern để khớp URL
+const remotePattern = {
+	protocol: 'https',
+	hostname: 'images.example.com',
+	pathname: '/photos/**', // Wildcard để cho phép tất cả file dưới /photos/
+	port: '', // Tùy chọn: Khớp bất kỳ port nào hoặc để trống cho mặc định
+};
+
+// Kiểm tra xem URL có khớp với remote pattern không
+const isPatternMatched = matchPattern(testURL, remotePattern);
+
+console.log(`URL có khớp với remote pattern? ${isPatternMatched}`); // Output: true
+```
+
+### `matchPort()`
+
+<p>
+	**Type:** `(url: URL, port?: string): boolean`
+	<br />
+	<Since v='4.0.0' />
+</p>
+
+Kiểm tra xem port của URL đã cho có khớp với port được chỉ định hay không. Nếu không có port nào được cung cấp, nó trả về `true`.
+
+```ts
+import { matchPort } from 'astro/assets/utils';
+
+const testURL1 = new URL('https://example.com:8080/resource');
+const testURL2 = new URL('https://example.com/resource');
+
+// Ví dụ sử dụng matchPort
+const portToMatch = '8080';
+
+// Khớp URL có port được chỉ định
+const isPortMatch1 = matchPort(testURL1, portToMatch);
+console.log(`Port có khớp? ${isPortMatch1}`); // Output: true
+
+// Khớp URL không có port được chỉ định (port mặc định sẽ được giả định)
+const isPortMatch2 = matchPort(testURL2, portToMatch);
+console.log(`Port có khớp? ${isPortMatch2}`); // Output: false
+
+// Kiểm tra URL mà không cung cấp port rõ ràng (mặc định true nếu port undefined)
+const isPortMatch3 = matchPort(testURL1);
+console.log(`Port có khớp (không chỉ định port)? ${isPortMatch3}`); // Output: true
+```
+
+### `matchProtocol()`
+
+<p>
+	**Type:** `(url: URL, protocol?: string): boolean`
+	<br />
+	<Since v='4.0.0' />
+</p>
+
+So sánh protocol của URL được cung cấp với protocol được chỉ định.
+
+```ts
+import { matchProtocol } from 'astro/assets/utils';
+
+const testURL1 = new URL('https://example.com/resource');
+const testURL2 = new URL('http://example.com/resource');
+
+// Ví dụ sử dụng matchProtocol
+const protocolToMatch = 'https';
+
+// Khớp URL với protocol đúng
+const isProtocolMatch1 = matchProtocol(testURL1, protocolToMatch);
+console.log(`Protocol có khớp cho testURL1? ${isProtocolMatch1}`); // Output: true
+
+// Khớp URL với protocol sai
+const isProtocolMatch2 = matchProtocol(testURL2, protocolToMatch);
+console.log(`Protocol có khớp cho testURL2? ${isProtocolMatch2}`); // Output: false
+
+// Khớp URL mà không cung cấp protocol rõ ràng (mặc định true nếu protocol undefined)
+const isProtocolMatch3 = matchProtocol(testURL1);
+console.log(`Protocol có khớp (không chỉ định protocol)? ${isProtocolMatch3}`); // Output: true
+```
+
+### `isESMImportedImage()`
+
+<p>
+	**Type:** `(src: ImageMetadata | string): boolean`
+	<br />
+	<Since v='4.0.0' />
+</p>
+
+Xác định xem nguồn đã cho có phải là hình ảnh được import ECMAScript Module (ESM) hay không.
+
+```ts
+import { isESMImportedImage } from 'astro/assets/utils';
+
+// Ví dụ sử dụng isESMImportedImage
+const imageMetadataExample = {
+	src: '/images/photo.jpg',
+	width: 800,
+	height: 600,
+	format: 'jpg',
+};
+
+const filePathExample = '/images/photo.jpg';
+
+// Kiểm tra xem input có phải là hình ảnh import ESM không
+const isMetadataImage = isESMImportedImage(imageMetadataExample);
+console.log(`imageMetadataExample có phải là hình ảnh import ESM? ${isMetadataImage}`); // Output: true
+
+const isFilePathImage = isESMImportedImage(filePathExample);
+console.log(`filePathExample có phải là hình ảnh import ESM? ${isFilePathImage}`); // Output: false
+```
+
+### `isRemoteImage()`
+
+<p>
+	**Type:** `(src: ImageMetadata | string): boolean`
+	<br />
+	<Since v='4.0.0' />
+</p>
+
+Xác định xem nguồn được cung cấp có phải là URL hình ảnh từ xa dưới dạng string hay không.
+
+```ts
+import { isRemoteImage } from 'astro/assets/utils';
+
+// Ví dụ sử dụng isRemoteImage
+const remoteImageUrl = 'https://example.com/images/photo.jpg';
+const localImageMetadata = {
+	src: '/images/photo.jpg',
+	width: 800,
+	height: 600,
+	format: 'jpg',
+};
+
+// Kiểm tra xem input có phải là URL hình ảnh từ xa không
+const isRemote1 = isRemoteImage(remoteImageUrl);
+console.log(`remoteImageUrl có phải là hình ảnh từ xa? ${isRemote1}`); // Output: true
+
+const isRemote2 = isRemoteImage(localImageMetadata);
+console.log(`localImageMetadata có phải là hình ảnh từ xa? ${isRemote2}`); // Output: false
+```
+
+### `resolveSrc()`
+
+<p>
+  **Type:** `(src: UnresolvedImageTransform['src']): Promise<string | ImageMetadata>`<br />
+  <Since v="4.0.0" />
+</p>
+
+Trả về nguồn hình ảnh. Hàm này đảm bảo rằng nếu `src` là Promise (ví dụ: `import()` động), nó được await và `src` đúng được trích xuất. Nếu `src` đã là giá trị đã được giải quyết, nó được trả về như vậy.
+
+```ts
+import { resolveSrc } from 'astro/assets/utils';
+import localImage from './images/photo.jpg';
+
+const resolvedLocal = await resolveSrc(localImage);
+// sẽ là `{ src: '/images/photo.jpg', width: 800, height: 600, format: 'jpg' }`
+
+const resolvedRemote = await resolveSrc('https://example.com/remote-img.jpg');
+// sẽ là `"https://example.com/remote-img.jpg"`
+
+const resolvedDynamic = await resolveSrc(import('./images/dynamic-image.jpg'));
+// sẽ là `{ src: '/images/dynamic-image.jpg', width: 800, height: 600, format: 'jpg' }`
+```
+
+### `imageMetadata()`
+
+<p>
+  **Type:** `(data: Uint8Array, src?: string): Promise<Omit<ImageMetadata, 'src' | 'fsPath'>>`<br />
+  <Since v="4.0.0" />
+</p>
+
+Trích xuất metadata hình ảnh như kích thước, định dạng và hướng từ dữ liệu hình ảnh được cung cấp.
+
+```ts
+import { imageMetadata } from 'astro/assets/utils';
+
+async function extractImageMetadata() {
+	// Ví dụ dữ liệu hình ảnh (Uint8Array)
+	const exampleImageData = new Uint8Array([
+		/* ...dữ liệu hình ảnh nhị phân... */
+	]);
+
+	// Đường dẫn nguồn tùy chọn (hữu ích để debug hoặc ngữ cảnh metadata bổ sung)
+	const sourcePath = '/images/photo.jpg';
+
+	try {
+		// Trích xuất metadata từ dữ liệu hình ảnh
+		const metadata = await imageMetadata(exampleImageData, sourcePath);
+
+		console.log('Metadata Hình ảnh đã trích xuất:', metadata);
+		// Ví dụ output:
+		// {
+		//   width: 800,
+		//   height: 600,
+		//   format: 'jpg',
+		//   orientation: undefined
+		// }
+	} catch (error) {
+		console.error('Không thể trích xuất metadata từ hình ảnh:', error);
+	}
+}
+
+await extractImageMetadata();
+```
+
+### `emitESMImage()`
+
+:::caution[Deprecated]
+Sử dụng hàm [`emitImageMetadata`](#emitimagemetadata) thay thế.
+:::
+
+<p>
+  **Type:** `(id: string | undefined, _watchMode: boolean, experimentalSvgEnabled: boolean,  fileEmitter?: FileEmitter): Promise<ImageMetadataWithContents | undefined>`<br />
+  <Since v="4.0.0" />
+</p>
+
+Xử lý file hình ảnh và emit metadata cùng với nội dung tùy chọn. Trong chế độ build, hàm sử dụng `fileEmitter` để tạo tham chiếu asset. Trong chế độ phát triển, nó resolve thành URL file local với query parameters cho metadata.
+
+```ts
+import { emitESMImage } from 'astro/assets/utils';
+
+const imageId = '/images/photo.jpg';
+const unusedWatchMode = false; // Deprecated, không sử dụng
+const unusedExperimentalSvgEnabled = false; // Đặt `true` chỉ khi bạn sử dụng SVG và muốn dữ liệu file được nhúng
+
+try {
+	const result = await emitESMImage(imageId, unusedWatchMode, unusedExperimentalSvgEnabled);
+	if (result) {
+		console.log('Metadata hình ảnh với nội dung:', result);
+		// Ví dụ output:
+		// {
+		//   width: 800,
+		//   height: 600,
+		//   format: 'jpg',
+		//   contents: Uint8Array([...])
+		// }
+	} else {
+		console.log('Không có metadata nào được emit cho hình ảnh này.');
+	}
+} catch (error) {
+	console.error('Không thể emit ESM image:', error);
+}
+```
+
+### `emitImageMetadata()`
+
+<p>
+  **Type:** `(id: string | undefined, fileEmitter?: FileEmitter): Promise<ImageMetadataWithContents | undefined>`<br />
+  <Since v="5.7.0" />
+</p>
+
+Xử lý file hình ảnh và emit metadata cùng với nội dung tùy chọn. Trong chế độ build, hàm sử dụng `fileEmitter` để tạo tham chiếu asset. Trong chế độ phát triển, nó resolve thành URL file local với query parameters cho metadata.
+
+```ts
+import { emitImageMetadata } from 'astro/assets/utils';
+
+const imageId = '/images/photo.jpg';
+
+try {
+	const result = await emitImageMetadata(imageId);
+	if (result) {
+		console.log('Metadata hình ảnh với nội dung:', result);
+		// Ví dụ output:
+		// {
+		//   width: 800,
+		//   height: 600,
+		//   format: 'jpg',
+		//   contents: Uint8Array([...])
+		// }
+	} else {
+		console.log('Không có metadata nào được emit cho hình ảnh này.');
+	}
+} catch (error) {
+	console.error('Không thể emit ESM image:', error);
+}
+```
+
+### `getOrigQueryParams()`
+
+<p>
+  **Type:** `(params: URLSearchParams): Pick<ImageMetadata, 'width' | 'height' | 'format'> | undefined`<br />
+  <Since v="4.0.0" />
+</p>
+
+Lấy `width`, `height`, và `format` của hình ảnh từ object [`URLSearchParams`](https://developer.mozilla.org/en-US/docs/Web/API/URLSearchParams). Nếu bất kỳ tham số nào bị thiếu hoặc không hợp lệ, hàm trả về `undefined`.
+
+```ts
+import { getOrigQueryParams } from 'astro/assets/utils';
+
+const url = new URL('https://example.com/image.jpg?width=800&height=600&format=jpg');
+const queryParams = url.searchParams;
+
+// Trích xuất các query parameter gốc
+const origParams = getOrigQueryParams(queryParams);
+
+if (origParams) {
+	console.log('Query parameter gốc:', origParams);
+	// Ví dụ output:
+	// {
+	//   width: 800,
+	//   height: 600,
+	//   format: 'jpg'
+	// }
+} else {
+	console.log('Không thể trích xuất query parameter gốc.');
+}
+```
+
+### `inferRemoteSize()`
+
+<p>
+  **Type:** `(url: string): Promise<Omit<ImageMetadata, 'src' | 'fsPath'>>`<br />
+  <Since v="4.0.0" />
+</p>
+
+Suy luận kích thước của hình ảnh từ xa bằng cách streaming dữ liệu và phân tích dần cho đến khi có đủ metadata.
+
+```ts
+import { inferRemoteSize } from 'astro/assets/utils';
+
+async function getRemoteImageSize() {
+	const remoteImageUrl = 'https://example.com/image.jpg';
+
+	try {
+		// Suy luận kích thước hình ảnh từ xa từ URL
+		const imageSize = await inferRemoteSize(remoteImageUrl);
+
+		console.log('Kích thước hình ảnh từ xa đã suy luận:', imageSize);
+		// Ví dụ output:
+		// {
+		//   width: 1920,
+		//   height: 1080,
+		//   format: 'jpg'
+		// }
+	} catch (error) {
+		console.error('Không thể suy luận kích thước hình ảnh từ xa:', error);
+	}
+}
+
+await getRemoteImageSize();
+```
+
+### `propsToFilename()`
+
+<p>
+	**Type:** `(filePath: string, transform: ImageTransform, hash: string): string`
+	<br />
+	<Since v='4.0.0' />
+</p>
+
+Tạo tên file được định dạng cho hình ảnh dựa trên đường dẫn nguồn, thuộc tính chuyển đổi và hash duy nhất.
+
+Tên file được định dạng tuân theo cấu trúc này:
+
+`<prefixDirname>/<baseFilename>_<hash><outputExtension>`
+
+- `prefixDirname`: Nếu hình ảnh là ESM imported image, đây là tên thư mục của đường dẫn file gốc; nếu không, sẽ là string rỗng.
+- `baseFilename`: Tên cơ sở của file hoặc tên ngắn được hash nếu file là `data:` URI.
+- `hash`: Chuỗi hash duy nhất được tạo để phân biệt file đã được chuyển đổi.
+- `outputExtension`: Extension file đầu ra mong muốn được lấy từ `transform.format` hoặc extension file gốc.
+
+```ts
+import { propsToFilename } from 'astro/assets/utils';
+
+function generateTransformedFilename() {
+	const filePath = '/images/photo.jpg';
+	const transform = {
+		format: 'png',
+		src: '/images/photo.jpg',
+	};
+	const hash = 'abcd1234';
+
+	// Tạo tên file đã chuyển đổi dựa trên đường dẫn file, chuyển đổi và hash
+	const filename = propsToFilename(filePath, transform, hash);
+
+	console.log('Tên file đã chuyển đổi được tạo:', filename);
+	// Ví dụ output: '/images/photo_abcd1234.png'
+}
+
+generateTransformedFilename();
+```
+
+### `hashTransform()`
+
+<p>
+	**Type:** `(transform: ImageTransform, imageService: string, propertiesToHash: string[]): string`
+	<br />
+	<Since v='4.0.0' />
+</p>
+
+Chuyển đổi object `transform` được cung cấp thành chuỗi hash dựa trên các thuộc tính đã chọn và `imageService` được chỉ định.
+
+```ts
+import { hashTransform } from 'astro/assets/utils';
+
+function generateTransformHash() {
+	const transform = {
+		width: 800,
+		height: 600,
+		format: 'jpg',
+	};
+
+	const imageService = 'astroImageService';
+	const propertiesToHash = ['width', 'height', 'format'];
+
+	// Tạo hash dựa trên transform, image service và thuộc tính
+	const hash = hashTransform(transform, imageService, propertiesToHash);
+
+	console.log('Hash transform đã tạo:', hash);
+	// Ví dụ output: 'd41d8cd98f00b204e9800998ecf8427e'
+}
+
+generateTransformHash();
+```

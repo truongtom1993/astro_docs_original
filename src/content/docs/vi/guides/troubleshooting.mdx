@@ -1,0 +1,229 @@
+---
+title: Khắc phục Sự cố
+description: Cần trợ giúp? Gặp khó khăn? Chúng tôi sẽ hỗ trợ bạn.
+i18nReady: true
+---
+
+Astro cung cấp nhiều công cụ khác nhau để giúp bạn khắc phục sự cố và debug code.
+
+## Mẹo và thủ thuật
+
+### Debug với `console.log()`
+
+`console.log()` là phương pháp đơn giản nhưng phổ biến để debug code Astro. Nơi bạn viết lệnh `console.log()` sẽ quyết định vị trí hiển thị kết quả debug:
+
+```astro
+---
+console.log('Xin chào! Tôi là server. Điều này được ghi log trong terminal đang chạy Astro.');
+---
+
+<script>
+console.log('Xin chào! Tôi là client. Điều này được ghi log trong console của trình duyệt.');
+</script>
+```
+
+Lệnh `console.log()` trong frontmatter của Astro luôn xuất ra **terminal** đang chạy Astro CLI. Điều này vì Astro chạy trên server, chứ không phải trong trình duyệt.
+
+Code được viết hoặc import bên trong thẻ `<script>` của Astro sẽ chạy trong trình duyệt. Bất kỳ lệnh `console.log()` nào sẽ được in trong **console của trình duyệt**.
+
+### Debug framework components
+
+[Framework components](/vi/guides/framework-components/) (như React và Svelte) có đặc điểm riêng: Chúng render phía server theo mặc định, nghĩa là kết quả debug `console.log()` sẽ hiển thị trong terminal. Tuy nhiên, chúng cũng có thể được hydrate cho trình duyệt, khiến debug logs cũng xuất hiện trong trình duyệt.
+
+Điều này hữu ích để debug sự khác biệt giữa kết quả server và các component đã hydrate trong trình duyệt.
+
+### Component `<Debug />` của Astro
+
+Để giúp debug các component Astro, Astro cung cấp component `<Debug />` tích hợp sẵn để render bất kỳ giá trị nào trực tiếp vào template HTML component.
+
+Component này cung cấp cách kiểm tra giá trị phía client-side mà không cần JavaScript. Rất hữu ích để debug nhanh trong trình duyệt mà không cần chuyển đổi giữa terminal và trình duyệt.
+
+```astro {2,7}
+---
+import { Debug } from 'astro:components';
+const sum = (a, b) => a + b;
+---
+
+<!-- Ví dụ: Xuất {answer: 6} ra trình duyệt -->
+<Debug answer={sum(2, 4)} />
+```
+
+Component Debug hỗ trợ nhiều cú pháp để debug linh hoạt và ngắn gọn hơn:
+
+```astro {2,7-9}
+---
+import { Debug } from 'astro:components';
+const sum = (a, b) => a + b;
+const answer = sum(2, 4);
+---
+<!-- Ví dụ: Cả ba ví dụ đều tương đương -->
+<Debug answer={sum(2, 4)} />
+<Debug {{answer: sum(2, 4)}} />
+<Debug {answer} />
+```
+
+## Thông báo Lỗi Thường gặp
+
+Dưới đây là một số thông báo lỗi thường gặp trong terminal, ý nghĩa và cách khắc phục. Xem [hướng dẫn tham khảo lỗi đầy đủ](/vi/reference/error-reference/) để biết danh sách hoàn chỉnh các lỗi Astro có thể gặp phải.
+
+### Cannot use import statement outside a module
+
+Trong các component Astro, thẻ `<script>` được tải như [JS modules](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Modules) theo mặc định. Nếu bạn đã thêm [directive `is:inline`](/vi/reference/directives-reference/#isinline) hoặc thuộc tính khác vào thẻ, hành vi mặc định này sẽ bị gỡ bỏ.
+
+**Giải pháp**: Nếu đã thêm thuộc tính vào thẻ `<script>`, bạn cũng phải thêm thuộc tính `type="module"` để có thể sử dụng lệnh import.
+
+**Trạng thái**: Hành vi Astro dự kiến, như thiết kế.
+
+**Không chắc đây có phải vấn đề của bạn?**  
+Kiểm tra xem có ai khác báo cáo [vấn đề này](https://github.com/withastro/astro/issues?q=is%3Aissue+is%3Aopen+Cannot+use+import+statement) không!
+
+### `document` (hoặc `window`) is not defined
+
+Lỗi này xảy ra khi cố gắng truy cập `document` hoặc `window` trên server.
+
+Các component Astro chạy trên server, nên bạn không thể truy cập các object đặc thù của trình duyệt trong frontmatter.
+
+Framework components chạy trên server theo mặc định, nên lỗi này có thể xảy ra khi truy cập `document` hoặc `window` trong quá trình rendering.
+
+**Giải pháp**: Xác định code gọi `document` hoặc `window`. Nếu không sử dụng `document` hoặc `window` trực tiếp nhưng vẫn gặp lỗi, kiểm tra xem các package import có dành cho client không.
+
+- Nếu code ở trong component Astro, chuyển nó vào thẻ `<script>` bên ngoài frontmatter. Điều này báo cho Astro chạy code này trên client, nơi có `document` và `window`.
+
+- Nếu code ở trong framework component, thử truy cập các object này sau rendering bằng lifecycle methods (ví dụ: [`useEffect()`](https://react.dev/reference/react/useEffect) trong React, [`onMounted()`](https://vuejs.org/api/composition-api-lifecycle.html#onmounted) trong Vue, và [`onMount()`](https://svelte.dev/docs#run-time-svelte-onmount) trong Svelte). Báo cho framework component hydrate phía client bằng directive [client:](/vi/reference/directives-reference/#client-directives) như `client:load`. Bạn cũng có thể ngăn component render trên server hoàn toàn bằng directive [`client:only`](/vi/reference/directives-reference/#clientonly).
+
+**Trạng thái**: Hành vi Astro dự kiến, như thiết kế.
+
+### Expected a default export
+
+Lỗi này có thể xuất hiện khi cố gắng import hoặc render component không hợp lệ hoặc không hoạt động đúng. (Thông báo cụ thể này xuất hiện do cách import UI component hoạt động trong Astro.)
+
+**Giải pháp**: Thử tìm lỗi trong bất kỳ component nào bạn đang import và render, đảm bảo nó hoạt động đúng. Cân nhắc mở template starter Astro từ [astro.new](https://astro.new) và khắc phục sự cố component trong dự án Astro tối giản.
+
+**Trạng thái**: Hành vi Astro dự kiến, như thiết kế.
+
+### Refused to execute inline script
+
+Bạn có thể thấy lỗi sau trong console trình duyệt:
+
+> Refused to execute inline script because it violates the following Content Security Policy directive: …
+
+Điều này có nghĩa là [Content Security Policy](https://developer.mozilla.org/en-US/docs/Web/HTTP/CSP) (CSP) của trang web không cho phép chạy thẻ `<script>` inline, mà Astro xuất ra theo mặc định.
+
+**Giải pháp:** Cập nhật CSP để bao gồm `script-src: 'unsafe-inline'` cho phép chạy inline scripts. Hoặc bạn có thể sử dụng integration bên thứ ba như [`astro-shield`](https://github.com/KindSpells/astro-shield) để tạo CSP headers.
+
+## Lỗi Thường gặp
+
+### Component của tôi không render
+
+Đầu tiên, kiểm tra xem bạn đã **import component** trong [script component `.astro`](/vi/basics/astro-components/#the-component-script) hoặc [file `.mdx`](/vi/guides/integrations-guide/mdx/#using-components-in-mdx) chưa.
+
+Sau đó kiểm tra lệnh import:
+
+- Import có link đến đúng nơi không? (Kiểm tra đường dẫn import.)
+
+- Import có cùng tên với component được import không? (Kiểm tra tên component và đảm bảo nó [tuân theo cú pháp `.astro`](/vi/reference/astro-syntax/#differences-between-astro-and-jsx).)
+
+- Bạn đã bao gồm extension trong import chưa? (Kiểm tra file import có chứa extension. ví dụ: `.astro`, `.md`, `.vue`, `.svelte`. Lưu ý: Extension file **không** bắt buộc cho file `.js(x)` và `.ts(x)`.)
+
+### Component của tôi không tương tác
+
+Nếu component render (xem trên) nhưng không phản hồi tương tác của người dùng, thì có thể bạn thiếu [directive `client:*`](/vi/reference/directives-reference/#client-directives) để hydrate component.
+
+Theo mặc định, [UI Framework component không được hydrate trong client](/vi/guides/framework-components/#hydrating-interactive-components). Nếu không cung cấp directive `client:*`, HTML sẽ được render lên trang mà không có JavaScript.
+
+:::tip
+[Astro components](/vi/basics/astro-components/) là các component template chỉ có HTML không có runtime phía client. Nhưng bạn có thể sử dụng thẻ `<script>` trong template component Astro để gửi JavaScript tới trình duyệt thực thi trong global scope.
+:::
+
+### Cannot find package 'X'
+
+Nếu thấy cảnh báo `"Cannot find package 'react'"` (hoặc tương tự) khi khởi động Astro, có nghĩa bạn cần cài đặt package đó vào dự án. Không phải tất cả package manager đều tự động cài đặt peer dependencies. Nếu bạn dùng Node v16+ và npm, bạn không cần lo lắng về phần này.
+
+React chẳng hạn là peer dependency của integration `@astrojs/react`. Có nghĩa bạn nên cài đặt các package chính thức `react` và `react-dom` cùng với integration. Integration sẽ tự động sử dụng các package này.
+
+```shell ins="react react-dom"
+# Ví dụ: Cài đặt integrations và frameworks cùng nhau
+npm install @astrojs/react react react-dom
+```
+Xem [hướng dẫn integration của Astro](/vi/guides/integrations-guide/) để biết cách thêm framework renderers, CSS tools và các package khác vào Astro.
+
+### Sử dụng Astro với Yarn 2+ (Berry)
+
+Yarn 2+, còn gọi là Berry, sử dụng kỹ thuật [Plug'n'Play (PnP)](https://yarnpkg.com/features/pnp) để lưu trữ và quản lý Node modules, có thể [gây vấn đề](https://github.com/withastro/astro/issues/3450) khi khởi tạo dự án Astro mới bằng `create astro` hoặc khi làm việc với Astro. Cách khắc phục là đặt thuộc tính [`nodeLinker`](https://yarnpkg.com/configuration/yarnrc#nodeLinker) trong `.yarnrc.yml` thành `node-modules`:
+
+```yaml title=".yarnrc.yml"
+nodeLinker: "node-modules"
+```
+
+### Thêm dependencies vào Astro trong monorepo
+
+Khi làm việc với Astro trong thiết lập monorepo, dependencies dự án nên được thêm vào file `package.json` riêng của từng dự án.
+
+Tuy nhiên, bạn cũng có thể muốn sử dụng Astro ở root của monorepo (ví dụ: [dự án Nx khuyên cài dependencies ở root](https://github.com/nrwl/nx/issues/3023#issuecomment-630558318)). Trong trường hợp này, thêm thủ công các dependencies liên quan đến Astro (ví dụ: `@astrojs/vue`, `astro-component-lib`) vào phần `vite.ssr.noExternal` của config Astro để đảm bảo các dependencies này được cài đặt và bundle đúng cách:
+
+```js
+// astro.config.mjs
+import { defineConfig } from 'astro/config'
+export default defineConfig({
+  vite: {
+    ssr: {
+      noExternal: [
+        '@astrojs/vue',
+        'astro-component-lib',
+      ]
+    }
+  }
+})
+```
+
+### Sử dụng `<head>` trong component
+
+Trong Astro, sử dụng thẻ `<head>` hoạt động như bất kỳ thẻ HTML nào khác: nó không được di chuyển lên đầu trang hoặc merge với `<head>` hiện có. Vì vậy, thường bạn chỉ muốn bao gồm một thẻ `<head>` trong toàn bộ trang. Chúng tôi khuyên viết `<head>` duy nhất đó và nội dung của nó trong [layout component](/vi/basics/layouts/).
+
+### Một `<style>` bất ngờ được bao gồm
+
+Bạn có thể nhận thấy thẻ `<style>` của component được import bao gồm trong HTML source ngay cả khi component đó không xuất hiện trong kết quả cuối. Ví dụ, điều này sẽ xảy ra với [các component được render có điều kiện](/vi/reference/astro-syntax/#dynamic-html) không được hiển thị.
+
+Quá trình build của Astro hoạt động trên module graph: một khi component được bao gồm trong template, thẻ `<style>` của nó sẽ được xử lý, tối ưu hóa và bundle, dù nó có xuất hiện trong kết quả cuối hay không.
+
+## Escape ký tự đặc biệt trong Markdown
+
+Một số ký tự có ý nghĩa đặc biệt trong Markdown. Bạn có thể cần sử dụng cú pháp khác nếu muốn hiển thị chúng. Để làm điều này, bạn có thể sử dụng [HTML entities](https://developer.mozilla.org/en-US/docs/Glossary/Entity) cho các ký tự này.
+
+Ví dụ, để ngăn `<` được hiểu là đầu của element HTML, hãy viết `&lt;`.
+
+## Tạo minimal reproductions
+
+Khi khắc phục sự cố code, việc tạo **minimal reproduction** của vấn đề để chia sẻ rất hữu ích. Đây là dự án Astro nhỏ hơn, đơn giản hóa để minh họa vấn đề. Có working reproduction trong dự án mới giúp xác nhận đây là vấn đề có thể lặp lại, không phải do môi trường cá nhân hoặc dự án hiện tại gây ra.
+
+Chia sẻ minimal reproduction hữu ích khi yêu cầu trợ giúp trong support threads và thường được yêu cầu khi báo cáo bug cho Astro.
+
+### Tạo StackBlitz qua [astro.new](https://astro.new/repro)
+
+Bạn có thể sử dụng [astro.new](https://astro.new/repro) để tạo dự án Astro mới chỉ với một click. Để minimal reproductions, chúng tôi khuyên mạnh bắt đầu từ ví dụ minimal (trống) chạy trong [StackBlitz](https://stackblitz.com), với ít code bổ sung nhất có thể.
+
+StackBlitz sẽ chạy dự án Astro này trong trình duyệt, bên ngoài môi trường local. Nó cũng cung cấp link có thể chia sẻ để bất kỳ maintainer Astro hoặc thành viên support squad nào có thể xem minimal reproduction bên ngoài môi trường local của họ. Điều này có nghĩa mọi người đang xem cùng một dự án, với cùng cấu hình và dependencies. Điều này giúp người khác dễ dàng hỗ trợ khắc phục sự cố code. Nếu vấn đề có thể tái tạo, nó cho phép bạn xác minh vấn đề nằm trong code Astro và bạn có thể tự tin gửi bug report.
+
+Lưu ý không phải mọi vấn đề đều có thể tái tạo trong StackBlitz. Ví dụ, vấn đề có thể phụ thuộc vào môi trường hoặc package manager cụ thể, hoặc có thể liên quan đến HTML Streaming không được hỗ trợ trong StackBlitz. Trong trường hợp này, tạo dự án Astro minimal (trống) mới bằng CLI, tái tạo vấn đề và upload lên GitHub repository. Thay vì chia sẻ StackBlitz URL, cung cấp link đến GitHub repository của minimal reproduction.
+
+### Minimal code
+
+Khi dự án trống đã thiết lập, thực hiện các bước để tái tạo vấn đề. Có thể bao gồm thêm packages, thay đổi cấu hình và viết code.
+
+Bạn chỉ nên thêm lượng code tối thiểu cần thiết để tái tạo vấn đề. Đừng tái tạo các element khác của dự án hiện tại và loại bỏ tất cả code không liên quan trực tiếp đến vấn đề.
+
+### Tạo issue
+
+Nếu vấn đề có thể tái tạo, đã đến lúc tạo issue và báo cáo bug!
+
+Đi đến repository Astro phù hợp trên GitHub và mở issue mới. Hầu hết repositories có template issue sẽ đặt câu hỏi hoặc yêu cầu thông tin để gửi. Quan trọng là bạn tuân theo các template này vì nếu không cung cấp thông tin cần thiết, chúng tôi phải hỏi bạn... và không ai làm việc trên vấn đề của bạn!
+
+Bao gồm link đến minimal reproduction trên StackBlitz (hoặc GitHub repository nếu cần). Bắt đầu với mô tả hành vi mong đợi so với thực tế để cung cấp ngữ cảnh cho vấn đề. Sau đó, bao gồm hướng dẫn rõ ràng, từng bước về cách tái tạo vấn đề trong dự án Astro.
+
+## Cần thêm?
+
+Hãy đến chat với chúng tôi trên [Discord](https://astro.build/chat) và giải thích vấn đề trong kênh forum `#support`. Chúng tôi luôn sẵn sàng giúp đỡ!
+
+Truy cập [Issues đang mở trong Astro](https://github.com/withastro/astro/issues/) hiện tại để xem bạn có đang gặp vấn đề đã biết không hoặc báo cáo bug.
+
+Bạn cũng có thể truy cập [RFC Discussions](https://github.com/withastro/rfcs/discussions/) để xem bạn có tìm thấy giới hạn đã biết của Astro không, và kiểm tra xem có đề xuất hiện tại liên quan đến use case của bạn không.

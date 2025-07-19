@@ -1,0 +1,108 @@
+---
+title: Triển khai trang Astro của bạn lên Kinsta Application Hosting
+description: Cách triển khai trang Astro của bạn lên web bằng Kinsta Application Hosting.
+sidebar:
+  label: Kinsta
+type: deploy
+i18nReady: true
+---
+import { Steps } from '@astrojs/starlight/components';
+
+Bạn có thể sử dụng [Kinsta Application Hosting](https://kinsta.com/application-hosting/) để lưu trữ một trang Astro trên nền tảng đám mây của họ.
+
+## Cấu hình dự án Astro của bạn
+
+### Lưu trữ tĩnh
+
+:::tip[Looking for an example?]
+Xem [dự án khởi đầu chính thức của Kinsta Application Hosting cho Astro](https://github.com/kinsta/hello-world-astro)!
+:::
+
+Để lưu trữ dự án trên **Kinsta Application Hosting**, bạn cần:
+- Thêm trường `name` vào `package.json`. (Giá trị này có thể là bất kỳ gì và sẽ không ảnh hưởng đến quá trình triển khai.)
+- Thêm script `build` vào `package.json`. (Dự án Astro của bạn có thể đã có sẵn.)
+- Cài đặt gói [`serve`](https://www.npmjs.com/package/serve) và thiết lập script `start` thành `serve dist/`.
+
+Đây là các dòng cần thiết trong tệp `package.json` của bạn:
+```json title="package.json" {2,5,6} ins={12} "serv dist/"
+{
+  "name": "anything", // Trường này là bắt buộc, giá trị không quan trọng.
+  "scripts": {
+    "dev": "astro dev",
+    "start": "serve dist/",
+    "build": "astro build",
+    "preview": "astro preview",
+    "astro": "astro"
+  },
+  "dependencies": {
+    "astro": "^2.2.0",
+    "serve": "^14.0.1"
+  },
+}
+```
+
+### SSR
+
+:::tip[Looking for an example?]
+Xem [dự án khởi đầu chính thức của Kinsta Application Hosting cho Astro SSR](https://github.com/kinsta/hello-world-astro-ssr)!
+:::
+
+Để lưu trữ dự án trên **Kinsta Application Hosting**, bạn cần:
+- Thêm trường `name` vào `package.json`. (Giá trị này có thể là bất kỳ gì và sẽ không ảnh hưởng đến quá trình triển khai.)
+- Thêm script `build` vào `package.json`. (Dự án Astro của bạn có thể đã có sẵn.)
+- Cài đặt gói [`@astrojs/node`](https://www.npmjs.com/package/@astrojs/node) và thiết lập script `start` thành `node ./dist/server/entry.mjs`.
+- Thiết lập `astro.config.mjs` để sử dụng `@astrojs/node` và đặt `host: true`.
+
+Đây là các dòng cần thiết trong tệp `package.json` của bạn:
+```json title="package.json" {2,5,6} ins={12} "node ./dist/server/entry.mjs"
+{
+  "name": "anything", // Trường này là bắt buộc, giá trị không quan trọng.
+  "scripts": {
+    "dev": "astro dev",
+    "start": "node ./dist/server/entry.mjs",
+    "build": "astro build",
+    "preview": "astro preview",
+    "astro": "astro"
+  },
+  "dependencies": {
+    "astro": "^2.2.0",
+    "@astrojs/node": "^5.1.1"
+  },
+}
+```
+
+Đây là các dòng cần thiết trong tệp `astro.config.mjs` của bạn:
+```js title="astro.config.mjs"
+  import { defineConfig } from 'astro/config';
+  import node from "@astrojs/node";
+
+  export default defineConfig({
+    output: 'server',
+    adapter: node({
+      mode: "standalone"
+    }),
+    server: {
+      host: true
+    }
+  });
+```
+
+## Cách triển khai
+
+Khi kho lưu trữ GitHub của dự án đã được kết nối, bạn có thể kích hoạt triển khai thủ công lên Kinsta Application Hosting trong **Bảng điều khiển MyKinsta**. Bạn cũng có thể thiết lập tự động triển khai trong bảng điều khiển quản trị.
+
+### Cấu hình một ứng dụng Kinsta mới
+
+<Steps>
+1. Truy cập bảng điều khiển quản trị [My Kinsta](https://my.kinsta.com/).
+
+2. Chuyển tới tab **Applications**.
+
+3. Kết nối kho lưu trữ GitHub của bạn.
+
+4. Nhấn nút **Add service** > **Application**.
+
+5. Làm theo các bước hướng dẫn hiện ra.
+
+6. Ứng dụng của bạn đã được triển khai.
+</Steps>

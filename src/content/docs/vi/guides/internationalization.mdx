@@ -1,0 +1,371 @@
+---
+title: Định tuyến Đa ngôn ngữ (i18n)
+sidebar:
+  label: Đa ngôn ngữ (i18n)
+description: Tìm hiểu cách sử dụng tính năng định tuyến i18n của Astro để bản địa hóa các trang của trang web.
+i18nReady: true
+---
+
+import { FileTree } from '@astrojs/starlight/components';
+import Since from '~/components/Since.astro'
+
+Các tính năng đa ngôn ngữ (i18n) của Astro cho phép bạn điều chỉnh dự án cho đối tượng quốc tế. API định tuyến này giúp bạn tạo, sử dụng và xác minh các URL mà trang web đa ngôn ngữ của bạn tạo ra.
+
+Định tuyến i18n của Astro cho phép bạn mang nội dung đa ngôn ngữ với hỗ trợ cấu hình ngôn ngữ mặc định, tính toán URL trang tương đối và chấp nhận ngôn ngữ ưa thích do trình duyệt của khách truy cập cung cấp. Bạn cũng có thể chỉ định ngôn ngữ dự phòng cho từng ngôn ngữ để khách truy cập luôn có thể được hướng đến nội dung hiện có trên trang web của bạn.
+
+## Logic Định tuyến
+
+Astro sử dụng [middleware](/vi/guides/middleware/) để triển khai logic định tuyến. Hàm middleware này được đặt ở [vị trí đầu tiên](/vi/guides/middleware/#chaining-middleware) nơi nó chờ đợi mọi `Response` đến từ bất kỳ middleware bổ sung nào và mỗi route trang trước khi cuối cùng thực thi logic của chính nó.
+
+Điều này có nghĩa là các hoạt động (ví dụ: chuyển hướng) từ middleware của bạn và logic trang của bạn được chạy trước, các route của bạn được render, và sau đó middleware i18n thực hiện các hành động của riêng nó như xác minh rằng URL được bản địa hóa tương ứng với một route hợp lệ.
+
+Bạn cũng có thể chọn [thêm logic i18n của riêng bạn ngoài hoặc thay vì middleware i18n của Astro](#manual), cho bạn kiểm soát nhiều hơn đối với các route của bạn trong khi vẫn có quyền truy cập vào các hàm trợ giúp `astro:i18n`.
+
+## Cấu hình định tuyến i18n
+
+Cả danh sách tất cả các ngôn ngữ được hỗ trợ ([`locales`](/vi/reference/configuration-reference/#i18nlocales)) và ngôn ngữ mặc định ([`defaultLocale`](/vi/reference/configuration-reference/#i18ndefaultlocale)), phải là một trong các ngôn ngữ được liệt kê trong `locales`, cần được chỉ định trong đối tượng cấu hình `i18n`. Ngoài ra, bạn có thể cấu hình hành vi định tuyến và dự phòng cụ thể hơn để phù hợp với URL mong muốn của bạn.
+
+```js title="astro.config.mjs"
+import { defineConfig } from "astro/config"
+export default defineConfig({
+  i18n: {
+    locales: ["es", "en", "pt-br"],
+    defaultLocale: "en",
+  }
+})
+```
+
+### Tạo thư mục được bản địa hóa
+
+Tổ chức các thư mục nội dung của bạn với nội dung được bản địa hóa theo ngôn ngữ. Tạo các thư mục `/[locale]/` riêng lẻ ở bất cứ đâu trong `src/pages/` và [định tuyến dựa trên file](/vi/guides/routing/) của Astro sẽ tạo các trang của bạn tại các đường dẫn URL tương ứng.
+
+Tên thư mục của bạn phải khớp chính xác với các mục trong `locales`. Chỉ bao gồm thư mục được bản địa hóa cho `defaultLocale` của bạn nếu bạn cấu hình `prefixDefaultLocale: true` để hiển thị đường dẫn URL được bản địa hóa cho ngôn ngữ mặc định của bạn (ví dụ: `/vi/about/`).
+
+<FileTree>
+- src
+  - pages
+    - about.astro
+    - index.astro
+    - es
+      - about.astro
+      - index.astro
+    - pt-br
+      - about.astro
+      - index.astro
+</FileTree>
+
+:::note
+Các thư mục được bản địa hóa không cần phải ở thư mục gốc của `/pages/`.
+:::
+
+### Tạo liên kết
+
+Với định tuyến i18n được cấu hình, bạn giờ có thể tính toán liên kết đến các trang trong trang web của bạn bằng cách sử dụng các hàm trợ giúp như [`getRelativeLocaleUrl()`](/vi/reference/modules/astro-i18n/#getrelativelocaleurl) có sẵn từ [module `astro:i18n`](/vi/reference/modules/astro-i18n/). Các liên kết được tạo này sẽ luôn cung cấp route được bản địa hóa chính xác và có thể giúp bạn sử dụng hoặc kiểm tra URL trên trang web của bạn một cách chính xác.
+
+Bạn cũng vẫn có thể viết liên kết thủ công.
+
+```astro title="src/pages/es/index.astro"
+---
+import { getRelativeLocaleUrl } from 'astro:i18n';
+
+// defaultLocale is "es"
+const aboutURL = getRelativeLocaleUrl("es", "about");
+---
+
+<a href="/get-started/">¡Vamos!</a>
+<a href={getRelativeLocaleUrl('es', 'blog')}>Blog</a>
+<a href={aboutURL}>Acerca</a> 
+``` 
+
+## `routing`
+
+Định tuyến dựa trên file tích hợp của Astro tự động tạo các route URL cho bạn dựa trên cấu trúc file của bạn trong `src/pages/`.
+
+Khi bạn cấu hình định tuyến i18n, thông tin về cấu trúc file này (và các đường dẫn URL tương ứng được tạo) có sẵn cho các hàm trợ giúp i18n để chúng có thể tạo, sử dụng và xác minh các route trong dự án của bạn. Nhiều tùy chọn này có thể được sử dụng cùng nhau để tùy chỉnh nhiều hơn và linh hoạt theo từng ngôn ngữ.
+
+Bạn thậm chí có thể chọn [triển khai logic định tuyến của riêng bạn thủ công](#manual) để kiểm soát tốt hơn.
+
+### `prefixDefaultLocale`
+
+<p><Since v="3.5.0" /></p>
+
+Tùy chọn định tuyến này xác định xem URL của ngôn ngữ mặc định của bạn có sử dụng tiền tố ngôn ngữ hay không (ví dụ: `/vi/about/`).
+
+Tất cả các ngôn ngữ được hỗ trợ không mặc định **sẽ** sử dụng tiền tố được bản địa hóa (ví dụ: `/fr/` hoặc `/french/`) và các file nội dung phải nằm trong các thư mục thích hợp. Tùy chọn cấu hình này cho phép bạn chỉ định xem ngôn ngữ mặc định của bạn có nên tuân theo cấu trúc URL được bản địa hóa hay không.
+
+Cài đặt này cũng xác định nơi các file trang cho ngôn ngữ mặc định của bạn phải tồn tại (ví dụ: `src/pages/about/` hoặc `src/pages/vi/about`) vì cấu trúc file và cấu trúc URL phải khớp cho tất cả các ngôn ngữ.
+
+- `"prefixDefaultLocale: false"` (mặc định): URL trong ngôn ngữ mặc định của bạn sẽ **không** có tiền tố `/[locale]/`. Tất cả các locale khác sẽ có.
+
+- `"prefixDefaultLocale: true"`: Tất cả URL, bao gồm ngôn ngữ mặc định của bạn, sẽ có tiền tố `/[locale]/`.
+
+#### `prefixDefaultLocale: false`
+
+```js title="astro.config.mjs" ins={7}
+import { defineConfig } from "astro/config"
+export default defineConfig({
+  i18n: {
+    locales: ["es", "en", "fr"],
+    defaultLocale: "en",
+    routing: {
+        prefixDefaultLocale: false
+    }
+  }
+})
+```
+
+Đây là giá trị **mặc định**. Đặt tùy chọn này khi URL trong ngôn ngữ mặc định của bạn sẽ **không** có tiền tố `/[locale]/` và các file trong ngôn ngữ mặc định của bạn tồn tại ở thư mục gốc của `src/pages/`:
+
+<FileTree>
+  - src
+    - pages
+      - about.astro
+      - index.astro
+      - es
+        - about.astro
+        - index.astro
+      - fr
+        - about.astro
+        - index.astro
+</FileTree>
+
+- `src/pages/about.astro` sẽ tạo route `example.com/about/` 
+- `src/pages/fr/about.astro` sẽ tạo route `example.com/fr/about/` 
+
+#### `prefixDefaultLocale: true`
+
+```js title="astro.config.mjs" ins={7}
+import { defineConfig } from "astro/config"
+export default defineConfig({
+  i18n: {
+    locales: ["es", "en", "fr"],
+    defaultLocale: "en",
+    routing: {
+        prefixDefaultLocale: true
+    }
+  }
+})
+```
+
+Đặt tùy chọn này khi tất cả các route sẽ có tiền tố `/locale/` trong URL của chúng và khi tất cả các file nội dung trang, bao gồm cả những file cho `defaultLocale` của bạn, tồn tại trong thư mục được bản địa hóa:
+
+<FileTree>
+- src
+  - pages
+    - **index.astro** // Lưu ý: file này luôn được yêu cầu
+    - en
+      - index.astro
+      - about.astro
+    - es
+      - about.astro
+      - index.astro
+    - pt-br
+      - about.astro
+      - index.astro
+</FileTree>
+
+- URL không có tiền tố locale, (ví dụ: `example.com/about/`) sẽ trả về mã trạng thái 404 (không tìm thấy) trừ khi bạn chỉ định [chiến lược dự phòng](#fallback).
+
+### `redirectToDefaultLocale`
+
+<p><Since v="4.2.0" /></p>
+
+Cấu hình xem URL trang chủ (`/`) được tạo bởi `src/pages/index.astro` có chuyển hướng đến `/<defaultLocale>` hay không.
+
+Đặt `prefixDefaultLocale: true` cũng sẽ tự động đặt `redirectToDefaultLocale: true` trong đối tượng cấu hình `routing` của bạn. Theo mặc định, file `src/pages/index.astro` bắt buộc sẽ tự động chuyển hướng đến trang index của locale mặc định của bạn.
+
+Bạn có thể chọn không sử dụng hành vi này bằng cách [đặt `redirectToDefaultLocale: false`](/vi/reference/configuration-reference/#i18nroutingredirecttodefaultlocale). Điều này cho phép bạn có trang chủ trang web tồn tại bên ngoài cấu trúc thư mục locale được cấu hình của bạn.
+
+### `manual`
+
+<p><Since v="4.6.0" /></p>
+
+Khi tùy chọn này được bật, Astro sẽ **vô hiệu hóa** middleware i18n của nó để bạn có thể triển khai logic tùy chỉnh của riêng mình. Không có tùy chọn `routing` nào khác (ví dụ: `prefixDefaultLocale`) có thể được cấu hình với `routing: "manual"`.
+
+Bạn sẽ chịu trách nhiệm viết logic định tuyến của riêng mình, hoặc [thực thi middleware i18n của Astro thủ công](#middleware-function) cùng với logic của bạn.
+
+```js title="astro.config.mjs"
+import { defineConfig } from "astro/config"
+export default defineConfig({
+  i18n: {
+    locales: ["es", "en", "fr"],
+    defaultLocale: "en",
+    routing: "manual"
+  }
+})
+```
+
+Astro cung cấp các hàm trợ giúp cho middleware của bạn để bạn có thể kiểm soát định tuyến mặc định, ngoại lệ, hành vi dự phòng, xử lý lỗi, v.v.: [`redirectToDefaultLocale()`](/vi/reference/modules/astro-i18n/#redirecttodefaultlocale), [`notFound()`](/vi/reference/modules/astro-i18n/#notfound), và [`redirectToFallback()`](/vi/reference/modules/astro-i18n/#redirecttofallback):
+
+```js title="src/middleware.js"
+import { defineMiddleware } from "astro:middleware";
+import { redirectToDefaultLocale } from "astro:i18n"; // hàm có sẵn với định tuyến `manual`
+export const onRequest = defineMiddleware(async (ctx, next) => {
+  if (ctx.url.startsWith("/about")) {
+    return next();
+  } else {
+    return redirectToDefaultLocale(302);
+  }
+})
+```
+
+#### hàm middleware
+
+Hàm [`middleware`](#middleware-function) tạo middleware i18n của Astro thủ công. Điều này cho phép bạn mở rộng định tuyến i18n của Astro thay vì thay thế hoàn toàn nó.
+
+Bạn có thể chạy `middleware` với [tùy chọn định tuyến](#routing) kết hợp với middleware của riêng bạn, sử dụng tiện ích [`sequence`](/vi/reference/modules/astro-middleware/#sequence) để xác định thứ tự:
+
+```js title="src/middleware.js"
+import {defineMiddleware, sequence} from "astro:middleware";
+import { middleware } from "astro:i18n"; // Cấu hình định tuyến i18n của chính Astro
+
+export const userMiddleware = defineMiddleware(async (ctx, next) => {
+  // phản hồi này có thể đến từ middleware i18n của Astro, và nó có thể trả về 404
+  const response = await next();
+  // trang /about là ngoại lệ và chúng ta muốn render nó
+  if (ctx.url.startsWith("/about")) {
+    return new Response("About page", {
+      status: 200
+    });
+  } else {
+    return response;
+  }
+});
+
+export const onRequest = sequence(
+  userMiddleware,
+  middleware({
+    redirectToDefaultLocale: false,
+    prefixDefaultLocale: true
+  })
+)
+```
+
+## `domains`
+
+<p><Since v="4.9.0" /></p>
+
+Tùy chọn định tuyến này cho phép bạn tùy chỉnh domain theo từng ngôn ngữ cho các dự án được render `server` sử dụng adapter [`@astrojs/node`](/vi/guides/integrations-guide/node/) hoặc [`@astrojs/vercel`](/vi/guides/integrations-guide/vercel/) với `site` được cấu hình.
+
+Thêm `i18n.domains` để ánh xạ bất kỳ `locales` được hỗ trợ nào của bạn đến URL tùy chỉnh:
+
+```js title="astro.config.mjs" {3-7} ins={14-17}
+import { defineConfig } from "astro/config"
+export default defineConfig({
+  site: "https://example.com",
+  output: "server", // bắt buộc, không có trang prerendered
+  adapter: node({
+    mode: 'standalone',
+  }),
+  i18n: {
+    locales: ["es", "en", "fr", "ja"],
+    defaultLocale: "en",
+    routing: {
+      prefixDefaultLocale: false
+    },
+    domains: {
+      fr: "https://fr.example.com",
+      es: "https://example.es"
+    }
+  }
+})
+```
+
+Tất cả `locales` không được ánh xạ sẽ tuân theo cấu hình `prefixDefaultLocales` của bạn. Tuy nhiên, ngay cả khi giá trị này là `false`, các file trang cho `defaultLocale` của bạn cũng phải tồn tại trong thư mục được bản địa hóa. Đối với cấu hình trên, thư mục `/vi/` là bắt buộc.
+
+Với cấu hình trên:
+
+- File `/fr/about.astro` sẽ tạo URL `https://fr.example.com/about`.
+- File `/es/about.astro` sẽ tạo URL `https://example.es/about`.
+- File `/ja/about.astro` sẽ tạo URL `https://example.com/ja/about`.
+- File `/vi/about.astro` sẽ tạo URL `https://example.com/about`.
+
+Các URL trên cũng sẽ được trả về bởi các hàm `getAbsoluteLocaleUrl()` và `getAbsoluteLocaleUrlList()`.
+
+## Dự phòng
+
+Khi một trang trong một ngôn ngữ không tồn tại (ví dụ: một trang chưa được dịch), thay vì hiển thị trang 404, bạn có thể chọn hiển thị nội dung dự phòng từ `locale` khác trên cơ sở từng ngôn ngữ. Điều này hữu ích khi bạn chưa có trang cho mọi route, nhưng bạn vẫn muốn cung cấp một số nội dung cho khách truy cập của mình.
+
+Chiến lược dự phòng của bạn bao gồm hai phần: chọn ngôn ngữ nào nên dự phòng cho ngôn ngữ nào khác ([`i18n.fallback`](/vi/reference/configuration-reference/#i18nfallback)) và chọn có thực hiện [chuyển hướng](/vi/guides/routing/#redirects) hay [viết lại](/vi/guides/routing/#rewrites) để hiển thị nội dung dự phòng ([`i18n.routing.fallbackType`](/vi/reference/configuration-reference/#i18nroutingfallbacktype) được thêm trong Astro v4.15.0).
+
+Ví dụ, khi bạn cấu hình `i18n.fallback: { fr: "es" }`, Astro sẽ đảm bảo rằng một trang được xây dựng trong `src/pages/fr/` cho mọi trang tồn tại trong `src/pages/es/`.
+
+Nếu bất kỳ trang nào chưa tồn tại, thì một trang sẽ được tạo tùy thuộc vào `fallbackType` của bạn:
+
+- Với chuyển hướng đến route `es` tương ứng (hành vi mặc định).
+- Với nội dung của trang `/es/` (`i18n.routing.fallbackType: "rewrite"`).
+
+Ví dụ, cấu hình dưới đây đặt `es` làm locale dự phòng cho bất kỳ route `fr` bị thiếu nào. Điều này có nghĩa là người dùng truy cập `example.com/fr/my-page/` sẽ được hiển thị nội dung cho `example.com/es/my-page/` (mà không bị chuyển hướng) thay vì được đưa đến trang 404 khi `src/pages/fr/my-page.astro` không tồn tại.
+
+```js title="astro.config.mjs" ins={6-8,10} 
+import { defineConfig } from "astro/config"
+export default defineConfig({
+  i18n: {
+    locales: ["es", "en", "fr"],
+    defaultLocale: "en",
+    fallback: {
+      fr: "es"  
+    },
+    routing: {
+      fallbackType: "rewrite"
+    }
+  }
+})
+```
+
+## Đường dẫn locale tùy chỉnh
+
+Ngoài việc định nghĩa `locales` được hỗ trợ của trang web của bạn dưới dạng chuỗi (ví dụ: "en", "pt-br"), Astro cũng cho phép bạn ánh xạ một số lượng tùy ý các [mã ngôn ngữ được trình duyệt nhận dạng](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Accept-Language#syntax) đến `path` URL tùy chỉnh. Trong khi locales có thể là chuỗi ở bất kỳ định dạng nào miễn là chúng tương ứng với cấu trúc thư mục dự án của bạn, `codes` phải tuân theo cú pháp được trình duyệt chấp nhận.
+
+Truyền một đối tượng vào mảng `locales` với khóa `path` để định nghĩa tiền tố URL tùy chỉnh, và `codes` để chỉ ra các ngôn ngữ được ánh xạ đến URL này. Trong trường hợp này, tên thư mục `/[locale]/` của bạn phải khớp chính xác với giá trị của `path` và URL của bạn sẽ được tạo bằng giá trị `path`.
+
+Điều này hữu ích nếu bạn hỗ trợ nhiều biến thể của một ngôn ngữ (ví dụ: `"fr"`, `"fr-BR"`, và `"fr-CA"`) và bạn muốn tất cả các biến thể này được ánh xạ dưới cùng một URL `/fr/`, hoặc thậm chí tùy chỉnh hoàn toàn nó (ví dụ: `/french/`):
+
+```js title="astro.config.mjs" del={4} ins={5-8}
+import { defineConfig } from "astro/config"
+export default defineConfig({
+  i18n: {
+    locales: ["es", "en", "fr"],
+    locales: ["es", "en", {
+      path: "french", // không bao gồm dấu gạch chéo
+      codes: ["fr", "fr-BR", "fr-CA"]
+    }],
+    defaultLocale: "en",
+    routing: {
+        prefixDefaultLocale: true
+    }
+  }
+})
+```
+
+Khi sử dụng các hàm từ [module ảo `astro:i18n`](/vi/reference/modules/astro-i18n/) để tính toán đường dẫn URL hợp lệ dựa trên cấu hình của bạn (ví dụ: `getRelativeLocaleUrl()`), [sử dụng `path` làm giá trị cho `locale`](/vi/reference/modules/astro-i18n/#getlocalebypath).
+
+#### Hạn chế
+
+Tính năng này có một số hạn chế:
+- Tùy chọn `site` là bắt buộc.
+- Tùy chọn `output` phải được đặt thành `"server"`.
+- Không thể có bất kỳ trang prerendered riêng lẻ nào.
+
+Astro dựa vào các header sau để hỗ trợ tính năng:
+- [`X-Forwarded-Host`](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/X-Forwarded-Host) và [`Host`](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Host). Astro sẽ sử dụng cái trước, và nếu không có, sẽ thử cái sau.
+- [`X-Forwarded-Proto`](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/X-Forwarded-Proto) và [`URL#protocol`](https://developer.mozilla.org/en-US/docs/Web/API/URL/protocol) của yêu cầu máy chủ.
+
+Đảm bảo rằng proxy máy chủ/nền tảng hosting của bạn có thể cung cấp thông tin này. Việc không thể lấy được các header này sẽ dẫn đến trang 404 (mã trạng thái).
+
+## Phát hiện ngôn ngữ trình duyệt
+
+Định tuyến i18n của Astro cho phép bạn truy cập hai thuộc tính để phát hiện ngôn ngữ trình duyệt trong các trang được render theo yêu cầu: `Astro.preferredLocale` và `Astro.preferredLocaleList`. Tất cả các trang, bao gồm các trang tĩnh được prerender, đều có quyền truy cập vào `Astro.currentLocale`.
+
+Chúng kết hợp header `Accept-Language` của trình duyệt và `locales` của bạn (chuỗi hoặc `codes`) để tự động tôn trọng ngôn ngữ ưa thích của khách truy cập.
+
+- [`Astro.preferredLocale`](/vi/reference/api-reference/#preferredlocale): Astro có thể tính toán **locale ưa thích** cho khách truy cập của bạn nếu locale ưa thích của trình duyệt được bao gồm trong mảng `locales` của bạn. Giá trị này không được xác định nếu không có sự khớp như vậy.
+
+- [`Astro.preferredLocaleList`](/vi/reference/api-reference/#preferredlocalelist): Một mảng tất cả các locale vừa được trình duyệt yêu cầu vừa được trang web của bạn hỗ trợ. Điều này tạo ra danh sách tất cả các ngôn ngữ tương thích giữa trang web của bạn và khách truy cập của bạn. Giá trị là `[]` nếu không có ngôn ngữ được trình duyệt yêu cầu nào được tìm thấy trong mảng `locales` của bạn. Nếu trình duyệt không chỉ định bất kỳ ngôn ngữ ưa thích nào, thì giá trị này sẽ là [`i18n.locales`].
+
+- [`Astro.currentLocale`](/vi/reference/api-reference/#currentlocale): Locale được tính toán từ URL hiện tại, sử dụng cú pháp được chỉ định trong cấu hình `locales` của bạn. Nếu URL không chứa tiền tố `/[locale]/`, thì giá trị sẽ mặc định là [`i18n.defaultLocale`](/vi/reference/configuration-reference/#i18ndefaultlocale).
+
+Để khớp thành công với sở thích của khách truy cập, hãy cung cấp `codes` của bạn bằng cách sử dụng cùng một mẫu [được trình duyệt sử dụng](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Accept-Language#syntax).
+
+[`site`]: /vi/reference/configuration-reference/#site
+[`i18n.locales`]: /vi/reference/configuration-reference/#i18nlocales

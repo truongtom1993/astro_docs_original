@@ -1,0 +1,35 @@
+---
+title: Triển khai trang Astro của bạn lên Surge
+description: Cách triển khai trang Astro của bạn lên web bằng Surge
+sidebar:
+  label: Surge
+type: deploy
+i18nReady: true
+---
+import { Steps } from '@astrojs/starlight/components';
+
+Bạn có thể triển khai dự án Astro của mình lên [Surge](https://surge.sh/), một nền tảng xuất bản web chỉ với một lệnh, được thiết kế cho các lập trình viên front-end.
+
+## Cách triển khai
+
+<Steps>
+1. Cài đặt [Surge CLI](https://www.npmjs.com/package/surge) toàn cục từ terminal, nếu bạn chưa cài.
+
+    ```shell
+    npm install -g surge
+    ```
+
+2. Xây dựng trang Astro của bạn từ thư mục gốc của dự án.
+
+    ```shell
+    npm run build
+    ```
+
+3. Triển khai lên Surge bằng CLI.
+
+    ```shell
+    surge dist
+    ```
+
+    Bạn có thể [sử dụng tên miền tùy chỉnh với Surge](http://surge.sh/help/adding-a-custom-domain) khi triển khai bằng cách chạy `surge dist yourdomain.com`.
+</Steps>

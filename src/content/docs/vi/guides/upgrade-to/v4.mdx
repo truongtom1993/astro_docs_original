@@ -1,0 +1,388 @@
+---
+title: Nâng cấp lên Astro v4
+description: Cách nâng cấp dự án của bạn lên phiên bản mới nhất của Astro (v4.0).
+sidebar:
+  label: v4.0
+i18nReady: true
+---
+import PackageManagerTabs from '~/components/tabs/PackageManagerTabs.astro'
+
+Hướng dẫn này sẽ giúp bạn di chuyển từ Astro v3 lên Astro v4.
+
+Cần nâng cấp dự án cũ hơn lên v3? Xem [hướng dẫn nâng cấp cũ](/vi/guides/upgrade-to/v3/).
+
+Cần xem tài liệu của v3? Truy cập [phiên bản tài liệu cũ (ảnh chụp v3.6, không còn được bảo trì)](https://docs-git-v3-docs-unmaintained-astrodotbuild.vercel.app/).
+
+## Nâng cấp Astro
+
+Cập nhật phiên bản Astro và tất cả các tích hợp chính thức của dự án lên phiên bản mới nhất bằng trình quản lý gói của bạn.
+
+<PackageManagerTabs>
+  <Fragment slot="npm">
+  ```shell
+  # Nâng cấp Astro và các tích hợp chính thức cùng lúc
+  npx @astrojs/upgrade
+  ```
+  </Fragment>
+  <Fragment slot="pnpm">
+  ```shell
+  # Nâng cấp Astro và các tích hợp chính thức cùng lúc
+  pnpm dlx @astrojs/upgrade
+  ```
+  </Fragment>
+  <Fragment slot="yarn">
+  ```shell
+  # Nâng cấp Astro và các tích hợp chính thức cùng lúc
+  yarn dlx @astrojs/upgrade
+  ```
+  </Fragment>
+</PackageManagerTabs>
+
+Bạn cũng có thể [nâng cấp các tích hợp Astro của mình thủ công](/vi/guides/integrations-guide/#manual-upgrading) nếu cần, và có thể bạn cũng cần nâng cấp các phụ thuộc khác trong dự án của mình.
+
+:::note[Cần tiếp tục?]
+Sau khi nâng cấp Astro lên phiên bản mới nhất, bạn có thể sẽ không cần thay đổi gì trong dự án của mình!
+
+Nhưng nếu bạn gặp lỗi hoặc hành vi bất ngờ, vui lòng kiểm tra bên dưới để biết những thay đổi có thể cần cập nhật trong dự án của bạn.
+:::
+
+Astro v4.0 bao gồm [các thay đổi có thể phá vỡ tương thích](#breaking-changes), cũng như [loại bỏ một số tính năng đã bị deprecate trước đó](#previously-deprecated-features-now-removed).
+
+Nếu dự án của bạn không hoạt động như mong đợi sau khi nâng cấp lên v4.0, hãy kiểm tra hướng dẫn này để xem tổng quan các thay đổi phá vỡ và hướng dẫn cập nhật mã nguồn.
+
+Xem [changelog](https://github.com/withastro/astro/blob/main/packages/astro/CHANGELOG.md) để biết chi tiết các thay đổi của bản phát hành.
+
+## Đã loại bỏ các cờ thử nghiệm của Astro v4.0
+
+Loại bỏ cờ thử nghiệm `devOverlay` và chuyển cấu hình `i18n` lên cấp cao nhất trong `astro.config.mjs`:
+
+```js del={5-9} ins={11-14} title="astro.config.mjs"
+import { defineConfig } from 'astro/config';
+
+export default defineConfig({
+  experimental: {
+    devOverlay: true,
+    i18n: {
+      locales: ["en", "fr", "pt-br", "es"],
+      defaultLocale: "en",
+    }
+  },
+  i18n: {
+    locales: ["en", "fr", "pt-br", "es"],
+    defaultLocale: "en",
+  },
+})
+```
+
+Các cấu hình này, `i18n` và `devToolbar` (đã đổi tên), hiện có sẵn trong Astro v4.0.
+
+Đọc thêm về hai tính năng thú vị này và nhiều cái khác trong [bài blog về v4.0](https://astro.build/blog/astro-4/)!
+
+## Các nâng cấp
+
+Bất kỳ nâng cấp lớn nào cho các phụ thuộc của Astro có thể gây ra thay đổi phá vỡ trong dự án của bạn.
+
+### Đã nâng cấp: Vite 5.0
+
+Ở Astro v3.0, Vite 4 được sử dụng làm máy chủ phát triển và bộ đóng gói sản phẩm.
+
+Astro v4.0 nâng cấp từ Vite 4 lên Vite 5.
+
+#### Tôi nên làm gì?
+
+Nếu bạn sử dụng các plugin, cấu hình hoặc API chuyên biệt của Vite, hãy kiểm tra [hướng dẫn di cư của Vite](https://vite.dev/guide/migration) để biết các thay đổi phá vỡ và nâng cấp dự án của bạn khi cần thiết. Không có thay đổi nào phá vỡ cho chính Astro.
+
+### Đã nâng cấp: unified, remark, và rehype
+
+Ở Astro v3.x, unified v10 và các gói remark/rehype tương thích được sử dụng để xử lý Markdown và MDX.
+
+Astro v4.0 nâng cấp [unified lên v11](https://github.com/unifiedjs/unified/releases/tag/11.0.0) và các gói remark/rehype khác lên phiên bản mới nhất.
+
+#### Tôi nên làm gì?
+
+Nếu bạn sử dụng các gói remark/rehype tùy chỉnh, hãy cập nhật tất cả lên bản mới nhất bằng trình quản lý gói để đảm bảo tương thích unified v11. Các gói bạn đang sử dụng có thể tìm thấy trong `astro.config.mjs`.
+
+Không nên có thay đổi phá vỡ lớn nếu bạn dùng các gói đang được cập nhật thường xuyên, tuy nhiên một số gói có thể chưa tương thích với unified v11.
+Hãy kiểm tra trực quan các trang Markdown/MDX của bạn trước khi triển khai để đảm bảo website hoạt động như mong muốn.
+
+## Các thay đổi phá vỡ (Breaking Changes)
+
+Những thay đổi sau được coi là phá vỡ trong Astro. Các thay đổi này có thể hoặc không hỗ trợ tương thích tạm thời, và tất cả tài liệu đều được cập nhật chỉ hướng dẫn cách dùng mã hiện tại, được hỗ trợ.
+
+Nếu bạn cần tham khảo tài liệu cho dự án v3.x, bạn có thể xem [ảnh chụp tài liệu cũ trước khi phát hành v4.0](https://docs-git-v3-docs-unmaintained-astrodotbuild.vercel.app/).
+
+### Đổi tên: `entrypoint` (Integrations API)
+
+Ở Astro v3.x, thuộc tính của API tích hợp `injectRoute` xác định điểm vào route được đặt tên là `entryPoint`.
+
+Astro v4.0 đổi tên thuộc tính này thành `entrypoint` để đồng bộ với các API khác của Astro. Thuộc tính `entryPoint` đã bị deprecate nhưng vẫn hoạt động và sẽ log cảnh báo nhắc bạn cập nhật mã.
+
+#### Tôi nên làm gì?
+
+Nếu bạn có tích hợp sử dụng API `injectRoute`, hãy đổi tên thuộc tính `entryPoint` thành `entrypoint`. Nếu bạn là tác giả thư viện muốn hỗ trợ cả Astro 3 và 4, bạn có thể khai báo cả hai thuộc tính, khi đó sẽ không có cảnh báo.
+
+```js ins={4} del={3}
+injectRoute({
+  pattern: '/fancy-dashboard',
+  entryPoint: '@fancy/dashboard/dashboard.astro'
+  entrypoint: '@fancy/dashboard/dashboard.astro'
+});
+```
+
+### Thay đổi: chữ ký `app.render` trong Integrations API
+
+Ở Astro v3.0, phương thức `app.render()` nhận `routeData` và `locals` dưới dạng hai tham số tùy chọn riêng biệt.
+
+Astro v4.0 thay đổi chữ ký của `app.render()`. Hai thuộc tính này giờ được truyền trong một object. Cả object lẫn hai thuộc tính này đều vẫn là tùy chọn.
+
+#### Tôi nên làm gì?
+
+Nếu bạn đang duy trì một adapter, chữ ký hiện tại vẫn hoạt động cho đến bản lớn tiếp theo. Để chuyển sang chữ ký mới, truyền `routeData` và `locals` thành thuộc tính của một object thay vì nhiều đối số độc lập.
+
+```diff lang="js"
+- app.render(request, routeData, locals)
++ app.render(request, { routeData, locals })
+```
+### Thay đổi: adapter giờ phải chỉ rõ tính năng hỗ trợ
+
+Ở Astro v3.x, adapter không bắt buộc phải chỉ định các tính năng mà chúng hỗ trợ.
+
+Astro v4.0 yêu cầu adapter truyền thuộc tính `supportedAstroFeatures{}` để liệt kê các tính năng hỗ trợ. Thuộc tính này không còn tùy chọn nữa.
+
+#### Tôi nên làm gì?
+
+Các tác giả adapter cần truyền tuỳ chọn `supportedAstroFeatures{}` để chỉ rõ các tính năng mà adapter hỗ trợ.
+
+```js title="my-adapter.mjs" ins={9-11}
+export default function createIntegration() {
+  return {
+    name: '@matthewp/my-adapter',
+    hooks: {
+      'astro:config:done': ({ setAdapter }) => {
+        setAdapter({
+          name: '@matthewp/my-adapter',
+          serverEntrypoint: '@matthewp/my-adapter/server.js',
+          supportedAstroFeatures: {
+              staticOutput: 'stable'
+          }
+        });
+      },
+    },
+  };
+}
+```
+
+### Đã loại bỏ: thuộc tính `path` của ngôn ngữ Shiki
+
+Ở Astro v3.x, một ngôn ngữ Shiki được truyền vào `markdown.shikiConfig.langs` sẽ tự động chuyển đổi sang ngôn ngữ tương thích Shikiji. Shikiji là công cụ nội bộ của Astro dùng để tô sáng cú pháp.
+
+Astro v4.0 loại bỏ hỗ trợ thuộc tính `path` của ngôn ngữ Shiki, vì cấu hình này gây nhầm lẫn. Thay vào đó, import file JSON ngôn ngữ và truyền trực tiếp vào `langs`.
+
+#### Tôi nên làm gì?
+
+File JSON ngôn ngữ nên được import và truyền vào tuỳ chọn.
+
+```diff lang="js"
+// astro.config.js
++ import customLang from './custom.tmLanguage.json'
+
+export default defineConfig({
+  markdown: {
+    shikiConfig: {
+      langs: [
+-       { path: '../../custom.tmLanguage.json' },
++       customLang,
+      ],
+    },
+  },
+})
+```
+
+## Đã deprecate
+
+Các tính năng sau đã bị deprecate, không còn được hỗ trợ và không còn trong tài liệu. Vui lòng cập nhật dự án của bạn cho phù hợp.
+
+Một số tính năng deprecate có thể tiếp tục hoạt động tạm thời cho đến khi bị loại bỏ hoàn toàn. Số khác có thể không còn tác dụng, hoặc báo lỗi yêu cầu bạn cập nhật mã nguồn.
+
+### Đã deprecate: `handleForms` cho sự kiện `submit` View Transitions
+
+Ở Astro v3.x, các dự án sử dụng component `<ViewTransitions />` phải bật tuỳ chọn xử lý sự kiện `submit` cho các phần tử `form` bằng cách truyền prop `handleForms`.
+
+Astro v4.0 tự động xử lý sự kiện `submit` cho `form` khi dùng `<ViewTransitions />`. Prop `handleForms` đã bị deprecate và không còn tác dụng.
+
+#### Tôi nên làm gì?
+
+Hãy xoá thuộc tính `handleForms` khỏi component `ViewTransitions`. Không còn cần thiết nữa.
+
+```astro title="src/pages/index.astro" del="handleForms"
+---
+import { ViewTransitions } from "astro:transitions";
+---
+<html>
+  <head>
+    <ViewTransitions handleForms />
+  </head>
+  <body>
+    <!-- stuff here -->
+  </body>
+</html>
+```
+
+Để không xử lý tự động sự kiện `submit`, thêm thuộc tính `data-astro-reload` cho các phần tử `form` liên quan.
+
+```astro title="src/components/Form.astro" ins="data-astro-reload"
+<form action="/contact" data-astro-reload>
+  <!-- -->
+</form>
+```
+
+## Các tính năng đã deprecate trước đây nay bị loại bỏ hoàn toàn
+
+Các tính năng sau đây hiện đã bị loại bỏ hoàn toàn khỏi mã nguồn và không thể sử dụng nữa. Một số tính năng này có thể vẫn hoạt động sau khi bị deprecate. Số khác có thể không còn tác dụng mà không báo lỗi.
+
+Các dự án còn chứa các tính năng này sẽ không thể build, và sẽ không còn tài liệu hỗ trợ bạn xoá chúng khỏi dự án.
+
+### Đã loại bỏ: trả về object đơn giản từ endpoint
+
+Ở Astro v3.x, trả về object đơn giản từ endpoint đã bị deprecate, nhưng vẫn hỗ trợ để duy trì tương thích với Astro v2. Một tiện ích `ResponseWithEncoding` cũng được cung cấp để dễ chuyển đổi.
+
+Astro v4.0 loại bỏ hoàn toàn hỗ trợ trả về object đơn giản, yêu cầu endpoint luôn trả về một đối tượng `Response`. Tiện ích `ResponseWithEncoding` cũng bị loại bỏ, thay bằng kiểu `Response` chuẩn.
+
+#### Tôi nên làm gì?
+
+Cập nhật endpoint của bạn để trả về đối tượng `Response` trực tiếp.
+
+```diff lang="ts"
+  export async function GET() {
+-   return { body: { "title": "Bob's blog" }};
++   return new Response(JSON.stringify({ "title": "Bob's blog" }));
+  }
+```
+
+Để loại bỏ việc sử dụng `ResponseWithEncoding`, hãy chuyển mã dùng `ArrayBuffer` như sau:
+
+```diff lang="ts"
+  export async function GET() {
+    const file = await fs.readFile('./bob.png');
+-   return new ResponseWithEncoding(file.toString('binary'), undefined, 'binary');
++   return new Response(file.buffer);
+  }
+```
+
+### Đã loại bỏ: `build.split` và `build.excludeMiddleware`
+
+Ở Astro v3.0, các tuỳ chọn cấu hình build `build.split` và `build.excludeMiddleware` đã bị deprecate và được thay thế bằng [cấu hình adapter](/vi/reference/adapter-reference/#adapter-features) để thực hiện chức năng tương tự.
+
+Astro v4.0 loại bỏ hoàn toàn các thuộc tính này.
+
+#### Tôi nên làm gì?
+
+Nếu bạn đang sử dụng `build.split` hoặc `build.excludeMiddleware` đã bị deprecate, bạn phải xoá chúng vì chúng không còn tồn tại.
+
+Vui lòng xem hướng dẫn nâng cấp v3 để [cập nhật các thuộc tính middleware này](/vi/guides/upgrade-to/v3/#deprecated-buildexcludemiddleware-and-buildsplit) bằng cấu hình adapter.
+
+### Đã loại bỏ: `Astro.request.params`
+
+Ở Astro v3.0, API `Astro.request.params` đã bị deprecate nhưng vẫn giữ để tương thích ngược.
+
+Astro v4.0 loại bỏ hoàn toàn tuỳ chọn này.
+
+#### Tôi nên làm gì?
+
+Cập nhật tất cả các trường hợp sang [`Astro.params`](/vi/reference/api-reference/#params), là phương pháp thay thế được hỗ trợ.
+
+```astro del={1} ins={2}
+const { id } = Astro.request.params;
+const { id } = Astro.params;
+```
+
+### Đã loại bỏ: `markdown.drafts`
+
+Ở Astro v3.0, sử dụng `markdown.drafts` để kiểm soát việc build bài nháp đã bị deprecate.
+
+Astro v4.0 loại bỏ hoàn toàn tuỳ chọn này.
+
+#### Tôi nên làm gì?
+
+Nếu bạn đang dùng `markdown.drafts` đã bị deprecate, bạn phải xoá nó vì nó không còn tồn tại.
+
+Để tiếp tục đánh dấu một số trang là nháp, [chuyển sang content collections](/vi/guides/content-collections/) và tự lọc các trang có property frontmatter `draft: true`.
+
+### Đã loại bỏ: `getHeaders()`
+
+Ở Astro v3.0, xuất Markdown `getHeaders()` đã bị deprecate và được thay thế bằng `getHeadings()`.
+
+Astro v4.0 loại bỏ hoàn toàn tuỳ chọn này.
+
+#### Tôi nên làm gì?
+
+Nếu bạn đang sử dụng `getHeaders()` đã bị deprecate, bạn phải xoá nó vì nó không còn tồn tại. Thay thế bằng `getHeadings()`, là phương pháp thay thế được hỗ trợ.
+
+```js del={2} ins={3}
+const posts = await Astro.glob('../content/blog/*.mdx');
+const firstPostHeadings = posts.at(0).getHeaders();
+const firstPostHeadings = posts.at(0).getHeadings();
+```
+
+### Đã loại bỏ: sử dụng `rss` trong `getStaticPaths()`
+
+Ở Astro v3.0, sử dụng helper `rss` bị deprecate trong `getStaticPaths()` sẽ báo lỗi.
+
+Astro v4.0 loại bỏ hoàn toàn helper này.
+
+#### Tôi nên làm gì?
+
+Nếu bạn đang sử dụng phương pháp không được hỗ trợ để tạo RSS feed, bạn phải sử dụng [tích hợp `@astrojs/rss`](/vi/recipes/rss/) để có setup RSS hoàn chỉnh.
+
+### Đã loại bỏ: tên phương thức HTTP viết thường
+
+Ở Astro v3.0, sử dụng tên phương thức HTTP viết thường (`get`, `post`, `put`, `all`, `del`) đã bị deprecate.
+
+Astro v4.0 loại bỏ hoàn toàn hỗ trợ tên viết thường. Tất cả phương thức HTTP phải được viết hoa.
+
+#### Tôi nên làm gì?
+
+Nếu bạn đang sử dụng tên viết thường đã bị deprecate, bạn phải thay thế bằng tên viết hoa tương ứng.
+
+Vui lòng xem hướng dẫn nâng cấp v3 [để biết cách dùng phương thức HTTP viết hoa](/vi/guides/upgrade-to/v3/#changed-http-request-methods-case).
+
+### Đã loại bỏ: chuyển hướng 301 khi thiếu tiền tố `base`
+
+Ở Astro v3.x, máy chủ preview của Astro trả về chuyển hướng 301 khi truy cập tài nguyên thư mục public mà không có đường dẫn base.
+
+Astro v4.0 trả về trạng thái 404 nếu thiếu tiền tố base ở đường dẫn tài nguyên thư mục public khi chạy preview server, giống với hành vi của dev server.
+
+#### Tôi nên làm gì?
+
+Khi sử dụng preview server, tất cả import tài nguyên tĩnh và URL từ thư mục public phải có [giá trị base](/vi/reference/configuration-reference/#base) làm tiền tố cho đường dẫn.
+
+Ví dụ dưới đây minh hoạ thuộc tính `src` cần thiết để hiển thị hình ảnh từ thư mục public khi cấu hình `base: '/docs'`:
+
+```astro title="src/pages/index.astro" ins="/docs"
+// Để truy cập public/images/my-image.png:
+
+<img src="/docs/images/my-image.png" alt="">
+```
+
+### Đã loại bỏ: tự động chuyển đổi `astro/client-image`
+
+Ở Astro v3.x, kiểu `astro/client-image` (dùng cho image integration cũ) đã bị loại bỏ nhưng vẫn được tự động chuyển sang kiểu mặc định Astro là `astro/client` nếu tìm thấy trong file `env.d.ts` của bạn.
+
+Astro v4.0 bỏ qua `astro/client-image` và sẽ không tự động cập nhật `env.d.ts` nữa.
+
+#### Tôi nên làm gì?
+
+Nếu bạn đã cấu hình types cho `@astrojs/image` trong `src/env.d.ts` và khi nâng cấp lên v3.0 chưa tự động chuyển đổi, hãy thay thế thủ công kiểu `astro/client-image` bằng `astro/client`.
+
+```ts title="src/env.d.ts" del={1} ins={2}
+  /// <reference types="astro/client-image" />
+  /// <reference types="astro/client" />
+```
+
+## Tài nguyên cộng đồng
+
+Biết tài nguyên hay cho Astro v4.0? [Chỉnh sửa trang này](https://github.com/withastro/docs/edit/main/src/content/docs/vi/guides/upgrade-to/v4.mdx) và thêm liên kết bên dưới!
+
+## Các vấn đề đã biết
+
+Vui lòng kiểm tra [vấn đề của Astro trên GitHub](https://github.com/withastro/astro/issues/) để xem các báo cáo hoặc gửi vấn đề mới.

@@ -1,0 +1,338 @@
+---
+title: Tham khảo template directives
+i18nReady: true
+---
+
+import Since from '~/components/Since.astro';
+import ReadMore from '~/components/ReadMore.astro';
+
+**Template directives** là một loại thuộc tính HTML đặc biệt có sẵn bên trong bất kỳ template component Astro nào (file `.astro`), và một số cũng có thể được sử dụng trong file `.mdx`.
+
+Template directives được sử dụng để kiểm soát hành vi của một element hoặc component theo một cách nào đó. Một template directive có thể kích hoạt một số tính năng của compiler giúp công việc của bạn dễ dàng hơn (như sử dụng `class:list` thay vì `class`). Hoặc, một directive có thể yêu cầu Astro compiler làm điều gì đó đặc biệt với component đó (như hydrating với `client:load`).
+
+Trang này mô tả tất cả các template directives có sẵn trong Astro và cách chúng hoạt động.
+
+## Quy tắc
+
+Để một template directive hợp lệ, nó phải:
+
+- Bao gồm dấu hai chấm `:` trong tên của nó, sử dụng dạng `X:Y` (ví dụ: `client:load`).
+- Có thể nhìn thấy bởi compiler (ví dụ: `<X {...attr}>` sẽ không hoạt động nếu `attr` chứa một directive).
+
+Một số template directives, nhưng không phải tất cả, có thể nhận một giá trị tùy chỉnh:
+
+- `<X client:load />` (không nhận giá trị)
+- `<X class:list={['some-css-class']} />` (nhận một array)
+
+Một template directive không bao giờ được bao gồm trực tiếp trong output HTML cuối cùng của một component.
+
+## Common Directives
+
+### `class:list`
+
+`class:list={...}` nhận một array các giá trị class và chuyển đổi chúng thành một chuỗi class. Điều này được cung cấp bởi thư viện helper phổ biến [clsx](https://github.com/lukeed/clsx) của @lukeed.
+
+`class:list` nhận một array của nhiều loại giá trị khác nhau:
+
+- `string`: Được thêm vào `class` của element
+- `Object`: Tất cả các key truthy được thêm vào `class` của element
+- `Array`: được làm phẳng
+- `false`, `null`, hoặc `undefined`: bị bỏ qua
+
+```astro
+<!-- Này -->
+<span class:list={[ 'hello goodbye', { world: true }, [ 'friend' ] ]} />
+<!-- Trở thành -->
+<span class="hello goodbye world friend"></span>
+```
+
+### `set:html`
+
+`set:html={string}` chèn một chuỗi HTML vào một element, tương tự như việc đặt `el.innerHTML`.
+
+**Giá trị không được Astro escape tự động!** Hãy đảm bảo rằng bạn tin tưởng giá trị đó, hoặc bạn đã escape nó thủ công trước khi truyền vào template. Quên làm điều này sẽ khiến bạn dễ bị tấn công [Cross Site Scripting (XSS).](https://owasp.org/www-community/attacks/xss/)
+
+```astro
+---
+const rawHTMLString = "Hello <strong>World</strong>"
+---
+<h1>{rawHTMLString}</h1>
+  <!-- Output: <h1>Hello &lt;strong&gt;World&lt;/strong&gt;</h1> -->
+<h1 set:html={rawHTMLString} />
+  <!-- Output: <h1>Hello <strong>World</strong></h1> -->
+```
+
+Bạn cũng có thể sử dụng `set:html` trên `<Fragment>` để tránh thêm một wrapper element không cần thiết. Điều này có thể đặc biệt hữu ích khi fetch HTML từ một CMS.
+
+```astro
+---
+const cmsContent = await fetchHTMLFromMyCMS();
+---
+<Fragment set:html={cmsContent}>
+```
+
+`set:html={Promise<string>}` chèn một chuỗi HTML vào một element được bọc trong một Promise.
+
+Điều này có thể được sử dụng để chèn HTML được lưu trữ bên ngoài, chẳng hạn như trong cơ sở dữ liệu.
+
+```astro
+---
+import api from '../db/api.js';
+---
+<article set:html={api.getArticle(Astro.props.id)}></article>
+```
+
+`set:html={Promise<Response>}` chèn một [Response](https://developer.mozilla.org/en-US/docs/Web/API/Response) vào một element.
+
+Điều này hữu ích nhất khi sử dụng `fetch()`. Ví dụ, fetch các bài post cũ từ một static-site generator trước đó.
+
+```astro
+<article set:html={fetch('http://example/old-posts/making-soup.html')}></article>
+```
+
+`set:html` có thể được sử dụng trên bất kỳ tag nào và không cần phải bao gồm HTML. Ví dụ, sử dụng với [`JSON.stringify()`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/JSON/stringify) trên một tag `<script>` để thêm schema [JSON-LD](https://json-ld.org/) vào trang của bạn.
+
+```astro
+<script type="application/ld+json" set:html={JSON.stringify({
+  "@context": "https://schema.org/",
+  "@type": "Person",
+  name: "Houston",
+  hasOccupation: {
+    "@type": "Occupation",
+    name: "Astronaut"
+  }
+})}/>
+```
+
+### `set:text`
+
+`set:text={string}` chèn một chuỗi văn bản vào một element, tương tự như việc đặt `el.innerText`. Không giống như `set:html`, giá trị `string` được truyền sẽ được Astro escape tự động.
+
+Điều này tương đương với việc chỉ truyền một biến vào một template expression trực tiếp (ví dụ: `<div>{someText}</div>`) và do đó directive này không được sử dụng phổ biến.
+
+## Client Directives
+
+Các directives này kiểm soát cách các [UI Framework components](/vi/guides/framework-components/) được hydrated trên trang.
+
+Theo mặc định, một UI Framework component không được hydrated trên client. Nếu không có directive `client:*` nào được cung cấp, HTML của nó được render onto trang mà không có JavaScript.
+
+Một client directive chỉ có thể được sử dụng trên một UI framework component được import trực tiếp vào một component `.astro`. Hydration directives không được hỗ trợ khi sử dụng [dynamic tags](/vi/reference/astro-syntax/#dynamic-tags) và [custom components được truyền qua prop `components`](/vi/guides/integrations-guide/mdx/#custom-components-with-imported-mdx).
+
+### `client:load`
+
+- **Priority:** High
+- **Useful for:** Các UI elements hiển thị ngay lập tức cần interactive càng sớm càng tốt.
+
+Load và hydrate component JavaScript ngay lập tức khi trang load.
+
+```astro
+<BuyButton client:load />
+```
+
+### `client:idle`
+
+- **Priority:** Medium
+- **Useful for:** Các UI elements ưu tiên thấp hơn không cần interactive ngay lập tức.
+
+Load và hydrate component JavaScript một khi trang hoàn thành load ban đầu và sự kiện `requestIdleCallback` đã được kích hoạt. Nếu bạn đang ở trong trình duyệt không hỗ trợ [`requestIdleCallback`](https://developer.mozilla.org/en-US/docs/Web/API/Window/requestIdleCallback), thì sự kiện [`load`](https://developer.mozilla.org/en-US/docs/Web/API/Window/load_event) của document được sử dụng.
+
+```astro
+<ShowHideButton client:idle />
+```
+
+#### `timeout`
+
+<p>
+	<Since v='4.15.0' />
+</p>
+
+Thời gian tối đa để chờ, tính bằng milliseconds, trước khi hydrate component, ngay cả khi trang chưa hoàn thành load ban đầu.
+
+Điều này cho phép bạn truyền một giá trị cho [tùy chọn `timeout` từ đặc tả `requestIdleCallback()`](https://www.w3.org/TR/requestidlecallback/#the-requestidlecallback-method). Điều này có nghĩa là bạn có thể trì hoãn hydration cho các UI elements ưu tiên thấp hơn với nhiều kiểm soát hơn để đảm bảo element của bạn interactive trong khung thời gian được chỉ định.
+
+```astro
+<ShowHideButton client:idle={{timeout: 500}} />
+```
+
+### `client:visible`
+
+- **Priority:** Low
+- **Useful for:** Các UI elements ưu tiên thấp nằm xa bên dưới trang ("below the fold") hoặc tốn nhiều tài nguyên để load đến mức bạn muốn không load chúng nếu người dùng không bao giờ nhìn thấy element đó.
+
+Load và hydrate component JavaScript một khi component đã vào viewport của người dùng. Điều này sử dụng `IntersectionObserver` bên trong để theo dõi visibility.
+
+```astro
+<HeavyImageCarousel client:visible />
+```
+
+#### `client:visible={{rootMargin}}`
+
+<p>
+	<Since v='4.1.0' />
+</p>
+
+Tùy chọn, một giá trị cho `rootMargin` có thể được truyền cho `IntersectionObserver` bên dưới. Khi `rootMargin` được chỉ định, component JavaScript sẽ hydrate khi một margin được chỉ định (tính bằng pixels) xung quanh component vào viewport, thay vì chính component đó.
+
+```astro
+<HeavyImageCarousel client:visible={{rootMargin: "200px"}} />
+```
+
+Chỉ định giá trị `rootMargin` có thể giảm layout shifts (CLS), cho phép nhiều thời gian hơn để một component hydrate trên kết nối internet chậm hơn, và làm cho các components interactive sớm hơn, tăng cường tính ổn định và responsive của trang.
+
+### `client:media`
+
+- **Priority:** Low
+- **Useful for:** Sidebar toggles, hoặc các elements khác có thể chỉ hiển thị trên một số kích thước màn hình nhất định.
+
+`client:media={string}` load và hydrate component JavaScript một khi một CSS media query nhất định được đáp ứng.
+
+:::note
+Nếu component đã được ẩn và hiển thị bởi một media query trong CSS của bạn, thì có thể dễ dàng hơn khi chỉ sử dụng `client:visible` và không truyền cùng media query đó vào directive.
+:::
+
+```astro
+<SidebarToggle client:media="(max-width: 50em)" />
+```
+
+### `client:only`
+
+`client:only={string}` **bỏ qua** HTML server rendering, và chỉ render trên client. Nó hoạt động tương tự như `client:load` ở chỗ nó load, render, và hydrate component ngay lập tức khi trang load.
+
+**Bạn phải truyền framework đúng của component làm giá trị!** Bởi vì Astro không chạy component trong quá trình build / trên server, Astro không biết framework nào mà component của bạn sử dụng trừ khi bạn nói với nó một cách rõ ràng.
+
+```astro
+<SomeReactComponent client:only="react" />
+<SomePreactComponent client:only="preact" />
+<SomeSvelteComponent client:only="svelte" />
+<SomeVueComponent client:only="vue" />
+<SomeSolidComponent client:only="solid-js" />
+```
+
+#### Hiển thị loading content
+
+Đối với các components chỉ render trên client, cũng có thể hiển thị fallback content trong khi chúng đang loading. Sử dụng `slot="fallback"` trên bất kỳ child element nào để tạo content sẽ chỉ được hiển thị cho đến khi client component của bạn có sẵn:
+
+```astro {2}
+<ClientComponent client:only="vue">
+  <div slot="fallback">Loading</div>
+</ClientComponent>
+```
+
+### Custom Client Directives
+
+Kể từ Astro 2.6.0, các integrations cũng có thể thêm custom `client:*` directives để thay đổi cách và khi nào các components nên được hydrated.
+
+Truy cập trang [`addClientDirective` API](/vi/reference/integrations-reference/#addclientdirective-option) để tìm hiểu thêm về việc tạo custom client directive.
+
+## Server Directives
+
+Các directives này kiểm soát cách các server island components được rendered.
+
+### `server:defer`
+
+Directive `server:defer` chuyển đổi component thành một server island, khiến nó được render theo yêu cầu, bên ngoài phạm vi của phần còn lại của page rendering.
+
+<ReadMore>Xem thêm về việc sử dụng [server island components](/vi/guides/server-islands/).</ReadMore>
+
+```astro
+<Avatar server:defer />
+```
+
+## Script & Style Directives
+
+Các directives này chỉ có thể được sử dụng trên các tag HTML `<script>` và `<style>`, để kiểm soát cách client-side JavaScript và CSS của bạn được xử lý trên trang.
+
+### `is:global`
+
+Theo mặc định, Astro tự động scope các quy tắc CSS `<style>` cho component. Bạn có thể opt-out khỏi hành vi này với directive `is:global`.
+
+`is:global` làm cho nội dung của tag `<style>` áp dụng globally trên trang khi component được bao gồm. Điều này vô hiệu hóa hệ thống CSS scoping của Astro. Điều này tương đương với việc bọc tất cả các selectors trong tag `<style>` bằng `:global()`.
+
+Bạn có thể kết hợp `<style>` và `<style is:global>` cùng nhau trong cùng một component, để tạo một số quy tắc style global trong khi vẫn scoping hầu hết CSS của component của bạn.
+
+<ReadMore>Xem trang [Styling & CSS](/vi/guides/styling/#global-styles) để biết thêm chi tiết về cách global styles hoạt động.</ReadMore>
+
+```astro
+<style is:global>
+  body a { color: red; }
+</style>
+```
+
+### `is:inline`
+
+Theo mặc định, Astro sẽ xử lý, tối ưu hóa và bundle bất kỳ tag `<script>` và `<style>` nào mà nó thấy trên trang. Bạn có thể opt-out khỏi hành vi này với directive `is:inline`.
+
+`is:inline` yêu cầu Astro để lại tag `<script>` hoặc `<style>` như hiện tại trong output HTML cuối cùng. Nội dung sẽ không được xử lý, tối ưu hóa hoặc bundle. Điều này giới hạn một số tính năng của Astro, như import một npm package hoặc sử dụng một ngôn ngữ compile-to-CSS như Sass.
+
+Directive `is:inline` có nghĩa là các tag `<style>` và `<script>`:
+
+- Sẽ không được bundle vào một file bên ngoài. Điều này có nghĩa là [các thuộc tính như `defer`](https://javascript.info/script-async-defer) kiểm soát việc loading của một file bên ngoài sẽ không có hiệu lực.
+- Sẽ không được deduplicated—element sẽ xuất hiện nhiều lần như nó được rendered.
+- Sẽ không có các tham chiếu `import`/`@import`/`url()` của nó được resolve tương đối với file `.astro`.
+- Sẽ được rendered trong output HTML cuối cùng chính xác ở nơi nó được authored.
+- Styles sẽ là global và không được scoped cho component.
+
+:::caution
+Directive `is:inline` được implied bất cứ khi nào bất kỳ thuộc tính nào khác ngoài `src` được sử dụng trên tag `<script>` hoặc `<style>`.
+Ngoại lệ duy nhất là sử dụng [`define:vars` directive](/vi/reference/directives-reference/#definevars) trên tag `<style>`, điều này không tự động imply `is:inline`.
+:::
+
+```astro
+<style is:inline>
+  /* inline: relative & npm package imports are not supported. */
+  @import '/assets/some-public-styles.css';
+  span { color: green; }
+</style>
+
+<script is:inline>
+  /* inline: relative & npm package imports are not supported. */
+  console.log('I am inlined right here in the final output HTML.');
+</script>
+```
+
+<ReadMore>Xem cách [client-side scripts](/vi/guides/client-side-scripts/) hoạt động trong các components Astro.</ReadMore>
+
+### `define:vars`
+
+`define:vars={...}` có thể truyền các biến server-side từ component frontmatter của bạn vào các tag `<script>` hoặc `<style>` client. Bất kỳ biến frontmatter JSON-serializable nào đều được hỗ trợ, bao gồm `props` được truyền cho component của bạn thông qua `Astro.props`. Các giá trị được serialized bằng [`JSON.stringify()`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/JSON/stringify).
+
+```astro
+---
+const foregroundColor = "rgb(221 243 228)";
+const backgroundColor = "rgb(24 121 78)";
+const message = "Astro is awesome!";
+---
+<style define:vars={{ textColor: foregroundColor, backgroundColor }}>
+  h1 {
+    background-color: var(--backgroundColor);
+    color: var(--textColor);
+  }
+</style>
+
+<script define:vars={{ message }}>
+  alert(message);
+</script>
+```
+
+:::caution
+Sử dụng `define:vars` trên tag `<script>` implies [`is:inline` directive](#isinline), có nghĩa là các scripts của bạn sẽ không được bundle và sẽ được inline trực tiếp vào HTML.
+
+Điều này là bởi vì khi Astro bundle một script, nó bao gồm và chạy script một lần ngay cả khi bạn bao gồm component chứa script nhiều lần trên một trang. `define:vars` yêu cầu một script chạy lại với mỗi tập hợp giá trị, vì vậy Astro tạo một inline script thay thế.
+
+Đối với scripts, hãy thử [truyền biến vào scripts thủ công](/vi/guides/client-side-scripts/#pass-frontmatter-variables-to-scripts) thay thế.
+:::
+
+## Advanced Directives
+
+### `is:raw`
+
+`is:raw` hướng dẫn Astro compiler xử lý bất kỳ children nào của element đó như văn bản. Điều này có nghĩa là tất cả cú pháp templating đặc biệt của Astro sẽ được bỏ qua bên trong component này.
+
+Ví dụ, nếu bạn có một custom Katex component chuyển đổi một số văn bản thành HTML, bạn có thể để người dùng làm điều này:
+
+```astro
+---
+import Katex from '../components/Katex.astro';
+---
+<Katex is:raw>Some conflicting {syntax} here</Katex>
+```

@@ -1,0 +1,180 @@
+---
+title: Hình ảnh đáp ứng thử nghiệm
+sidebar:
+  label: Hình ảnh đáp ứng
+i18nReady: true
+---
+
+import Since from '~/components/Since.astro';
+
+<p>
+
+**Kiểu:** `boolean`<br />
+**Mặc định:** `false`<br />
+
+<Since v="5.0.0" />
+</p>
+
+Kích hoạt hỗ trợ tự động tạo hình ảnh đáp ứng trong dự án của bạn.
+
+Thuật ngữ [hình ảnh đáp ứng](https://developer.mozilla.org/en-US/docs/Web/HTML/Guides/Responsive_images) đề cập đến hình ảnh hoạt động tốt trên nhiều thiết bị khác nhau. Điều này đặc biệt áp dụng với những hình ảnh có thể thay đổi kích thước để phù hợp với vùng chứa của chúng, và có thể được phục vụ ở nhiều kích thước khác nhau tùy theo kích thước màn hình và độ phân giải của thiết bị.
+
+Có một số thuộc tính bổ sung có thể được thiết lập để kiểm soát cách hiển thị hình ảnh, nhưng việc này có thể phức tạp nếu làm thủ công. Xử lý sai các thuộc tính này có thể dẫn đến hình ảnh tải chậm hoặc hiển thị không đúng. Đây là một trong những nguyên nhân phổ biến nhất khiến điểm số Core Web Vitals và Lighthouse bị thấp.
+
+Khi bật cờ này, Astro có thể tự động tạo các giá trị `srcset` và `sizes` cần thiết cho hình ảnh, đồng thời áp dụng các kiểu đúng để đảm bảo chúng thay đổi kích thước chính xác. Hành vi này có thể cấu hình chung hoặc cho từng hình ảnh cụ thể.
+
+Để bật tính năng này, trước tiên hãy thêm cờ `responsiveImages` vào tệp `astro.config.mjs` của bạn:
+
+```js title="astro.config.mjs"
+{
+  experimental: {
+    responsiveImages: true,
+  },
+}
+```
+
+Việc bật cờ này sẽ không thay đổi gì ngay lập tức, nhưng sau đó bạn có thể cấu hình hình ảnh đáp ứng bằng cách thiết lập [bố cục hình ảnh](#image-layout) ở mức toàn cục hoặc cho từng hình ảnh.
+
+Để thực hiện điều này, bạn có thể sử dụng các [thiết lập cấu hình `image`](#configuration-settings) bổ sung để kiểm soát hành vi mặc định của tất cả hình ảnh được Astro xử lý và tối ưu:
+
+- Hình ảnh cục bộ và từ xa sử dụng [cú pháp Markdown `![]()`](/vi/guides/images/#images-in-markdown-files).
+- Các thành phần [`<Image />`](/vi/guides/images/#display-optimized-images-with-the-image--component) và [`<Picture />`](/vi/guides/images/#create-responsive-images-with-the-picture--component).
+
+Ngoài ra, các thành phần hình ảnh của Astro có thể nhận các [thuộc tính hình ảnh đáp ứng](#responsive-image-properties) để ghi đè các thiết lập mặc định này cho từng hình ảnh cụ thể.
+
+Hình ảnh trong thư mục `public/` sẽ không bao giờ được tối ưu hóa, và không hỗ trợ hình ảnh đáp ứng.
+
+:::note
+Bật hình ảnh đáp ứng sẽ tạo thêm nhiều kích thước hình ảnh cho tất cả các hình ảnh bị ảnh hưởng. Đối với các trang prerendered, việc này diễn ra trong quá trình build nên có thể làm tăng thời gian build của dự án, đặc biệt nếu bạn có nhiều hình ảnh.
+
+Đối với các trang render theo yêu cầu, hình ảnh sẽ được tạo khi cần thiết, vì vậy không ảnh hưởng đến thời gian build nhưng có thể làm tăng số lần chuyển đổi hình ảnh. Tùy theo dịch vụ hình ảnh bạn sử dụng, việc này có thể phát sinh thêm chi phí.
+:::
+
+## Bố cục hình ảnh
+
+Để tạo các thuộc tính `srcset` và `sizes` chính xác, các thành phần `<Image />` và `<Picture />` cần biết hình ảnh sẽ thay đổi kích thước như thế nào khi vùng chứa thay đổi kích thước. Điều này được thực hiện bằng cách thiết lập thuộc tính `layout`, hoặc giá trị mặc định `image.experimentalLayout`. Các giá trị hỗ trợ gồm:
+
+- `constrained` - Hình ảnh sẽ thu nhỏ để vừa với vùng chứa, giữ nguyên tỷ lệ, nhưng không phóng to vượt quá `width`, `height` chỉ định hoặc kích thước gốc của hình ảnh. Dùng khi bạn muốn hình ảnh hiển thị ở kích thước yêu cầu khi có thể, nhưng thu nhỏ cho màn hình nhỏ hơn. Đây là hành vi mặc định khi dùng với Tailwind. Nếu không chắc, bạn nên chọn bố cục này.
+- `full-width` - Hình ảnh sẽ phóng to để vừa với chiều rộng vùng chứa, giữ nguyên tỷ lệ. Dùng cho hình ảnh nổi bật hoặc hình chiếm toàn bộ chiều rộng trang.
+- `fixed` - Hình ảnh sẽ giữ nguyên kích thước yêu cầu và không thay đổi kích thước. Sẽ tạo `srcset` để hỗ trợ màn hình mật độ cao, nhưng không cho các kích thước màn hình khác nhau. Dùng khi hình ảnh không thay đổi kích thước, ví dụ icon, logo nhỏ hơn mọi kích thước màn hình, hoặc hình trong vùng chứa có chiều rộng cố định.
+- `none` - Hình ảnh sẽ không đáp ứng. Không tự động tạo `srcset` hay `sizes`, không áp dụng kiểu nào. Hữu ích khi bạn đã bật bố cục mặc định nhưng muốn tắt cho hình ảnh cụ thể.
+
+Bố cục `layout` đã chọn sẽ được dùng để tạo thuộc tính `srcset` và `sizes` chính xác cho hình ảnh, đồng thời xác định các kiểu mặc định áp dụng cho thẻ `<img>` đó.
+
+## Thiết lập cấu hình
+
+Thiết lập [`image.experimentalLayout`](/vi/reference/configuration-reference/#imageexperimentallayout) với giá trị mặc định để bật hình ảnh đáp ứng trên toàn bộ dự án.
+
+Nếu giá trị này không được cấu hình, bạn vẫn có thể truyền thuộc tính `layout` vào bất kỳ thành phần `<Image />` hoặc `<Picture />` nào để tạo hình ảnh đáp ứng. Tuy nhiên, hình ảnh Markdown sẽ không đáp ứng.
+
+Bạn cũng có thể tùy chọn cấu hình [`image.experimentalObjectFit`](/vi/reference/configuration-reference/#imageexperimentalobjectfit) và [`image.experimentalObjectPosition`](/vi/reference/configuration-reference/#imageexperimentalobjectposition), các giá trị này sẽ áp dụng mặc định cho tất cả hình ảnh được xử lý.
+
+Mỗi thiết lập này có thể ghi đè cho từng thành phần `<Image />` hoặc `<Picture />` bằng thuộc tính, nhưng hình ảnh Markdown luôn dùng thiết lập mặc định.
+
+```js title="astro.config.mjs"
+{
+  image: {
+    // Dùng cho tất cả hình ảnh Markdown; không thể cấu hình riêng lẻ
+    // Dùng cho tất cả thành phần `<Image />` và `<Picture />` trừ khi ghi đè bằng thuộc tính
+    experimentalLayout: 'constrained',
+  },
+  experimental: {
+    responsiveImages: true,
+  },
+}
+```
+
+## Thuộc tính hình ảnh đáp ứng
+
+Đây là các thuộc tính bổ sung dành cho các thành phần `<Image />` và `<Picture />` khi hình ảnh đáp ứng được bật:
+
+- `layout`: [Loại bố cục](#image-layout) cho hình ảnh. Có thể là `constrained`, `fixed`, `full-width` hoặc `none`. Nếu đặt là `none`, tắt hành vi đáp ứng cho hình ảnh này và bỏ qua các tùy chọn khác. Mặc định là `none`, hoặc giá trị của [`image.experimentalLayout`](/vi/reference/configuration-reference/#imageexperimentallayout) nếu được cấu hình.
+- `fit`: Xác định cách hình ảnh bị cắt nếu tỷ lệ bị thay đổi. Giá trị giống với CSS `object-fit`. Mặc định là `cover`, hoặc giá trị của [`image.experimentalObjectFit`](/vi/reference/configuration-reference/#imageexperimentalobjectfit) nếu được cấu hình.
+- `position`: Xác định vị trí cắt hình ảnh nếu tỷ lệ bị thay đổi. Giá trị giống với CSS `object-position`. Mặc định là `center`, hoặc giá trị của [`image.experimentalObjectPosition`](/vi/reference/configuration-reference/#imageexperimentalobjectposition) nếu được cấu hình.
+- `priority`: Nếu đặt, sẽ tải hình ảnh ngay lập tức. Nếu không, hình ảnh sẽ được tải lười (lazy-load). Dùng cho hình ảnh lớn nhất ở phía trên màn hình. Mặc định là `false`.
+
+Thuộc tính `widths` và `sizes` sẽ được tự động tạo dựa trên kích thước của hình ảnh và loại bố cục, và trong hầu hết trường hợp không nên tự đặt thủ công. Thuộc tính `sizes` được tạo ra cho bố cục `constrained` và `full-width` dựa trên giả định hình ảnh được hiển thị gần như toàn bộ chiều rộng màn hình khi viewport nhỏ hơn chiều rộng hình ảnh. Nếu khác biệt đáng kể (ví dụ trong bố cục nhiều cột trên màn hình nhỏ), bạn nên điều chỉnh lại thuộc tính `sizes` thủ công để có kết quả tốt nhất.
+
+Thuộc tính `densities` không tương thích với hình ảnh đáp ứng và sẽ bị bỏ qua nếu thiết lập.
+
+Ví dụ, với bố cục mặc định là `constrained`, bạn có thể ghi đè thuộc tính `layout` cho từng hình ảnh:
+
+```astro
+---
+import { Image } from 'astro:assets';
+import myImage from '../assets/my_image.png';
+---
+<Image src={myImage} alt="Hình này sẽ dùng bố cục đáp ứng" width={800} height={600} />
+<Image src={myImage} alt="Hình này sẽ dùng bố cục full-width" layout="full-width" />
+<Image src={myImage} alt="Hình này sẽ tắt hình ảnh đáp ứng" layout="none" />
+```
+
+## Kết quả HTML sinh ra cho hình ảnh đáp ứng
+
+Khi một bố cục được đặt, dù mặc định hay trên từng thành phần, hình ảnh sẽ được tự động tạo các thuộc tính `srcset` và `sizes` dựa trên kích thước hình và loại bố cục. Hình ảnh dùng bố cục `constrained` và `full-width` sẽ được áp dụng các kiểu đảm bảo chúng thay đổi kích thước theo vùng chứa.
+
+```astro title=MyComponent.astro
+---
+import { Image, Picture } from 'astro:assets';
+import myImage from '../assets/my_image.png';
+---
+<Image src={myImage} alt="Mô tả về hình ảnh của tôi." layout='responsive' width={800} height={600} />
+<Picture src={myImage} alt="Mô tả về hình ảnh của tôi." layout='full-width' formats={['avif', 'webp', 'jpeg']} />
+```
+
+Thành phần `<Image />` này sẽ sinh ra HTML như sau:
+
+```html
+<img
+	src="/_astro/my_image.hash3.webp"
+	srcset="
+		/_astro/my_image.hash1.webp  640w,
+		/_astro/my_image.hash2.webp  750w,
+		/_astro/my_image.hash3.webp  800w,
+		/_astro/my_image.hash4.webp  828w,
+		/_astro/my_image.hash5.webp 1080w,
+		/_astro/my_image.hash6.webp 1280w,
+		/_astro/my_image.hash7.webp 1600w
+	"
+	alt="Mô tả về hình ảnh của tôi"
+	sizes="(min-width: 800px) 800px, 100vw"
+	loading="lazy"
+	decoding="async"
+	fetchpriority="auto"
+	width="800"
+	height="600"
+	style="--fit: cover; --pos: center;"
+	data-astro-image="constrained"
+/>
+```
+
+## Kiểu mặc định cho hình ảnh đáp ứng
+
+Thành phần hình ảnh đáp ứng áp dụng một số kiểu nhỏ để đảm bảo chúng thay đổi kích thước chính xác. Các kiểu được áp dụng tùy thuộc vào loại bố cục, nhằm đảm bảo hành vi tốt nhất cho các thuộc tính `srcset` và `sizes` được tạo ra:
+
+```css title="Responsive Image Styles"
+:where([data-astro-image]) {
+	object-fit: var(--fit);
+	object-position: var(--pos);
+}
+:where([data-astro-image='full-width']) {
+	width: 100%;
+}
+:where([data-astro-image='constrained']) {
+	max-width: 100%;
+}
+```
+
+### Ghi đè kiểu mặc định
+
+Các kiểu sử dụng [`:where()` pseudo-class](https://developer.mozilla.org/en-US/docs/Web/CSS/:where), có [độ ưu tiên](https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_cascade/Specificity) là 0, nghĩa là rất dễ ghi đè với kiểu của riêng bạn. Bất kỳ selector CSS nào cũng sẽ có độ ưu tiên cao hơn `:where()`, nên bạn có thể dễ dàng ghi đè bằng cách thêm kiểu CSS của mình cho hình ảnh.
+
+Bạn có thể ghi đè các kiểu `object-fit` và `object-position` cho từng hình ảnh bằng cách đặt thuộc tính `fit` và `position` trên thành phần `<Image />` hoặc `<Picture />`.
+
+Bạn có thể tắt hoàn toàn các kiểu mặc định bằng cách đặt [`image.experimentalDefaultStyles`](/vi/reference/configuration-reference/#imageexperimentaldefaultstyles) thành `false` nếu muốn tự xử lý kiểu cho hình ảnh đáp ứng.
+
+#### Tailwind 4
+
+Tailwind 4 là trường hợp đặc biệt, vì nó sử dụng [cascade layers](https://developer.mozilla.org/en-US/docs/Web/CSS/@layer), nghĩa là các quy tắc Tailwind luôn có độ ưu tiên thấp hơn các quy tắc không dùng layer. Astro hỗ trợ cả trình duyệt không hỗ trợ cascade layers, nên không thể sử dụng chúng cho hình ảnh. Điều này có nghĩa là [bạn nên tắt các kiểu mặc định](/vi/reference/configuration-reference/#imageexperimentaldefaultstyles) nếu cần ghi đè chúng bằng Tailwind 4.
+
+Để xem tổng quan đầy đủ và góp ý cho API thử nghiệm này, hãy xem [Responsive Images RFC](https://github.com/withastro/roadmap/blob/responsive-images/proposals/0053-responsive-images.md).

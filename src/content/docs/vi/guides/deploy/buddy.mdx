@@ -1,0 +1,38 @@
+---
+title: Triển khai trang Astro của bạn với Buddy
+description: Cách triển khai trang Astro của bạn lên web bằng Buddy.
+sidebar:
+  label: Buddy
+type: deploy
+i18nReady: true
+---
+import { Steps } from '@astrojs/starlight/components';
+
+Bạn có thể triển khai dự án Astro của mình bằng [Buddy](https://buddy.works/), một giải pháp CI/CD có thể build trang web của bạn và đẩy lên nhiều nền tảng triển khai khác nhau bao gồm cả máy chủ FTP và các nhà cung cấp dịch vụ lưu trữ đám mây.
+
+:::note
+Buddy không tự lưu trữ trang web của bạn. Thay vào đó, nó giúp bạn quản lý quá trình build và chuyển kết quả đến nền tảng triển khai mà bạn chọn.
+:::
+
+## Cách triển khai
+
+<Steps>
+1. [Tạo tài khoản **Buddy**](https://buddy.works/sign-up).
+
+2. Tạo một dự án mới và kết nối với kho git (GitHub, GitLab, BitBucket, bất kỳ kho Git riêng tư nào hoặc bạn có thể sử dụng Buddy Git Hosting).
+
+3. Thêm một pipeline mới.
+
+4. Trong pipeline vừa tạo, thêm một hành động **[Node.js](https://buddy.works/actions/node-js)**.
+
+5. Trong hành động này, thêm:
+
+   ```bash
+   npm install
+   npm run build
+   ```
+
+6. Thêm một hành động triển khai — có rất nhiều lựa chọn, bạn có thể duyệt qua chúng trong [danh mục các hành động của Buddy](https://buddy.works/actions). Mặc dù các thiết lập có thể khác nhau, hãy nhớ đặt **Source path** thành `dist`.
+
+7. Nhấn nút **Run**.
+</Steps>

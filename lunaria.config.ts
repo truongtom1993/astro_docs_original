@@ -103,6 +103,13 @@ export default defineConfig({
 				tag: 'zh-TW',
 			},
 		},
+		{
+			label: 'Tiếng Việt',
+			lang: 'vi',
+			parameters: {
+				tag: 'vi',
+			},
+		},
 	],
 	files: [
 		{

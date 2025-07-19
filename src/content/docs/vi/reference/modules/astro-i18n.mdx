@@ -1,0 +1,363 @@
+---
+title: Tham chiếu API Quốc tế hóa
+sidebar:
+  label: 'astro:i18n'
+i18nReady: true
+tableOfContents:
+  minHeadingLevel: 2
+  maxHeadingLevel: 6
+---
+
+import Since from '~/components/Since.astro';
+import ReadMore from '~/components/ReadMore.astro';
+
+<p>
+	<Since v='3.5.0' />
+</p>
+
+Module này cung cấp các hàm để giúp bạn tạo URL bằng các locale đã cấu hình trong dự án của mình.
+
+Việc tạo các route cho dự án với i18n router sẽ phụ thuộc vào một số giá trị cấu hình mà bạn đã đặt, ảnh hưởng đến các route trang của bạn. Khi tạo route với các hàm này, hãy đảm bảo xét đến các thiết lập cá nhân của bạn cho:
+
+- [`base`](/vi/reference/configuration-reference/#base)
+- [`trailingSlash`](/vi/reference/configuration-reference/#trailingslash)
+- [`build.format`](/vi/reference/configuration-reference/#buildformat)
+- [`site`](/vi/reference/configuration-reference/#site)
+
+Ngoài ra, lưu ý rằng các URL trả về được tạo bởi các hàm này cho `defaultLocale` của bạn sẽ phản ánh cấu hình `i18n.routing` của bạn.
+
+Để xem các tính năng và ví dụ sử dụng, [xem hướng dẫn định tuyến i18n của chúng tôi](/vi/guides/internationalization/).
+
+## Import từ `astro:i18n`
+
+```js
+import {
+	getRelativeLocaleUrl,
+	getAbsoluteLocaleUrl,
+	getRelativeLocaleUrlList,
+	getAbsoluteLocaleUrlList,
+	getPathByLocale,
+	getLocaleByPath,
+	redirectToDefaultLocale,
+	redirectToFallback,
+	notFound,
+	middleware,
+	requestHasLocale,
+} from 'astro:i18n';
+```
+
+### `getRelativeLocaleUrl()`
+
+<p>
+
+**Kiểu:** `(locale: string, path?: string,  options?: GetLocaleOptions) => string`
+
+</p>
+
+Sử dụng hàm này để lấy đường dẫn tương đối cho một locale. Nếu locale không tồn tại, Astro sẽ ném ra lỗi.
+
+```astro
+---
+import { getRelativeLocaleUrl } from 'astro:i18n';
+
+getRelativeLocaleUrl("fr");
+// trả về /fr
+
+getRelativeLocaleUrl("fr", "");
+// trả về /fr/
+
+getRelativeLocaleUrl("fr", "getting-started");
+// trả về /fr/getting-started
+
+getRelativeLocaleUrl("fr_CA", "getting-started", {
+  prependWith: "blog"
+});
+// trả về /blog/fr-ca/getting-started
+
+getRelativeLocaleUrl("fr_CA", "getting-started", {
+  prependWith: "blog",
+  normalizeLocale: false
+});
+// trả về /blog/fr_CA/getting-started
+---
+```
+
+### `getAbsoluteLocaleUrl()`
+
+<p>
+
+**Kiểu:** `(locale: string, path?: string, options?: GetLocaleOptions) => string`
+
+</p>
+
+Sử dụng hàm này để lấy đường dẫn tuyệt đối cho một locale khi [`site`] đã có giá trị. Nếu [`site`] chưa được cấu hình, hàm sẽ trả về URL tương đối. Nếu locale không tồn tại, Astro sẽ ném ra lỗi.
+
+```astro title="src/pages/index.astro"
+---
+import { getAbsoluteLocaleUrl } from 'astro:i18n';
+
+// Nếu `site` được đặt là `https://example.com`
+
+getAbsoluteLocaleUrl("fr");
+// trả về https://example.com/fr
+
+getAbsoluteLocaleUrl("fr", "");
+// trả về https://example.com/fr/
+
+getAbsoluteLocaleUrl("fr", "getting-started");
+// trả về https://example.com/fr/getting-started
+
+getAbsoluteLocaleUrl("fr_CA", "getting-started", {
+  prependWith: "blog"
+});
+// trả về https://example.com/blog/fr-ca/getting-started
+
+getAbsoluteLocaleUrl("fr_CA", "getting-started", {
+  prependWith: "blog",
+  normalizeLocale: false
+});
+// trả về https://example.com/blog/fr_CA/getting-started
+---
+```
+
+### `getRelativeLocaleUrlList()`
+
+<p>
+
+**Kiểu:** `(path?: string, options?: GetLocaleOptions) => string[]`
+
+</p>
+
+Sử dụng tương tự như [`getRelativeLocaleUrl`](#getrelativelocaleurl) để trả về danh sách các đường dẫn tương đối cho tất cả các locale.
+
+### `getAbsoluteLocaleUrlList()`
+
+<p>
+
+**Kiểu:** `(path?: string, options?: GetLocaleOptions) => string[]`
+
+</p>
+
+Sử dụng tương tự như [`getAbsoluteLocaleUrl`](/vi/guides/internationalization/#custom-locale-paths) để trả về danh sách các đường dẫn tuyệt đối cho tất cả các locale.
+
+### `getPathByLocale()`
+
+<p>
+
+**Kiểu:** `(locale: string) => string`
+
+</p>
+
+Hàm trả về `path` liên kết với một hoặc nhiều `codes` khi [cấu hình đường dẫn locale tùy chỉnh](/vi/guides/internationalization/#custom-locale-paths) được thiết lập.
+
+```js title="astro.config.mjs"
+export default defineConfig({
+	i18n: {
+		locales: [
+			'es',
+			'en',
+			{
+				path: 'french',
+				codes: ['fr', 'fr-BR', 'fr-CA'],
+			},
+		],
+	},
+});
+```
+
+```astro title="src/pages/index.astro"
+---
+import { getPathByLocale } from 'astro:i18n';
+
+getPathByLocale("fr"); // trả về "french"
+getPathByLocale("fr-CA"); // trả về "french"
+---
+```
+
+### `getLocaleByPath()`
+
+<p>
+
+**Kiểu:** `(path: string) => string`
+
+</p>
+
+Hàm trả về `code` liên kết với một đường dẫn locale.
+
+```js title="astro.config.mjs"
+export default defineConfig({
+	i18n: {
+		locales: [
+			'es',
+			'en',
+			{
+				path: 'french',
+				codes: ['fr', 'fr-BR', 'fr-CA'],
+			},
+		],
+	},
+});
+```
+
+```astro title="src/pages/index.astro"
+---
+import { getLocaleByPath } from 'astro:i18n';
+
+getLocaleByPath("french"); // trả về "fr" vì đây là code đầu tiên được cấu hình
+---
+```
+
+### `redirectToDefaultLocale()`
+
+<p>
+
+**Kiểu:** `(context: APIContext, statusCode?: ValidRedirectStatus) => Promise<Response>`<br />
+
+<Since v="4.6.0" />
+</p>
+
+:::note
+Chỉ khả dụng khi `i18n.routing` được đặt là `"manual"`
+:::
+
+Hàm trả về một `Response` chuyển hướng đến `defaultLocale` đã cấu hình. Nhận thêm một mã trạng thái chuyển hướng hợp lệ tùy chọn.
+
+```js title="middleware.js"
+import { defineMiddleware } from 'astro:middleware';
+import { redirectToDefaultLocale } from 'astro:i18n';
+
+export const onRequest = defineMiddleware((context, next) => {
+	if (context.url.pathname.startsWith('/about')) {
+		return next();
+	} else {
+		return redirectToDefaultLocale(context, 302);
+	}
+});
+```
+
+### `redirectToFallback()`
+
+<p>
+
+**Kiểu:** `(context: APIContext, response: Response) => Promise<Response>`<br />
+
+<Since v="4.6.0" />
+</p>
+
+:::note
+Chỉ khả dụng khi `i18n.routing` được đặt là `"manual"`
+:::
+
+Hàm cho phép bạn sử dụng [cấu hình `i18n.fallback` của mình](/vi/reference/configuration-reference/#i18nfallback) trong middleware riêng.
+
+```js title="middleware.js"
+import { defineMiddleware } from 'astro:middleware';
+import { redirectToFallback } from 'astro:i18n';
+
+export const onRequest = defineMiddleware(async (context, next) => {
+	const response = await next();
+	if (response.status >= 300) {
+		return redirectToFallback(context, response);
+	}
+	return response;
+});
+```
+
+### `notFound()`
+
+<p>
+
+**Kiểu:** `(context: APIContext, response?: Response) => Promise<Response> | undefined`<br />
+
+<Since v="4.6.0" />
+</p>
+
+:::note
+Chỉ khả dụng khi `i18n.routing` được đặt là `"manual"`
+:::
+
+Sử dụng hàm này trong middleware định tuyến của bạn để trả về 404 khi:
+
+- đường dẫn hiện tại không phải là root, ví dụ: `/` hoặc `/<base>`
+- URL không chứa locale
+
+Khi truyền vào một `Response`, `Response` mới do hàm này trả về sẽ chứa các header giống như response gốc.
+
+```js title="middleware.js"
+import { defineMiddleware } from 'astro:middleware';
+import { notFound } from 'astro:i18n';
+
+export const onRequest = defineMiddleware((context, next) => {
+	const pathNotFound = notFound(context);
+	if (pathNotFound) {
+		return pathNotFound;
+	}
+	return next();
+});
+```
+
+### `middleware()`
+
+<p>
+
+**Kiểu:** `(options: { prefixDefaultLocale: boolean, redirectToDefaultLocale: boolean }) => MiddlewareHandler`<br />
+
+<Since v="4.6.0" />
+</p>
+
+:::note
+Chỉ khả dụng khi `i18n.routing` được đặt là `"manual"`
+:::
+
+Hàm cho phép bạn tạo middleware i18n của Astro một cách lập trình.
+
+Điều này hữu ích khi bạn vẫn muốn sử dụng logic i18n mặc định, nhưng chỉ thêm một vài ngoại lệ cho website của mình.
+
+```js title="middleware.js"
+import { middleware } from 'astro:i18n';
+import { sequence, defineMiddleware } from 'astro:middleware';
+
+const customLogic = defineMiddleware(async (context, next) => {
+	const response = await next();
+
+	// Logic tùy chỉnh sau khi nhận được response.
+	// Có thể bắt response trả về từ middleware i18n của Astro.
+
+	return response;
+});
+
+export const onRequest = sequence(
+	customLogic,
+	middleware({
+		prefixDefaultLocale: true,
+		redirectToDefaultLocale: false,
+	}),
+);
+```
+
+### `requestHasLocale()`
+
+<p>
+
+**Kiểu:** `(context: APIContext) => boolean`<br />
+
+<Since v="4.6.0" />
+</p>
+
+:::note
+Chỉ khả dụng khi `i18n.routing` được đặt là `"manual"`
+:::
+
+Kiểm tra xem URL hiện tại có chứa locale đã cấu hình hay không. Nội bộ, hàm này sẽ sử dụng `APIContext#url.pathname`.
+
+```js title="middleware.js"
+import { defineMiddleware } from 'astro:middleware';
+import { requestHasLocale } from 'astro:i18n';
+
+export const onRequest = defineMiddleware(async (context, next) => {
+	if (requestHasLocale(context)) {
+		return next();
+	}
+	return new Response('Không tìm thấy', { status: 404 });
+});
+```

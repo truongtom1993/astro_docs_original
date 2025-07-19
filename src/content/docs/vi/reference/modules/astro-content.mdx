@@ -1,0 +1,325 @@
+---
+title: Tham khảo API Bộ sưu tập Nội dung
+sidebar:
+  label: 'astro:content'
+i18nReady: true
+tableOfContents:
+  minHeadingLevel: 2
+  maxHeadingLevel: 6
+---
+
+import Since from '~/components/Since.astro';
+import ReadMore from '~/components/ReadMore.astro';
+
+<p>
+	<Since v='2.0.0' />
+</p>
+
+Bộ sưu tập nội dung cung cấp các API để cấu hình và truy vấn tài liệu Markdown hoặc MDX trong `src/content/`. Để biết các tính năng và ví dụ sử dụng, [xem hướng dẫn về bộ sưu tập nội dung của chúng tôi](/vi/guides/content-collections/).
+
+## Nhập khẩu từ `astro:content`
+
+```js
+import { z, defineCollection, getCollection, getEntry, getEntries, reference, render } from 'astro:content';
+```
+
+### `defineCollection()`
+
+<p>
+
+**Kiểu:** `(input: CollectionConfig) => CollectionConfig`
+
+<Since v="2.0.0" />
+</p>
+
+`defineCollection()` là một tiện ích để cấu hình một bộ sưu tập trong tệp `src/content.config.*`.
+
+```ts title="src/content.config.ts"
+import { z, defineCollection } from 'astro:content';
+import { glob } from 'astro/loaders';
+
+const blog = defineCollection({
+	loader: glob({ pattern: '**/*.md', base: './src/data/blog' }),
+	schema: z.object({
+		title: z.string(),
+		permalink: z.string().optional(),
+	}),
+});
+
+// Xuất bộ sưu tập đã định nghĩa của bạn cho Astro
+// với xuất `collections`
+export const collections = { blog };
+```
+
+Hàm này chấp nhận các thuộc tính sau:
+
+#### `loader`
+
+<p>
+
+**Kiểu:** <code>() => Promise&lt;Array&lt;\{ id: string, [key: string]: any }&gt; | Record&lt;string, Record&lt;string, any&gt;&gt;&gt; | <a href="/vi/reference/content-loader-reference/#object-loader-api">Loader</a></code>
+
+<Since v="5.0.0" />
+</p>
+
+Một `loader` là một đối tượng hoặc hàm cho phép bạn tải dữ liệu từ bất kỳ nguồn nào, cục bộ hoặc từ xa, vào các bộ sưu tập nội dung.
+
+[Xem hướng dẫn `Bộ sưu tập nội dung`](/vi/guides/content-collections/#defining-the-collection-loader) để biết ví dụ sử dụng.
+
+#### `schema`
+
+<p>
+
+**Kiểu:** <code>ZodType | (context: <a href="#schemacontext">SchemaContext</a>) => ZodType</code>
+
+<Since v="2.0.0" />
+</p>
+
+`schema` là một đối tượng Zod tùy chọn để cấu hình kiểu và hình dạng của frontmatter tài liệu cho một bộ sưu tập. Mỗi giá trị phải sử dụng [trình kiểm tra Zod](https://github.com/colinhacks/zod).
+
+[Xem hướng dẫn `Bộ sưu tập nội dung`](/vi/guides/content-collections/#defining-the-collection-schema) để biết ví dụ sử dụng.
+
+### `reference()`
+
+<p>
+
+**Kiểu:** `(collection: string) => ZodEffects<ZodString, { collection, id: string }>`<br />
+
+<Since v="2.5.0" />
+</p>
+
+Hàm `reference()` được sử dụng trong file cấu hình nội dung để xác định mối quan hệ, hoặc "tham chiếu", từ một bộ sưu tập này đến bộ sưu tập khác. Tham số truyền vào là tên bộ sưu tập và nó sẽ chuyển đổi tham chiếu thành một đối tượng chứa tên bộ sưu tập và id tham chiếu.
+
+Ví dụ này định nghĩa các tham chiếu từ tác giả blog đến bộ sưu tập `authors` và một mảng bài viết liên quan đến bộ sưu tập `blog`:
+
+```ts
+import { defineCollection, reference, z } from 'astro:content';
+import { glob, file } from 'astro/loaders';
+
+const blog = defineCollection({
+	loader: glob({ pattern: '**/*.md', base: './src/data/blog' }),
+	schema: z.object({
+		// Tham chiếu một tác giả từ bộ sưu tập `authors` theo `id`
+		author: reference('authors'),
+		// Tham chiếu một mảng bài liên quan từ bộ sưu tập `blog` theo `slug`
+		relatedPosts: z.array(reference('blog')),
+	}),
+});
+
+const authors = defineCollection({
+	loader: file('src/data/authors.json'),
+	schema: z.object({
+		/* ... */
+	}),
+});
+
+export const collections = { blog, authors };
+```
+
+Việc kiểm tra hợp lệ các mục tham chiếu được thực hiện khi chạy bằng cách sử dụng `getEntry()` hoặc `getEntries()`:
+
+```astro title="src/pages/[posts].astro"
+// nếu một mục tham chiếu không hợp lệ, hàm này sẽ trả về undefined.
+const relatedPosts = await getEntries(blogPost.data.relatedPosts);
+```
+
+[Xem hướng dẫn `Bộ sưu tập nội dung`](/vi/guides/content-collections/#defining-collection-references) để biết ví dụ sử dụng.
+
+### `getCollection()`
+
+<p>
+
+**Kiểu:** `(collection: string, filter?: (entry: CollectionEntry<collection>) => boolean) => CollectionEntry<collection>[]`
+
+<Since v="2.0.0" />
+</p>
+
+`getCollection()` là một hàm dùng để lấy danh sách các mục trong bộ sưu tập nội dung theo tên bộ sưu tập.
+
+Mặc định, nó trả về tất cả các mục trong bộ sưu tập, và chấp nhận một hàm `filter` tùy chọn để lọc theo thuộc tính mục. Điều này cho phép bạn truy vấn chỉ một số mục trong bộ sưu tập dựa trên `id` hoặc giá trị frontmatter thông qua đối tượng `data`.
+
+```astro
+---
+import { getCollection } from 'astro:content';
+
+// Lấy tất cả các mục trong `src/content/blog/`
+const allBlogPosts = await getCollection('blog');
+
+// Chỉ trả về các bài viết có `draft: true` trong frontmatter
+const draftBlogPosts = await getCollection('blog', ({ data }) => {
+  return data.draft === true;
+});
+---
+```
+
+[Xem hướng dẫn `Bộ sưu tập nội dung`](/vi/guides/content-collections/#querying-collections) để biết ví dụ sử dụng.
+
+### `getEntry()`
+
+<p>
+
+**Các kiểu:**
+
+- `(collection: string, id: string) => Promise<CollectionEntry<collection> | undefined>`
+- `({ collection: string, id: string }) => Promise<CollectionEntry<collection> | undefined>`
+  <Since v="2.5.0" />
+</p>
+
+`getEntry()` là một hàm để lấy một mục bộ sưu tập duy nhất bằng tên bộ sưu tập và `id` của mục đó. `getEntry()` cũng có thể được sử dụng để lấy các mục được tham chiếu để truy cập thuộc tính `data` hoặc `body`:
+
+```astro
+---
+import { getEntry } from 'astro:content';
+
+// Lấy `src/content/blog/enterprise.md`
+const enterprisePost = await getEntry('blog', 'enterprise');
+
+// Lấy `src/content/captains/picard.json`
+const picardProfile = await getEntry('captains', 'picard');
+
+// Lấy hồ sơ được tham chiếu bởi `data.captain`
+const enterpriseCaptainProfile = await getEntry(enterprisePost.data.captain);
+---
+```
+
+Xem hướng dẫn `Bộ sưu tập nội dung` để xem ví dụ về [truy vấn mục bộ sưu tập](/vi/guides/content-collections/#querying-collections).
+
+### `getEntries()`
+
+<p>
+
+**Kiểu:** `(Array<{ collection: string, id: string }>) => Array<CollectionEntry<collection>>`
+
+<Since v="2.5.0" />
+</p>
+
+`getEntries()` là một hàm để lấy nhiều mục bộ sưu tập từ cùng một bộ sưu tập. Điều này hữu ích cho [trả về một mảng các mục được tham chiếu](/vi/guides/content-collections/#defining-collection-references) để truy cập thuộc tính `data` và `body` của chúng.
+
+```astro
+---
+import { getEntries, getEntry } from 'astro:content';
+
+const enterprisePost = await getEntry('blog', 'enterprise');
+
+// Lấy các bài liên quan được tham chiếu bởi `data.relatedPosts`
+const enterpriseRelatedPosts = await getEntries(enterprisePost.data.relatedPosts);
+---
+```
+
+### `render()`
+
+<p>
+
+**Kiểu:** `(entry: CollectionEntry) => Promise<RenderedEntry>`
+
+<Since v="5.0.0" />
+</p>
+
+Một hàm để biên dịch một mục được chỉ định để hiển thị. Hàm này trả về các thuộc tính sau:
+
+- `<Content />` - Một component dùng để hiển thị nội dung tài liệu trong một file Astro.
+- `headings` - Danh sách các đề mục được tạo ra, [giống với tiện ích `getHeadings()` của Astro](/vi/guides/markdown-content/#available-properties) trên các import Markdown và MDX.
+- `remarkPluginFrontmatter` - Đối tượng frontmatter đã được chỉnh sửa sau khi bất kỳ [plugin remark hoặc rehype nào đã được áp dụng](/vi/guides/markdown-content/#modifying-frontmatter-programmatically). Có kiểu `any`.
+
+```astro
+---
+import { getEntry, render } from 'astro:content';
+const entry = await getEntry('blog', 'entry-1');
+
+if (!entry) {
+   // Xử lý lỗi, ví dụ:
+  throw new Error('Không tìm thấy bài viết 1');
+}
+const { Content, headings, remarkPluginFrontmatter } = await render(entry);
+---
+```
+
+[Xem hướng dẫn `Bộ sưu tập nội dung`](/vi/guides/content-collections/#rendering-body-content) để biết ví dụ sử dụng.
+
+## Các kiểu của `astro:content`
+
+```ts
+import type { CollectionEntry, CollectionKey, ContentCollectionKey, DataCollectionKey, SchemaContext } from 'astro:content';
+```
+
+### `CollectionEntry`
+
+Các hàm truy vấn bao gồm [`getCollection()`](#getcollection), [`getEntry()`](#getentry), và [`getEntries()`](#getentries) đều trả về các mục với kiểu `CollectionEntry`. Kiểu này có sẵn dưới dạng tiện ích từ `astro:content`:
+
+```ts
+import type { CollectionEntry } from 'astro:content';
+```
+
+`CollectionEntry` là một kiểu generic. Sử dụng nó với tên bộ sưu tập bạn đang truy vấn.
+Ví dụ, một mục trong bộ sưu tập `blog` của bạn sẽ có kiểu `CollectionEntry<'blog'>`.
+
+Mỗi `CollectionEntry` là một đối tượng với các giá trị sau:
+
+#### `id`
+
+**Kiểu:** `string`
+
+ID duy nhất. Lưu ý rằng tất cả ID từ trình tải tích hợp sẵn `glob()` của Astro đều được chuyển thành dạng slug.
+
+#### `collection`
+
+**Kiểu ví dụ:** `'blog' | 'authors' | ...`
+
+Tên của bộ sưu tập chứa các mục. Đây là tên được sử dụng để tham chiếu bộ sưu tập trong schema và trong các hàm truy vấn.
+
+#### `data`
+
+**Kiểu:** `CollectionSchema<TCollectionName>`
+
+Một đối tượng các thuộc tính frontmatter được suy ra từ schema của bộ sưu tập bạn định nghĩa ([xem tham khảo `defineCollection()`](#definecollection)). Mặc định sẽ là `any` nếu không cấu hình schema.
+
+#### `body`
+
+**Kiểu:** `string`
+
+Một chuỗi chứa nội dung thô, chưa được biên dịch của tài liệu Markdown hoặc MDX.
+
+### `CollectionKey`
+
+<p>
+	<Since v='3.1.0' />
+</p>
+
+Một kiểu hợp nhất chuỗi của tất cả tên bộ sưu tập được định nghĩa trong tệp `src/content.config.*` của bạn. Kiểu này hữu ích khi xây dựng một hàm generic bọc quanh hàm `getCollection()` tích hợp sẵn.
+
+```ts
+import { type CollectionKey, getCollection } from 'astro:content';
+
+async function queryCollection(collection: CollectionKey) {
+	return getCollection(collection, ({ data }) => {
+		return data.draft !== true;
+	});
+}
+```
+
+### `SchemaContext`
+
+Đối tượng `context` mà `defineCollection` sử dụng cho dạng hàm của `schema`. Kiểu này hữu ích khi xây dựng schema có thể tái sử dụng cho nhiều bộ sưu tập.
+
+Bao gồm thuộc tính sau:
+
+- `image` - Trợ giúp schema `image()` cho phép bạn [sử dụng hình ảnh cục bộ trong Bộ sưu tập Nội dung](/vi/guides/images/#images-in-content-collections)
+
+```ts
+import { defineCollection, z, type SchemaContext } from "astro:content";
+
+export const imageSchema = ({ image }: SchemaContext) =>
+    z.object({
+        image: image(),
+        description: z.string().optional(),
+    });
+
+const blog = defineCollection({
+  loader: /* ... */,
+  schema: ({ image }) => z.object({
+    title: z.string(),
+    permalink: z.string().optional(),
+    image: imageSchema({ image })
+  }),
+});
+```

@@ -1,0 +1,136 @@
+---
+title: Sử dụng font tùy chỉnh
+sidebar:
+  label: Fonts
+description: >-
+  Muốn thêm một số font chữ tùy chỉnh vào website Astro? Sử dụng Google Fonts
+  với Fontsource hoặc thêm font bạn lựa chọn.
+i18nReady: true
+---
+import PackageManagerTabs from '~/components/tabs/PackageManagerTabs.astro';
+import { Steps } from '@astrojs/starlight/components'
+
+Hướng dẫn này sẽ chỉ cho bạn cách thêm web fonts vào dự án và sử dụng chúng trong các component của bạn.
+
+:::tip[API Fonts Thử nghiệm]
+Tìm hiểu về [API Fonts thử nghiệm](/vi/reference/experimental-flags/fonts/) của Astro cho phép bạn sử dụng font từ hệ thống tệp và các nhà cung cấp font khác nhau thông qua API thống nhất, có thể tùy chỉnh hoàn toàn và type-safe.
+:::
+
+## Sử dụng tệp font cục bộ
+
+Ví dụ này sẽ minh họa cách thêm font tùy chỉnh sử dụng tệp font `DistantGalaxy.woff`.
+
+<Steps>
+1. Thêm tệp font của bạn vào `public/fonts/`.
+2. Thêm câu lệnh `@font-face` sau vào CSS của bạn. Điều này có thể trong tệp `.css` global bạn import, một khối `<style is:global>`, hoặc một khối `<style>` trong layout hoặc component cụ thể nơi bạn muốn sử dụng font này.
+
+    ```css
+    /* Đăng ký font family tùy chỉnh và cho trình duyệt biết nơi tìm thấy nó. */
+    @font-face {
+      font-family: 'DistantGalaxy';
+      src: url('/fonts/DistantGalaxy.woff') format('woff');
+      font-weight: normal;
+      font-style: normal;
+      font-display: swap;
+    }
+    ```
+
+3. Sử dụng giá trị `font-family` từ câu lệnh `@font-face` để style các element trong component hoặc layout của bạn. Trong ví dụ này, heading `<h1>` sẽ có font tùy chỉnh được áp dụng, trong khi paragraph `<p>` thì không.
+
+    ```astro title="src/pages/example.astro" {9-11}
+    ---
+    ---
+
+    <h1>Trong một thiên hà xa xôi...</h1>
+
+    <p>Font tùy chỉnh làm cho heading của tôi trở nên thú vị hơn nhiều!</p>
+
+    <style>
+    h1 {
+      font-family: 'DistantGalaxy', sans-serif;
+    }
+    </style>
+    ```
+</Steps>
+
+## Sử dụng Fontsource
+
+Dự án [Fontsource](https://fontsource.org/) đơn giản hóa việc sử dụng Google Fonts và các font mã nguồn mở khác. Nó cung cấp các module npm bạn có thể cài đặt cho các font muốn sử dụng.
+
+<Steps>
+1. Tìm font bạn muốn sử dụng trong [catalog của Fontsource](https://fontsource.org/). Ví dụ này sẽ sử dụng [Twinkle Star](https://fontsource.org/fonts/twinkle-star).
+2. Cài đặt package cho font bạn đã chọn.
+
+    <PackageManagerTabs>
+      <Fragment slot="npm">
+      ```shell
+      npm install @fontsource/twinkle-star
+      ```
+      </Fragment>
+      <Fragment slot="pnpm">
+      ```shell
+      pnpm add @fontsource/twinkle-star
+      ```
+      </Fragment>
+      <Fragment slot="yarn">
+      ```shell
+      yarn add @fontsource/twinkle-star
+      ```
+      </Fragment>
+    </PackageManagerTabs>
+
+    :::tip
+    Bạn sẽ tìm thấy tên package chính xác trong phần "Quick Installation" của mỗi trang font trên website Fontsource. Nó sẽ bắt đầu với `@fontsource/` hoặc `@fontsource-variable/` theo sau là tên của font.
+    :::
+
+3. Import package font trong component nơi bạn muốn sử dụng font. Thường thì bạn sẽ muốn làm điều này trong một layout component chung để đảm bảo font có sẵn trên toàn bộ trang web của bạn.
+
+    Import sẽ tự động thêm các quy tắc `@font-face` cần thiết để thiết lập font.
+
+    ```astro title="src/layouts/BaseLayout.astro"
+    ---
+    import '@fontsource/twinkle-star';
+    ---
+    ```
+
+4. Sử dụng tên font như được hiển thị trong ví dụ `body` trên trang Fontsource của nó như giá trị `font-family`. Điều này sẽ hoạt động ở bất cứ nơi nào bạn có thể viết CSS trong dự án Astro của mình.
+
+    ```css
+    h1 {
+      font-family: "Twinkle Star", cursive;
+    }
+    ```
+</Steps>
+
+Để tối ưu hóa thời gian render của website, bạn có thể muốn preload các font cần thiết cho việc hiển thị trang ban đầu.
+Xem [hướng dẫn Fontsource về preloading fonts](https://fontsource.org/docs/getting-started/preload) để biết thêm thông tin và cách sử dụng.
+
+## Đăng ký font trong Tailwind
+
+Nếu bạn đang sử dụng [Tailwind](/vi/guides/styling/#tailwind), bạn có thể sử dụng một trong hai phương pháp trước đó trên trang này để cài đặt font của mình, với một số sửa đổi. Bạn có thể thêm [câu lệnh `@font-face` cho font cục bộ](#using-a-local-font-file) hoặc sử dụng [chiến lược `import` của Fontsource](#using-fontsource) để cài đặt font.
+
+Để đăng ký font của bạn trong Tailwind:
+
+<Steps>
+1. Làm theo một trong hai hướng dẫn trên, nhưng bỏ qua bước cuối cùng là thêm `font-family` vào CSS của bạn.
+2. Thêm tên typeface vào `src/styles/global.css`.
+
+    Ví dụ này thêm `Inter` vào font stack sans-serif.
+
+    ```css title="src/styles/global.css" ins={3-5}
+    @import 'tailwindcss';
+
+    @theme {
+      --font-sans: 'Inter', 'sans-serif'; 
+    }
+    ```
+
+    Bây giờ, tất cả text sans-serif (mặc định với Tailwind) trong dự án của bạn sẽ sử dụng font bạn đã chọn và class `font-sans` cũng sẽ áp dụng font Inter.
+</Steps>
+
+Xem [tài liệu Tailwind về thêm font family tùy chỉnh](https://tailwindcss.com/docs/font-family#using-custom-values) để biết thêm thông tin.
+
+## Tài nguyên thêm
+
+- Tìm hiểu cách web fonts hoạt động trong [hướng dẫn web fonts của MDN](https://developer.mozilla.org/en-US/docs/Learn/CSS/Styling_text/Web_fonts).
+- Tạo CSS cho font của bạn với [Webfont Generator của Font Squirrel](https://www.fontsquirrel.com/tools/webfont-generator).

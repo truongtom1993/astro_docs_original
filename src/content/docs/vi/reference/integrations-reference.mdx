@@ -1,0 +1,1751 @@
+---
+title: Astro Integration API
+sidebar:
+  label: Integration API
+i18nReady: true
+---
+
+import Since from '~/components/Since.astro';
+
+**Astro Integrations** thêm các tính năng và hành vi mới cho dự án của bạn chỉ với vài dòng code.
+
+Trang tham khảo này dành cho bất kỳ ai viết integration của riêng mình. Để tìm hiểu cách sử dụng integration trong dự án của bạn, hãy xem hướng dẫn [Sử dụng Integrations](/vi/guides/integrations-guide/) thay thế.
+
+## Ví dụ
+
+Các integration chính thức của Astro có thể được dùng làm tài liệu tham khảo khi bạn xây dựng integration của riêng mình.
+
+- **Renderers:** [`svelte`](/vi/guides/integrations-guide/svelte/), [`react`](/vi/guides/integrations-guide/react/), [`preact`](/vi/guides/integrations-guide/preact/), [`vue`](/vi/guides/integrations-guide/vue/), [`solid`](/vi/guides/integrations-guide/solid-js/)
+- **Thư viện:** [`partytown`](/vi/guides/integrations-guide/partytown/)
+- **Tính năng:** [`sitemap`](/vi/guides/integrations-guide/sitemap/)
+
+## Tham khảo API nhanh
+
+```ts
+interface AstroIntegration {
+	name: string;
+	hooks: {
+		'astro:config:setup'?: (options: {
+			config: AstroConfig;
+			command: 'dev' | 'build' | 'preview' | 'sync';
+			isRestart: boolean;
+			updateConfig: (newConfig: DeepPartial<AstroConfig>) => AstroConfig;
+			addRenderer: (renderer: AstroRenderer) => void;
+			addWatchFile: (path: URL | string) => void;
+			addClientDirective: (directive: ClientDirectiveConfig) => void;
+			addMiddleware: (middleware: AstroIntegrationMiddleware) => void;
+			addDevToolbarApp: (entrypoint: DevToolbarAppEntry) => void;
+			injectScript: (stage: InjectedScriptStage, content: string) => void;
+			injectRoute: (injectedRoute: InjectedRoute) => void;
+			createCodegenDir: () => URL;
+			logger: AstroIntegrationLogger;
+		}) => void | Promise<void>;
+		'astro:route:setup'?: (options: { route: RouteOptions; logger: AstroIntegrationLogger }) => void | Promise<void>;
+		'astro:routes:resolved'?: (options: { routes: IntegrationResolvedRoute[]; logger: AstroIntegrationLogger }) => void | Promise<void>;
+		'astro:config:done'?: (options: {
+			config: AstroConfig;
+			setAdapter: (adapter: AstroAdapter) => void;
+			injectTypes: (injectedType: InjectedType) => URL;
+			logger: AstroIntegrationLogger;
+			buildOutput: 'static' | 'server';
+		}) => void | Promise<void>;
+		'astro:server:setup'?: (options: {
+			server: vite.ViteDevServer;
+			logger: AstroIntegrationLogger;
+			toolbar: ReturnType<typeof getToolbarServerCommunicationHelpers>;
+			refreshContent?: (options: RefreshContentOptions) => Promise<void>;
+		}) => void | Promise<void>;
+		'astro:server:start'?: (options: { address: AddressInfo; logger: AstroIntegrationLogger }) => void | Promise<void>;
+		'astro:server:done'?: (options: { logger: AstroIntegrationLogger }) => void | Promise<void>;
+		'astro:build:start'?: (options: { logger: AstroIntegrationLogger }) => void | Promise<void>;
+		'astro:build:setup'?: (options: {
+			vite: vite.InlineConfig;
+			pages: Map<string, PageBuildData>;
+			target: 'client' | 'server';
+			updateConfig: (newConfig: vite.InlineConfig) => void;
+			logger: AstroIntegrationLogger;
+		}) => void | Promise<void>;
+		'astro:build:ssr'?: (options: {
+			manifest: SerializedSSRManifest;
+			entryPoints: Map<IntegrationRouteData, URL>;
+			middlewareEntryPoint: URL | undefined;
+			logger: AstroIntegrationLogger;
+		}) => void | Promise<void>;
+		'astro:build:generated'?: (options: { dir: URL; logger: AstroIntegrationLogger }) => void | Promise<void>;
+		'astro:build:done'?: (options: {
+			pages: { pathname: string }[];
+			dir: URL;
+			assets: Map<string, URL[]>;
+			logger: AstroIntegrationLogger;
+		}) => void | Promise<void>;
+
+		// ... bất kỳ custom hooks nào từ integrations
+	};
+}
+```
+
+## Hooks
+
+Astro cung cấp các hooks mà integrations có thể implement để thực thi trong các phần nhất định của vòng đời Astro. Astro hooks được định nghĩa trong interface `IntegrationHooks`, là một phần của namespace global `Astro`. Mỗi hook có một [`logger` option](#astrointegrationlogger) cho phép bạn sử dụng Astro logger để viết logs.
+
+Những hooks sau được tích hợp sẵn trong Astro:
+
+### `astro:config:setup`
+
+**Hook tiếp theo:** [`astro:route:setup`](#astroroutesetup)
+
+**Khi nào:** Khi khởi tạo, trước khi [Vite](https://vite.dev/config/) hoặc [Astro config](/vi/reference/configuration-reference/) được giải quyết.
+
+**Tại sao:** Để mở rộng cấu hình dự án. Điều này bao gồm cập nhật [Astro config](/vi/reference/configuration-reference/), áp dụng [Vite plugins](https://vite.dev/guide/api-plugin.html), thêm component renderers, và inject scripts vào trang.
+
+```ts
+'astro:config:setup'?: (options: {
+  config: AstroConfig;
+  command: 'dev' | 'build' | 'preview' | 'sync';
+  isRestart: boolean;
+  updateConfig: (newConfig: DeepPartial<AstroConfig>) => AstroConfig;
+  addRenderer: (renderer: AstroRenderer) => void;
+  addClientDirective: (directive: ClientDirectiveConfig) => void;
+  addMiddleware: (middleware: AstroIntegrationMiddleware) => void;
+  addDevToolbarApp: (entrypoint: DevToolbarAppEntry) => void;
+  addWatchFile: (path: URL | string) => void;
+  injectScript: (stage: InjectedScriptStage, content: string) => void;
+  injectRoute: (injectedRoute: InjectedRoute) => void;
+  createCodegenDir: () => URL;
+  logger: AstroIntegrationLogger;
+}) => void | Promise<void>;
+```
+
+#### Tùy chọn `config`
+
+<p>
+
+**Kiểu:** `AstroConfig`
+
+</p>
+
+Một bản sao chỉ đọc của [Astro config](/vi/reference/configuration-reference/) do người dùng cung cấp. Điều này được giải quyết _trước khi_ bất kỳ integration nào khác chạy. Nếu bạn cần bản sao config sau khi tất cả integrations hoàn thành việc cập nhật config, [xem hook `astro:config:done`](#astroconfigdone).
+
+#### Tùy chọn `command`
+
+<p>
+
+**Kiểu:** `'dev' | 'build' | 'preview' | 'sync'`
+
+</p>
+
+- `dev` - Dự án được thực thi với `astro dev`
+- `build` - Dự án được thực thi với `astro build`
+- `preview` - Dự án được thực thi với `astro preview`
+- `sync` - Dự án được thực thi với `astro sync`
+
+#### Tùy chọn `isRestart`
+
+<p>
+
+**Kiểu:** `boolean`<br />
+
+<Since v="1.5.0" />
+</p>
+
+`false` khi dev server khởi động, `true` khi reload được kích hoạt. Hữu ích để phát hiện khi function này được gọi nhiều hơn một lần.
+
+#### Tùy chọn `updateConfig()`
+
+<p>
+
+**Kiểu:** `(newConfig: DeepPartial<AstroConfig>) => AstroConfig;`
+
+</p>
+
+Một callback function để cập nhật [Astro config](/vi/reference/configuration-reference/) do người dùng cung cấp. Bất kỳ config nào bạn cung cấp **sẽ được merge với user config + các cập nhật config integration khác**, vì vậy bạn có thể tự do bỏ qua các keys!
+
+Ví dụ, giả sử bạn cần cung cấp một [Vite](https://vite.dev/) plugin cho dự án của người dùng:
+
+```js
+import bananaCSS from '@vitejs/official-banana-css-plugin';
+
+export default {
+	name: 'banana-css-integration',
+	hooks: {
+		'astro:config:setup': ({ updateConfig }) => {
+			updateConfig({
+				vite: {
+					plugins: [bananaCSS()],
+				},
+			});
+		},
+	},
+};
+```
+
+#### Tùy chọn `addRenderer()`
+
+<p>
+
+**Kiểu:** `(renderer:` [`AstroRenderer`](https://github.com/withastro/astro/blob/fdd607c5755034edf262e7b275732519328a33b2/packages/astro/src/%40types/astro.ts#L872-L883) `) => void;`<br />
+**Ví dụ:** [`svelte`](https://github.com/withastro/astro/blob/main/packages/integrations/svelte/src/index.ts), [`react`](https://github.com/withastro/astro/blob/main/packages/integrations/react/src/index.ts), [`preact`](https://github.com/withastro/astro/blob/main/packages/integrations/preact/src/index.ts), [`vue`](https://github.com/withastro/astro/blob/main/packages/integrations/vue/src/index.ts), [`solid`](https://github.com/withastro/astro/blob/main/packages/integrations/solid/src/index.ts)
+
+</p>
+
+Một callback function để thêm component framework renderer (tức React, Vue, Svelte, v.v.). Bạn có thể xem các ví dụ và type definition ở trên để biết thêm các tùy chọn nâng cao, nhưng đây là 2 tùy chọn chính cần lưu ý:
+
+- `clientEntrypoint` - đường dẫn đến file thực thi trên client bất cứ khi nào component của bạn được sử dụng. Điều này chủ yếu để render hoặc hydrate component của bạn với JS.
+- `serverEntrypoint` - đường dẫn đến file thực thi trong các yêu cầu server-side hoặc static builds bất cứ khi nào component của bạn được sử dụng. Chúng nên render components thành static markup, với hooks cho hydration khi có thể. [React's `renderToString` callback](https://react.dev/reference/react-dom/server/renderToString) là một ví dụ kinh điển.
+
+<p>
+	<Since v='5.0.0' />
+</p>
+
+Các functions `clientEntrypoint` và `serverEntrypoint` chấp nhận một `URL`.
+
+#### Tùy chọn `addWatchFile()`
+
+<p>
+
+**Kiểu:** `(path: URL | string) => void`<br />
+
+<Since v="1.5.0" />
+</p>
+
+Nếu integration của bạn phụ thuộc vào một số file cấu hình mà Vite không watch và/hoặc cần khởi động lại dev server hoàn toàn để có hiệu lực, hãy thêm nó với `addWatchFile`. Bất cứ khi nào file đó thay đổi, Astro dev server sẽ được reload (bạn có thể kiểm tra khi nào reload xảy ra với `isRestart`).
+
+Ví dụ sử dụng:
+
+```js
+// Phải là đường dẫn tuyệt đối!
+addWatchFile('/home/user/.../my-config.json');
+addWatchFile(new URL('./ec.config.mjs', config.root));
+```
+
+#### Tùy chọn `addClientDirective()`
+
+<p>
+
+**Kiểu:** `(directive:` [`ClientDirectiveConfig`](https://github.com/withastro/astro/blob/00327c213f74627ac9ca1dec774efa5bf71e9375/packages/astro/src/%40types/astro.ts#L1872-L1875) `) => void;`<br />
+
+<Since v="2.6.0" />
+</p>
+
+Thêm một [custom client directive](/vi/reference/directives-reference/#custom-client-directives) để sử dụng trong files `.astro`.
+
+Lưu ý rằng directive entrypoints chỉ được bundle thông qua esbuild và nên được giữ nhỏ để không làm chậm component hydration.
+
+Ví dụ sử dụng:
+
+```js title="astro.config.mjs"
+import { defineConfig } from 'astro/config';
+import clickDirective from './astro-click-directive/register.js';
+
+// https://astro.build/config
+export default defineConfig({
+	integrations: [clickDirective()],
+});
+```
+
+```js title="astro-click-directive/register.js"
+/**
+ * @type {() => import('astro').AstroIntegration}
+ */
+export default () => ({
+	name: 'client:click',
+	hooks: {
+		'astro:config:setup': ({ addClientDirective }) => {
+			addClientDirective({
+				name: 'click',
+				entrypoint: './astro-click-directive/click.js',
+			});
+		},
+	},
+});
+```
+
+```js title="astro-click-directive/click.js"
+/**
+ * Hydrate on first click on the window
+ * @type {import('astro').ClientDirective}
+ */
+export default (load, opts, el) => {
+	window.addEventListener(
+		'click',
+		async () => {
+			const hydrate = await load();
+			await hydrate();
+		},
+		{ once: true },
+	);
+};
+```
+
+Bạn cũng có thể thêm types cho directives trong file type definition của thư viện:
+
+```ts title="astro-click-directive/index.d.ts"
+import 'astro';
+declare module 'astro' {
+	interface AstroClientDirectives {
+		'client:click'?: boolean;
+	}
+}
+```
+
+#### Tùy chọn `addDevToolbarApp()`
+
+<p>
+
+**Kiểu:** `(entrypoint: DevToolbarAppEntry) => void;`<br />
+
+<Since v="3.4.0" />
+</p>
+
+Thêm một [custom dev toolbar app](/vi/reference/dev-toolbar-app-reference/).
+
+Ví dụ sử dụng:
+
+```js title="astro.config.mjs"
+import { defineConfig } from 'astro/config';
+import devToolbarIntegration from './astro-dev-toolbar-app/integration.js';
+
+// https://astro.build/config
+export default defineConfig({
+	integrations: [devToolbarIntegration()],
+});
+```
+
+```js title="astro-dev-toolbar-app/integration.js"
+/**
+ * @type {() => import('astro').AstroIntegration}
+ */
+export default () => ({
+	name: 'dev-toolbar-app',
+	hooks: {
+		'astro:config:setup': ({ addDevToolbarApp }) => {
+			addDevToolbarApp({
+				entrypoint: './astro-dev-toolbar-app/plugin.js',
+				id: 'my-plugin',
+				name: 'My Plugin',
+			});
+		},
+	},
+});
+```
+
+```js title="astro-dev-toolbar-app/plugin.js"
+/**
+ * @type {import('astro').DevToolbarApp}
+ */
+export default {
+	id: 'my-plugin',
+	name: 'My Plugin',
+	icon: '<svg>...</svg>',
+	init() {
+		console.log("I'm a dev toolbar app!");
+	},
+};
+```
+
+#### Tùy chọn `addMiddleware()`
+
+<p>
+
+**Kiểu:** `(middleware:` [`AstroIntegrationMiddleware`](https://github.com/withastro/astro/blob/852ac0f75dfca1b2602e9cdbfa0447d9998e2449/packages/astro/src/%40types/astro.ts#L2124-L2127) `) => void;`<br />
+
+<Since v="3.5.0" />
+</p>
+
+Thêm [middleware](/vi/guides/middleware/) để chạy trên mỗi request. Nhận module `entrypoint` chứa middleware, và một `order` để chỉ định liệu nó nên chạy trước (`pre`) hay sau (`post`) middleware khác.
+
+```js title="@my-package/integration.js"
+/**
+ * @type {() => import('astro').AstroIntegration}
+ */
+export default () => ({
+	name: 'my-middleware-package',
+	hooks: {
+		'astro:config:setup': ({ addMiddleware }) => {
+			addMiddleware({
+				entrypoint: '@my-package/middleware',
+				order: 'pre',
+			});
+		},
+	},
+});
+```
+
+Middleware được định nghĩa trong một package với function `onRequest`, giống như user-defined middleware.
+
+```js title="@my-package/middleware.js"
+import { defineMiddleware } from 'astro:middleware';
+
+export const onRequest = defineMiddleware(async (context, next) => {
+	if (context.url.pathname === '/some-test-path') {
+		return Response.json({
+			ok: true,
+		});
+	}
+
+	return next();
+});
+```
+
+<p>
+	<Since v='5.0.0' />
+</p>
+
+Function cũng chấp nhận một `URL` cho `entrypoint`:
+
+```js title="@my-package/integration.js" ins={9}
+/**
+ * @type {() => import('astro').AstroIntegration}
+ */
+export default () => ({
+	name: 'my-middleware-package',
+	hooks: {
+		'astro:config:setup': ({ addMiddleware }) => {
+			addMiddleware({
+				entrypoint: new URL('./middleware.js', import.meta.url),
+				order: 'pre',
+			});
+		},
+	},
+});
+```
+
+#### Tùy chọn `injectRoute()`
+
+<p>
+
+**Kiểu:** `({ pattern: string; entrypoint: string | URL; prerender?: boolean }) => void;`
+
+</p>
+
+Một callback function để inject routes vào dự án Astro. Injected routes có thể là [`.astro` pages](/vi/basics/astro-pages/) hoặc [`.js` và `.ts` route handlers](/vi/guides/endpoints/#static-file-endpoints).
+
+`injectRoute` nhận một object với `pattern` và `entrypoint`.
+
+- `pattern` - nơi route nên được output trong browser, ví dụ `/foo/bar`. Một `pattern` có thể sử dụng syntax filepath của Astro để biểu thị dynamic routes, ví dụ `/foo/[bar]` hoặc `/foo/[...bar]`. Lưu ý rằng file extension **không** cần thiết trong `pattern`.
+- `entrypoint` - một bare module specifier trỏ tới `.astro` page hoặc `.js`/`.ts` route handler xử lý route được biểu thị trong `pattern`.
+- `prerender` - một boolean để đặt nếu Astro không thể phát hiện `prerender` export của bạn.
+
+##### Ví dụ sử dụng
+
+```js
+injectRoute({
+	// Sử dụng syntax pattern của Astro cho dynamic routes.
+	pattern: '/subfolder/[dynamic]',
+	// Sử dụng relative path syntax cho local route.
+	entrypoint: './src/dynamic-page.astro',
+	// Chỉ sử dụng nếu Astro không thể phát hiện prerender export của bạn
+	prerender: false,
+});
+```
+
+Đối với integration được thiết kế để cài đặt trong các dự án khác, sử dụng tên package của nó để tham chiếu route entrypoint.
+Ví dụ sau cho thấy một package được publish lên npm là `@fancy/dashboard` inject một dashboard route:
+
+```js
+injectRoute({
+	pattern: '/fancy-dashboard',
+	entrypoint: '@fancy/dashboard/dashboard.astro',
+});
+```
+
+Khi publish package của bạn (`@fancy/dashboard`, trong trường hợp này) lên npm, bạn phải export `dashboard.astro` trong `package.json`:
+
+```json title="package.json" "exports"
+{
+	"name": "@fancy/dashboard",
+	// ...
+	"exports": { "./dashboard.astro": "./dashboard.astro" }
+}
+```
+
+<p>
+	<Since v='5.0.0' />
+</p>
+
+Function cũng chấp nhận một `URL` cho `entrypoint`:
+
+```js "new URL('./dashboard.astro', import.meta.url)"
+injectRoute({
+	pattern: '/fancy-dashboard',
+	entrypoint: new URL('./dashboard.astro', import.meta.url),
+});
+```
+
+#### Tùy chọn `injectScript()`
+
+<p>
+
+**Kiểu:** `(stage: InjectedScriptStage, content: string) => void;`
+
+</p>
+
+Một callback function để inject một string nội dung JavaScript vào mọi trang.
+
+**`stage`** biểu thị cách script này (`content`) nên được insert. Một số stages cho phép insert scripts mà không sửa đổi, trong khi những stages khác cho phép tối ưu hóa trong [bước bundling của Vite](https://vite.dev/guide/build.html):
+
+- `"head-inline"`: Injected vào script tag trong `<head>` của mọi trang. **Không** được tối ưu hóa hoặc resolved bởi Vite.
+- `"before-hydration"`: Imported client-side, trước khi hydration script chạy. Được tối ưu hóa và resolved bởi Vite.
+- `"page"`: Tương tự như `head-inline`, ngoại trừ snippet được inject được xử lý bởi Vite và bundled với bất kỳ `<script>` tags nào khác được định nghĩa bên trong Astro components trên trang. Script sẽ được load với `<script type="module">` trong final page output, được tối ưu hóa và resolved bởi Vite.
+- `"page-ssr"`: Imported như một module riêng biệt trong frontmatter của mọi Astro page component. Vì stage này imports script của bạn, `Astro` global không khả dụng và script của bạn sẽ chỉ chạy một lần khi `import` được đánh giá lần đầu.
+
+  Sử dụng chính cho `page-ssr` stage là inject một CSS `import` vào mọi trang để được tối ưu hóa và resolved bởi Vite:
+
+  ```js
+  injectScript('page-ssr', 'import "global-styles.css";');
+  ```
+
+#### `createCodegenDir`
+
+<p>
+
+**Kiểu:** `() => URL;`<br />
+
+<Since v="5.0.0" />
+</p>
+
+Một function tạo folder `<root>/.astro/integrations/<normalized_integration_name>` và trả về đường dẫn của nó.
+
+Nó cho phép bạn có một folder chuyên dụng, tránh xung đột với integration khác hoặc chính Astro. Directory này được tạo bằng cách gọi function này nên an toàn để viết files trực tiếp vào nó:
+
+```ts title="my-integration.ts"
+import { writeFileSync } from 'node:fs';
+
+const integration = {
+	name: 'my-integration',
+	hooks: {
+		'astro:config:setup': ({ createCodegenDir }) => {
+			const codegenDir = createCodegenDir();
+			writeFileSync(new URL('cache.json', codegenDir), '{}', 'utf-8');
+		},
+	},
+};
+```
+
+### `astro:route:setup`
+
+<p>
+	<Since v='4.14.0' />
+</p>
+
+**Hook trước:** [`astro:config:setup`](#astroconfigsetup)
+
+**Hook tiếp theo:** [`astro:routes:resolved`](#astroroutesresolved)
+
+**Khi nào:** Trong `astro build`, trước khi bundling bắt đầu. Trong `astro dev`, trong khi xây dựng module graph và trên mọi thay đổi đối với file based route (added/removed/updated).
+
+**Tại sao:** Để đặt options cho một route tại build hoặc request time, chẳng hạn như enable [on-demand server rendering](/vi/guides/on-demand-rendering/#enabling-on-demand-rendering).
+
+```js
+'astro:route:setup'?: (options: {
+  route: RouteOptions;
+  logger: AstroIntegrationLogger;
+}) => void | Promise<void>;
+```
+
+#### Tùy chọn `route`
+
+<p>
+
+**Kiểu:** [`RouteOptions`](https://github.com/withastro/astro/blob/3b10b97a4fecd1dfd959b160a07b5b8427fe40a7/packages/astro/src/types/public/integrations.ts#L14-L27)
+
+</p>
+
+Một object với property `component` để identify route và các giá trị bổ sung sau để cho phép bạn cấu hình generated route: `prerender`.
+
+##### `route.component`
+
+<p>
+	**Kiểu:** `string`
+	<br />
+	<Since v='4.14.0' />
+</p>
+
+Property `component` chỉ ra entrypoint sẽ được render trên route. Bạn có thể truy cập giá trị này trước khi routes được build để cấu hình on-demand server rendering cho trang đó.
+
+##### `route.prerender`
+
+<p>
+	**Kiểu:** `boolean`
+	<br />
+	**Mặc định:** `undefined`
+	<br />
+	<Since v='4.14.0' />
+</p>
+
+Property `prerender` được sử dụng để cấu hình [on-demand server rendering](/vi/guides/on-demand-rendering/#enabling-on-demand-rendering) cho một route. Nếu route file chứa một giá trị `export const prerender` rõ ràng, giá trị đó sẽ được sử dụng làm mặc định thay vì `undefined`.
+
+```js title="astro.config.mjs"
+import { defineConfig } from 'astro/config';
+
+export default defineConfig({
+	integrations: [setPrerender()],
+});
+
+function setPrerender() {
+	return {
+		name: 'set-prerender',
+		hooks: {
+			'astro:route:setup': ({ route }) => {
+				if (route.component.endsWith('/blog/[slug].astro')) {
+					route.prerender = true;
+				}
+			},
+		},
+	};
+}
+```
+
+Nếu giá trị cuối cùng sau khi chạy tất cả hooks là `undefined`, route sẽ fallback về prerender mặc định dựa trên [`output` option](/vi/reference/configuration-reference/#output): prerendered cho `static` mode, và on-demand rendered cho `server` mode.
+
+### `astro:routes:resolved`
+
+<p>
+
+<Since v="5.0.0" />
+</p>
+
+**Hook trước:** [`astro:route:setup`](#astroroutesetup)
+
+**Hook tiếp theo:** [`astro:config:done`](#astroconfigdone) (chỉ trong setup)
+
+**Khi nào:** Trong `astro dev`, nó cũng chạy trên mọi thay đổi đối với file based route (added/removed/updated).
+
+**Tại sao:** Để truy cập routes và metadata của chúng
+
+```js
+'astro:routes:resolved'?: (options: {
+  routes: IntegrationResolvedRoute[];
+  logger: AstroIntegrationLogger;
+}) => void | Promise<void>;
+```
+
+#### Tùy chọn `routes`
+
+<p>
+
+**Kiểu:** [`IntegrationResolvedRoute[]`](#integrationresolvedroute-type-reference)
+
+</p>
+
+Một danh sách tất cả routes với metadata liên quan.
+
+Ví dụ sử dụng:
+
+```js title="my-integration.mjs"
+const integration = () => {
+	return {
+		name: 'my-integration',
+		hooks: {
+			'astro:routes:resolved': ({ routes }) => {
+				const projectRoutes = routes.filter(r => r.origin === 'project').map(r => r.pattern);
+
+				console.log(projectRoutes);
+			},
+		},
+	};
+};
+```
+
+### `astro:config:done`
+
+**Hook trước:** [`astro:routes:resolved`](#astroroutesresolved)
+
+**Hook tiếp theo:** [`astro:server:setup`](#astroserversetup) khi chạy trong "dev" mode, hoặc [`astro:build:start`](#astrobuildstart) trong production builds
+
+**Khi nào:** Sau khi Astro config đã được resolved và các integrations khác đã chạy `astro:config:setup` hooks của chúng.
+
+**Tại sao:** Để lấy config cuối cùng để sử dụng trong các hooks khác.
+
+```js
+'astro:config:done'?: (options: {
+  config: AstroConfig;
+  setAdapter: (adapter: AstroAdapter) => void;
+  injectTypes: (injectedType: InjectedType) => URL;
+  logger: AstroIntegrationLogger;
+  buildOutput: 'static' | 'server';
+}) => void | Promise<void>;
+```
+
+#### Tùy chọn `config`
+
+<p>
+
+**Kiểu:** `AstroConfig`
+
+</p>
+
+Một bản sao chỉ đọc của [Astro config](/vi/reference/configuration-reference/) do người dùng cung cấp. Điều này được resolved _sau khi_ các integrations khác đã chạy.
+
+#### Tùy chọn `setAdapter()`
+
+<p>
+
+**Kiểu:** `(adapter: AstroAdapter) => void;`
+
+</p>
+
+Làm cho integration trở thành một adapter. Đọc thêm trong [adapter API](/vi/reference/adapter-reference/).
+
+#### Tùy chọn `injectTypes()`
+
+<p>
+
+**Kiểu:** `(injectedType: { filename: string; content: string }) => URL`<br />
+
+<Since v="4.14.0" />
+</p>
+
+Cho phép bạn inject types vào dự án của người dùng bằng cách thêm file `*.d.ts` mới.
+
+Property `filename` sẽ được sử dụng để tạo file tại `/.astro/integrations/<normalized_integration_name>/<normalized_filename>.d.ts` và phải kết thúc với `".d.ts"`.
+
+Property `content` sẽ tạo body của file và phải là TypeScript hợp lệ.
+
+Ngoài ra, `injectTypes()` trả về URL đến đường dẫn normalized để bạn có thể ghi đè nội dung của nó sau đó, hoặc thao tác theo bất kỳ cách nào bạn muốn.
+
+```js
+const path = injectTypes({
+	filename: 'types.d.ts',
+	content: "declare module 'virtual:integration' {}",
+});
+console.log(path); // URL
+```
+
+#### Tùy chọn `buildOutput`
+
+<p>
+
+**Kiểu:** `'static' | 'server'`<br />
+
+<Since v="5.0.0" />
+</p>
+
+Cho phép bạn điều chỉnh logic của integration tùy thuộc vào project output của người dùng.
+
+### `astro:server:setup`
+
+**Hook trước:** [`astro:config:done`](#astroconfigdone)
+
+**Hook tiếp theo:** [`astro:server:start`](#astroserverstart)
+
+**Khi nào:** Ngay sau khi Vite server được tạo trong "dev" mode, nhưng trước khi event `listen()` được fired. [Xem Vite's createServer API](https://vite.dev/guide/api-javascript.html#createserver) để biết thêm.
+
+**Tại sao:** Để cập nhật Vite server options và middleware, hoặc enable hỗ trợ cho refreshing content layer.
+
+```js
+'astro:server:setup'?: (options: {
+  server: vite.ViteDevServer;
+  logger: AstroIntegrationLogger;
+  toolbar: ReturnType<typeof getToolbarServerCommunicationHelpers>;
+  refreshContent: (options: {
+    loaders?: Array<string>;
+    context?: Record<string, any>;
+  }) => Promise<void>;
+}) => void | Promise<void>;
+```
+
+#### Tùy chọn `server`
+
+<p>
+
+**Kiểu:** [`ViteDevServer`](https://vite.dev/guide/api-javascript.html#vitedevserver)
+
+</p>
+
+Một instance có thể thay đổi của Vite server được sử dụng trong "dev" mode. Ví dụ, điều này được [sử dụng bởi Partytown integration của chúng tôi](/vi/guides/integrations-guide/partytown/) để inject Partytown server như middleware:
+
+```js
+export default {
+	name: 'partytown',
+	hooks: {
+		'astro:server:setup': ({ server }) => {
+			server.middlewares.use(function middleware(req, res, next) {
+				// xử lý requests
+			});
+		},
+	},
+};
+```
+
+#### Tùy chọn `toolbar`
+
+<p>
+
+**Kiểu:** `ReturnType<typeof getToolbarServerCommunicationHelpers>`<br />
+
+<Since v="4.7.0" />
+</p>
+
+Một object cung cấp callback functions để tương tác với [dev toolbar](/vi/reference/dev-toolbar-app-reference/):
+
+##### `on()`
+
+<p>
+
+**Kiểu:** `<T>(event: string, callback: (data: T) => void) => void`<br />
+
+</p>
+
+Một function nhận event name làm argument đầu và callback function làm argument thứ hai. Điều này cho phép bạn nhận message từ dev toolbar app với data liên quan đến event đó.
+
+##### `onAppInitialized()`
+
+<p>
+
+**Kiểu:** `(appId: string, callback: (data: Record<string, never>) => void) => void`<br />
+
+</p>
+
+Một function được fired khi dev toolbar app được khởi tạo. Argument đầu là id của app đã được khởi tạo. Argument thứ hai là callback function để chạy khi app được khởi tạo.
+
+##### `onAppToggled()`
+
+<p>
+
+**Kiểu:** `(appId: string, callback: (data: { state: boolean; }) => void) => void`<br />
+
+</p>
+
+Một function được fired khi dev toolbar app được toggle on hoặc off. Argument đầu là id của app đã được toggled. Argument thứ hai là callback function cung cấp state để thực thi khi application được toggled.
+
+##### `send()`
+
+<p>
+
+**Kiểu:** `<T>(event: string, payload: T) => void`<br />
+
+</p>
+
+Một function gửi message đến dev toolbar mà app có thể listen. Điều này nhận event name làm argument đầu và payload làm argument thứ hai có thể là bất kỳ data serializable nào.
+
+#### Tùy chọn `refreshContent()`
+
+<p>
+
+**Kiểu:** `(options: { loaders?: Array<string>; context?: Record<string, any>; }) => Promise<void>`<br />
+
+<Since v="5.0.0" />
+</p>
+
+Một function cho integrations để trigger cập nhật content layer trong `astro dev`. Điều này có thể được sử dụng, ví dụ, để đăng ký webhook endpoint trong dev, hoặc mở socket đến CMS để listen changes.
+
+Mặc định, `refreshContent` sẽ refresh tất cả collections. Bạn có thể tùy chọn truyền property `loaders`, là một array tên loaders. Nếu được cung cấp, chỉ collections sử dụng những loaders đó sẽ được refreshed. Ví dụ, một CMS integration có thể sử dụng property này để chỉ refresh collections của riêng nó.
+
+Bạn cũng có thể truyền object `context` đến loaders. Điều này có thể được sử dụng để truyền data tùy ý như webhook body, hoặc event từ websocket.
+
+```ts title=my-integration.ts {19-22}
+{
+  name: 'my-integration',
+  hooks: {
+    'astro:server:setup': async ({ server, refreshContent }) => {
+      // Đăng ký dev server webhook endpoint
+      server.middlewares.use('/_refresh', async (req, res) => {
+        if(req.method !== 'POST') {
+          res.statusCode = 405
+          res.end('Method Not Allowed');
+          return
+        }
+        let body = '';
+        req.on('data', chunk => {
+          body += chunk.toString();
+        });
+        req.on('end', async () => {
+          try {
+            const webhookBody = JSON.parse(body);
+            await refreshContent({
+              context: { webhookBody },
+              loaders: ['my-loader']
+            });
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ message: 'Content refreshed successfully' }));
+          } catch (error) {
+            res.writeHead(500, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ error: 'Failed to refresh content: ' + error.message }));
+          }
+        });
+      });
+    }
+  }
+}
+```
+
+Loader sau đó có thể truy cập property `refreshContextData` để lấy webhook body. Xem property [`refreshContextData`](/vi/reference/content-loader-reference/#refreshcontextdata) để biết thêm thông tin.
+
+### `astro:server:start`
+
+**Hook trước:** [`astro:server:setup`](#astroserversetup)
+
+**Hook tiếp theo:** [`astro:server:done`](#astroserverdone)
+
+**Khi nào:** Ngay sau khi event `listen()` của server đã được fired.
+
+**Tại sao:** Để intercept network requests tại địa chỉ được chỉ định. Nếu bạn định sử dụng địa chỉ này cho middleware, hãy cân nhắc sử dụng `astro:server:setup` thay thế.
+
+```js
+'astro:server:start'?: (options: {
+  address: AddressInfo;
+  logger: AstroIntegrationLogger;
+}) => void | Promise<void>;
+```
+
+#### Tùy chọn `address`
+
+<p>
+
+**Kiểu:** [`AddressInfo`](https://microsoft.github.io/PowerBI-JavaScript/interfaces/_node_modules__types_node_net_d_._net_.addressinfo.html)
+
+</p>
+
+Địa chỉ, family và port number được cung cấp bởi [Node.js Net module](https://nodejs.org/api/net.html).
+
+### `astro:server:done`
+
+**Hook trước:** [`astro:server:start`](#astroserverstart)
+
+**Khi nào:** Ngay sau khi dev server được đóng.
+
+**Tại sao:** Để chạy bất kỳ cleanup events nào bạn có thể trigger trong `astro:server:setup` hoặc `astro:server:start` hooks.
+
+```js
+'astro:server:done'?: (options: {
+  logger: AstroIntegrationLogger;
+}) => void | Promise<void>;
+```
+
+### `astro:build:start`
+
+**Hook trước:** [`astro:config:done`](#astroconfigdone)
+
+**Hook tiếp theo:** [`astro:build:setup`](#astrobuildsetup)
+
+**Khi nào:** Sau event `astro:config:done`, nhưng trước khi production build bắt đầu.
+
+**Tại sao:** Để thiết lập bất kỳ global objects hoặc clients nào cần thiết trong production build. Điều này cũng có thể mở rộng build configuration options trong [adapter API](/vi/reference/adapter-reference/).
+
+```js
+'astro:build:start'?: (options: {
+  logger: AstroIntegrationLogger;
+}) => void | Promise<void>;
+```
+
+### `astro:build:setup`
+
+**Hook trước:** [`astro:build:start`](#astrobuildstart)
+
+**Hook tiếp theo:** [`astro:build:ssr`](#astrobuildssr)
+
+**Khi nào:** Sau hook `astro:build:start`, chạy ngay trước build.
+
+**Tại sao:** Tại thời điểm này, Vite config cho build đã được xây dựng hoàn toàn, đây là cơ hội cuối cùng để sửa đổi nó. Điều này có thể hữu ích ví dụ để ghi đè một số defaults. Nếu bạn không chắc chắn liệu nên sử dụng hook này hay `astro:build:start`, hãy sử dụng `astro:build:start` thay thế.
+
+```js
+'astro:build:setup'?: (options: {
+  vite: vite.InlineConfig;
+  pages: Map<string, PageBuildData>;
+  target: 'client' | 'server';
+  updateConfig: (newConfig: vite.InlineConfig) => void;
+  logger: AstroIntegrationLogger;
+}) => void | Promise<void>;
+
+```
+
+#### Tùy chọn `vite`
+
+<p>
+
+**Kiểu:** [`InlineConfig`](https://vite.dev/guide/api-javascript.html#inlineconfig)
+
+</p>
+
+Một object cho phép bạn truy cập Vite configuration được sử dụng trong build.
+
+Điều này có thể hữu ích nếu bạn cần truy cập configuration options trong integration của mình:
+
+```js
+export default {
+	name: 'my-integration',
+	hooks: {
+		'astro:build:setup': ({ vite }) => {
+			const { publicDir, root } = vite;
+		},
+	},
+};
+```
+
+#### Tùy chọn `pages`
+
+<p>
+
+**Kiểu:** <code>Map\<string, <a href="https://github.com/withastro/astro/blob/3b10b97a4fecd1dfd959b160a07b5b8427fe40a7/packages/astro/src/core/build/types.ts#L17-L23">PageBuildData</a>\></code>
+
+</p>
+
+Một `Map` với danh sách pages như key và build data của chúng như value.
+
+Điều này có thể được sử dụng để thực hiện action nếu route khớp với tiêu chí:
+
+```js
+export default {
+	name: 'my-integration',
+	hooks: {
+		'astro:build:setup': ({ pages }) => {
+			pages.forEach(data => {
+				if (data.route.pattern.test('/blog')) {
+					console.log(data.route.type);
+				}
+			});
+		},
+	},
+};
+```
+
+#### Tùy chọn `target`
+
+<p>
+
+**Kiểu:** `'client' | 'server'`
+
+</p>
+
+Builds được tách thành hai phases riêng biệt: `client` và `server`. Option này cho phép bạn xác định build phase hiện tại.
+
+Điều này có thể được sử dụng để thực hiện action chỉ trong một phase cụ thể:
+
+```js
+export default {
+	name: 'my-integration',
+	hooks: {
+		'astro:build:setup': ({ target }) => {
+			if (target === 'server') {
+				// làm gì đó trong server build phase
+			}
+		},
+	},
+};
+```
+
+#### Tùy chọn `updateConfig()`
+
+<p>
+
+**Kiểu:** <code>(newConfig: <a href="https://vite.dev/guide/api-javascript.html#inlineconfig">InlineConfig</a>) => void</code>
+
+</p>
+
+Một callback function để cập nhật [Vite](https://vite.dev/) options được sử dụng trong build. Bất kỳ config nào bạn cung cấp **sẽ được merged với user config + các cập nhật config integration khác**, vì vậy bạn có thể tự do bỏ qua keys!
+
+Ví dụ, điều này có thể được sử dụng để cung cấp plugin cho dự án của người dùng:
+
+```js
+import awesomeCssPlugin from 'awesome-css-vite-plugin';
+
+export default {
+	name: 'my-integration',
+	hooks: {
+		'astro:build:setup': ({ updateConfig }) => {
+			updateConfig({
+				plugins: [awesomeCssPlugin()],
+			});
+		},
+	},
+};
+```
+
+### `astro:build:ssr`
+
+**Hook trước:** [`astro:build:setup`](#astrobuildsetup)
+
+**Hook tiếp theo:** [`astro:build:generated`](#astrobuildgenerated)
+
+**Khi nào:** Sau khi production SSR build đã hoàn thành.
+
+**Tại sao:** Để truy cập SSR manifest và map của emitted entry points. Điều này hữu ích khi tạo custom SSR builds trong plugins hoặc integrations.
+
+- `entryPoints` maps một page route đến physical file được emitted sau build;
+- `middlewareEntryPoint` là file system path của middleware file;
+
+```js
+'astro:build:ssr'?: (options: {
+  manifest: SerializedSSRManifest;
+  entryPoints: Map<IntegrationRouteData, URL>;
+  middlewareEntryPoint: URL | undefined;
+  logger: AstroIntegrationLogger;
+}) => void | Promise<void>;
+```
+
+#### Tùy chọn `manifest`
+
+<p>
+
+**Kiểu:** [`SerializedSSRManifest`](https://github.com/withastro/astro/blob/3b10b97a4fecd1dfd959b160a07b5b8427fe40a7/packages/astro/src/core/app/types.ts#L91-L109)
+
+</p>
+
+Cho phép bạn tạo custom build bằng cách truy cập SSR manifest.
+
+```js
+export default {
+	name: 'my-integration',
+	hooks: {
+		'astro:build:ssr': ({ manifest }) => {
+			const { i18n } = manifest;
+			if (i18n?.strategy === 'domains-prefix-always') {
+				// làm gì đó
+			}
+		},
+	},
+};
+```
+
+#### Tùy chọn `entryPoints`
+
+<p>
+
+**Kiểu:** <code>Map\<<a href="#integrationroutedata-type-reference">IntegrationRouteData</a>, URL\></code><br />
+
+<Since v="2.7.0" />
+</p>
+
+Một `Map` của emitted entry points với `IntegrationRouteData` như key và physical file URL như value.
+
+```js
+export default {
+	name: 'my-integration',
+	hooks: {
+		'astro:build:ssr': ({ entryPoints }) => {
+			entryPoints.forEach(url => {
+				console.log(url.href);
+			});
+		},
+	},
+};
+```
+
+#### Tùy chọn `middlewareEntryPoint`
+
+<p>
+
+**Kiểu:** `URL | undefined`<br />
+
+<Since v="2.8.0" />
+</p>
+
+Expose [middleware](/vi/guides/middleware/) file path.
+
+```js
+export default {
+	name: 'my-integration',
+	hooks: {
+		'astro:build:ssr': ({ middlewareEntryPoint }) => {
+			if (middlewareEntryPoint) {
+				// thực hiện một số operations nếu middleware tồn tại
+			}
+		},
+	},
+};
+```
+
+### `astro:build:generated`
+
+<p>
+
+<Since v="1.3.0" />
+</p>
+
+**Hook trước:** [`astro:build:ssr`](#astrobuildssr)
+
+**Hook tiếp theo:** [`astro:build:done`](#astrobuilddone)
+
+**Khi nào:** Sau khi static production build đã hoàn thành việc tạo routes và assets.
+
+**Tại sao:** Để truy cập generated routes và assets **trước khi** build artifacts được cleaned up. Đây là use case rất không phổ biến. Chúng tôi khuyến nghị sử dụng [`astro:build:done`](#astrobuilddone) trừ khi bạn thực sự cần truy cập generated files trước khi cleanup.
+
+```js
+'astro:build:generated'?: (options: {
+  dir: URL;
+  logger: AstroIntegrationLogger;
+}) => void | Promise<void>;
+```
+
+#### Tùy chọn `dir`
+
+<p>
+
+**Kiểu:** [`URL`](https://developer.mozilla.org/en-US/docs/Web/API/URL)
+
+</p>
+
+Một URL path đến build output directory. Lưu ý rằng nếu bạn cần valid absolute path string, bạn nên sử dụng Node's built-in [`fileURLToPath`](https://nodejs.org/api/url.html#urlfileurltopathurl-options) utility.
+
+```js
+import { fileURLToPath } from 'node:url';
+
+export default {
+	name: 'my-integration',
+	hooks: {
+		'astro:build:generated': ({ dir }) => {
+			const outFile = fileURLToPath(new URL('./my-integration.json', dir));
+		},
+	},
+};
+```
+
+### `astro:build:done`
+
+**Hook trước:** [`astro:build:generated`](#astrobuildgenerated)
+
+**Khi nào:** Sau khi production build (SSG hoặc SSR) đã hoàn thành.
+
+**Tại sao:** Để truy cập generated routes và assets cho extension (ex. copy content vào generated `/assets` directory). Nếu bạn dự định transform generated assets, chúng tôi khuyến nghị khám phá [Vite Plugin API](https://vite.dev/guide/api-plugin.html) và [configuring via `astro:config:setup`](#updateconfig-option) thay thế.
+
+```js
+'astro:build:done'?: (options: {
+  pages: { pathname: string }[];
+  dir: URL;
+  /** @deprecated Sử dụng `assets` map và hook `astro:routes:resolved` mới */
+  routes: IntegrationRouteData[];
+  assets: Map<string, URL[]>;
+  logger: AstroIntegrationLogger;
+}) => void | Promise<void>;
+```
+
+#### Tùy chọn `dir`
+
+<p>
+
+**Kiểu:** [`URL`](https://developer.mozilla.org/en-US/docs/Web/API/URL)
+
+</p>
+
+Một URL path đến build output directory. Lưu ý rằng nếu bạn cần valid absolute path string, bạn nên sử dụng Node's built-in [`fileURLToPath`](https://nodejs.org/api/url.html#urlfileurltopathurl-options) utility.
+
+```js
+import { writeFile } from 'node:fs/promises';
+import { fileURLToPath } from 'node:url';
+
+export default function myIntegration() {
+	return {
+		hooks: {
+			'astro:build:done': async ({ dir }) => {
+				const metadata = await getIntegrationMetadata();
+				// Sử dụng fileURLToPath để lấy valid, cross-platform absolute path string
+				const outFile = fileURLToPath(new URL('./my-integration.json', dir));
+				await writeFile(outFile, JSON.stringify(metadata));
+			},
+		},
+	};
+}
+```
+
+#### Tùy chọn `routes`
+
+:::caution
+Property này deprecated kể từ v5.0. Kiểm tra [migration guide](/vi/guides/upgrade-to/v5/#deprecated-routes-on-astrobuilddone-hook-integration-api).
+:::
+
+<p>
+
+**Kiểu:** [`IntegrationRouteData[]`](#integrationroutedata-type-reference)
+
+</p>
+
+Một danh sách tất cả generated routes cùng với metadata liên quan.
+
+Bạn có thể tham khảo type `IntegrationRouteData` đầy đủ bên dưới, nhưng properties phổ biến nhất là:
+
+- `component` - input file path tương đối với project root
+- `pathname` - output file URL (undefined cho routes sử dụng `[dynamic]` và `[...spread]` params)
+
+#### Tùy chọn `assets`
+
+<p>
+
+**Kiểu:** `Map<string, URL[]>`<br />
+
+<Since v="5.0.0" />
+</p>
+
+Chứa URLs đến output files paths, được nhóm theo property `pattern` của [`IntegrationResolvedRoute`](#integrationresolvedroute-type-reference).
+
+#### Tùy chọn `pages`
+
+<p>
+
+**Kiểu:** `{ pathname: string }[]`
+
+</p>
+
+Một danh sách tất cả generated pages. Nó là một object với một property.
+
+- `pathname` - đường dẫn cuối cùng của page.
+
+### Custom hooks
+
+Custom hooks có thể được thêm vào integrations bằng cách mở rộng interface `IntegrationHooks` thông qua [global augmentation](https://www.typescriptlang.org/docs/handbook/declaration-merging.html#global-augmentation).
+
+```ts
+declare global {
+	namespace Astro {
+		export interface IntegrationHook {
+			'your:hook': (params: YourHookParameters) => Promise<void>;
+		}
+	}
+}
+```
+
+Astro dành prefix `astro:` cho future built-in hooks. Vui lòng chọn prefix khác khi đặt tên cho custom hook của bạn.
+
+## Tham khảo types integration
+
+### `AstroIntegrationLogger`
+
+Một instance của Astro logger, hữu ích để viết logs. Logger này sử dụng cùng [log level](/vi/reference/cli-reference/#--verbose) được cấu hình qua CLI.
+
+**Methods có sẵn** để viết ra terminal:
+
+- `logger.info("Message")`;
+- `logger.warn("Message")`;
+- `logger.error("Message")`;
+- `logger.debug("Message")`;
+
+Tất cả messages được prepend với label có cùng giá trị với tên của integration.
+
+```ts title="integration.ts" {8}
+import type { AstroIntegration } from 'astro';
+export function formatIntegration(): AstroIntegration {
+	return {
+		name: 'astro-format',
+		hooks: {
+			'astro:build:done': ({ logger }) => {
+				// làm gì đó
+				logger.info('Integration ready.');
+			},
+		},
+	};
+}
+```
+
+Ví dụ trên sẽ log message bao gồm message `info` được cung cấp:
+
+```shell
+[astro-format] Integration ready.
+```
+
+Để log một số messages với label khác, sử dụng method `.fork` để chỉ định alternative cho `name` mặc định:
+
+```ts title="integration.ts" ".fork"
+import type { AstroIntegration } from 'astro';
+export function formatIntegration(): AstroIntegration {
+	return {
+		name: 'astro-format',
+		hooks: {
+			'astro:config:done': ({ logger }) => {
+				// làm gì đó
+				logger.info('Integration ready.');
+			},
+			'astro:build:done': ({ logger }) => {
+				const buildLogger = logger.fork('astro-format/build');
+				// làm gì đó
+				buildLogger.info('Build finished.');
+			},
+		},
+	};
+}
+```
+
+Ví dụ trên sẽ tạo logs với `[astro-format]` mặc định, và `[astro-format/build]` khi được chỉ định:
+
+```shell
+[astro-format] Integration ready.
+[astro-format/build] Build finished.
+```
+
+### `HookParameters`
+
+Bạn có thể lấy type của arguments của hook bằng cách truyền tên hook vào utility type `HookParameters`. Trong ví dụ sau, argument `options` của function được typed để khớp với parameters của hook `astro:config:setup`:
+
+```ts /HookParameters(?:<.+>)?/
+import type { HookParameters } from 'astro';
+
+function mySetup(options: HookParameters<'astro:config:setup'>) {
+	options.updateConfig({
+		/* ... */
+	});
+}
+```
+
+### Tham khảo type `IntegrationResolvedRoute`
+
+```ts
+interface IntegrationResolvedRoute {
+	pattern: RouteData['route'];
+	patternRegex: RouteData['pattern'];
+	entrypoint: RouteData['component'];
+	isPrerendered: RouteData['prerender'];
+	redirectRoute?: IntegrationResolvedRoute;
+	generate: (data?: any) => string;
+	params: string[];
+	pathname?: string;
+	segments: RoutePart[][];
+	type: RouteType;
+	redirect?: RedirectConfig;
+	origin: 'internal' | 'external' | 'project';
+}
+```
+
+#### `pattern`
+
+<p>
+
+**Kiểu:** `string`
+
+</p>
+
+Cho phép bạn identify type của route dựa trên path của nó. Đây là một số ví dụ về paths liên quan đến pattern của chúng:
+
+- `src/pages/index.astro` sẽ là `/`
+- `src/pages/blog/[...slug].astro` sẽ là `/blog/[...slug]`
+- `src/pages/site/[blog]/[...slug].astro` sẽ là `/site/[blog]/[...slug]`
+
+#### `patternRegex`
+
+<p>
+
+**Kiểu:** `RegExp`
+
+</p>
+
+Cho phép bạn truy cập regex được sử dụng để matching input URL với requested route.
+
+Ví dụ, với path `[fruit]/about.astro`, regex sẽ là `/^\/([^/]+?)\/about\/?$/`. Sử dụng `pattern.test("banana/about")` sẽ trả về `true`.
+
+#### `entrypoint`
+
+<p>
+
+**Kiểu:** `string`
+
+</p>
+
+URL pathname của source component.
+
+#### `isPrerendered`
+
+<p>
+
+**Kiểu:** `boolean`
+
+</p>
+
+Xác định liệu route có sử dụng [on demand rendering](/vi/guides/on-demand-rendering/) hay không. Giá trị sẽ là `true` cho các dự án được cấu hình với:
+
+- `output: 'static'` khi route không export `const prerender = true`
+- `output: 'server'` khi route exports `const prerender = false`
+
+#### `redirectRoute`
+
+<p>
+
+**Kiểu:** `IntegrationResolvedRoute | undefined`
+
+</p>
+
+Khi giá trị của `IntegrationResolvedRoute.type` là `redirect`, giá trị sẽ là `IntegrationResolvedRoute` để redirect đến. Nếu không, giá trị sẽ là undefined.
+
+#### `generate()`
+
+<p>
+
+**Kiểu:** `(data?: any) => string`
+
+</p>
+
+Một function cung cấp các parameters tùy chọn của route, interpolates chúng với route pattern, và trả về path name của route.
+
+Ví dụ, với route như `/blog/[...id].astro`, function `generate` có thể trả về:
+
+```js
+console.log(generate({ id: 'presentation' })); // sẽ log `/blog/presentation`
+```
+
+#### `params`
+
+<p>
+
+**Kiểu:** `string[]`
+
+</p>
+
+Cho phép bạn truy cập route `params`. Ví dụ, khi dự án sử dụng [dynamic routes](/vi/guides/routing/#dynamic-routes) sau `/pages/[lang]/[...slug].astro`, giá trị sẽ là `['lang', '...slug']`.
+
+#### `pathname`
+
+<p>
+
+**Kiểu:** `string | undefined`
+
+</p>
+
+Đối với regular routes, giá trị sẽ là URL pathname nơi route này sẽ được served. Khi dự án sử dụng [dynamic routes](/vi/guides/routing/#dynamic-routes) (tức `[dynamic]` hoặc `[...spread]`), pathname sẽ là undefined.
+
+#### `segments`
+
+<p>
+
+**Kiểu:** <code><a href="https://github.com/withastro/astro/blob/3b10b97a4fecd1dfd959b160a07b5b8427fe40a7/packages/astro/src/types/public/internal.ts#L154-L158">RoutePart</a>[][]</code>
+
+</p>
+
+Cho phép bạn truy cập route [`params`](#params) với metadata bổ sung. Mỗi object chứa các properties sau:
+
+- `content`: tên `param`,
+- `dynamic`: liệu route có dynamic hay không,
+- `spread`: liệu dynamic route có sử dụng spread syntax hay không.
+
+Ví dụ, route sau `/pages/[blog]/[...slug].astro` sẽ output segments:
+
+```js
+[
+	[{ content: 'pages', dynamic: false, spread: false }],
+	[{ content: 'blog', dynamic: true, spread: false }],
+	[{ content: '...slug', dynamic: true, spread: true }],
+];
+```
+
+#### `type`
+
+<p>
+
+**Kiểu:** `RouteType`
+
+</p>
+
+Cho phép bạn identify type của route. Các giá trị có thể:
+
+- `page`: một route tồn tại trong file system, thường là Astro component
+- `endpoint`: một route tồn tại trong file system, thường là JS file expose endpoints methods
+- `redirect`: một route trỏ đến route khác tồn tại trong file system
+- `fallback`: một route không tồn tại trong file system cần được xử lý bằng cách khác, thường là middleware
+
+#### `redirect`
+
+<p>
+
+**Kiểu:** <code><a href="https://github.com/withastro/astro/blob/3b10b97a4fecd1dfd959b160a07b5b8427fe40a7/packages/astro/src/types/public/config.ts#L39-L44">RedirectConfig</a> | undefined</code>
+
+</p>
+
+Cho phép bạn truy cập route để redirect đến. Đây có thể là string hoặc object chứa thông tin về status code và destination của nó.
+
+#### `origin`
+
+<p>
+
+**Kiểu:** `'internal' | 'external' | 'project'`
+
+</p>
+
+Xác định liệu route đến từ Astro core (`internal`), integration (`external`) hay dự án của người dùng (`project`).
+
+### Tham khảo type `IntegrationRouteData`
+
+:::caution
+Type này deprecated kể từ v5.0. Sử dụng [`IntegrationResolvedRoute`](#integrationresolvedroute-type-reference) thay thế.
+:::
+
+Một phiên bản nhỏ hơn của `RouteData` được sử dụng trong integrations.
+
+```ts
+interface IntegrationRouteData {
+	type: RouteType;
+	component: string;
+	pathname?: string;
+	pattern: RegExp;
+	params: string[];
+	segments: { content: string; dynamic: boolean; spread: boolean }[][];
+	generate: (data?: any) => string;
+	prerender: boolean;
+	distURL?: URL[];
+	redirect?: RedirectConfig;
+	redirectRoute?: IntegrationRouteData;
+}
+```
+
+#### `type`
+
+<p>
+
+**Kiểu:** `RouteType`
+
+</p>
+
+Cho phép bạn identify type của route. Giá trị có thể là:
+
+- `page`: một route tồn tại trong file system, thường là Astro component
+- `endpoint`: một route tồn tại trong file system, thường là JS file expose endpoints methods
+- `redirect`: một route trỏ đến route khác tồn tại trong file system
+- `fallback`: một route không tồn tại trong file system và cần được xử lý bằng cách khác, thường là middleware
+
+#### `component`
+
+<p>
+
+**Kiểu:** `string`
+
+</p>
+
+Cho phép bạn truy cập source component URL pathname.
+
+#### `pathname`
+
+<p>
+
+**Kiểu:** `string | undefined`
+
+</p>
+
+Đối với regular routes, giá trị sẽ là URL pathname nơi route này sẽ được served. Khi dự án sử dụng [dynamic routes](/vi/guides/routing/#dynamic-routes) (tức `[dynamic]` hoặc `[...spread]`), pathname sẽ là undefined.
+
+#### `pattern`
+
+<p>
+
+**Kiểu:** `RegExp`
+
+</p>
+
+Cho phép bạn truy cập regex được sử dụng để matching input URL với requested route.
+
+Ví dụ, với path `[fruit]/about.astro`, regex sẽ là `/^\/([^/]+?)\/about\/?$/`. Sử dụng `pattern.test("banana/about")` sẽ trả về `true`.
+
+#### `params`
+
+<p>
+
+**Kiểu:** `string[]`
+
+</p>
+
+Cho phép bạn truy cập route `params`. Ví dụ, khi dự án sử dụng [dynamic routes](/vi/guides/routing/#dynamic-routes) sau `/pages/[lang]/[...slug].astro`, giá trị sẽ là `['lang', '...slug']`.
+
+#### `segments`
+
+<p>
+
+**Kiểu:** `{ content: string; dynamic: boolean; spread: boolean; }[][]`
+
+</p>
+
+Cho phép bạn truy cập route [`params`](#params-1) với metadata bổ sung. Mỗi object chứa các properties sau:
+
+- `content`: `param`,
+- `dynamic`: liệu route có dynamic hay không,
+- `spread`: liệu dynamic route có sử dụng spread syntax hay không.
+
+Ví dụ, route sau `/pages/[lang]/index.astro` sẽ output segments `[[ { content: 'lang', dynamic: true, spread: false } ]]`.
+
+#### `generate()`
+
+<p>
+
+**Kiểu:** `(data?: any) => string`
+
+</p>
+
+Một function cung cấp các parameters tùy chọn của route, interpolates chúng với route pattern, và trả về path name của route.
+
+Ví dụ, với route như `/blog/[...id].astro`, function `generate` có thể trả về:
+
+```js
+console.log(generate({ id: 'presentation' })); // sẽ log `/blog/presentation`
+```
+
+#### `prerender`
+
+<p>
+
+**Kiểu:** `boolean`
+
+</p>
+
+Xác định liệu route có được prerendered hay không.
+
+#### `distURL`
+
+<p>
+
+**Kiểu:** `URL[] | undefined`
+
+</p>
+
+Paths của physical files được emitted bởi route này. Khi route **không** được prerendered, giá trị là `undefined` hoặc array rỗng.
+
+#### `redirect`
+
+<p>
+
+**Kiểu:** <code><a href="https://github.com/withastro/astro/blob/3b10b97a4fecd1dfd959b160a07b5b8427fe40a7/packages/astro/src/types/public/config.ts#L39-L44">RedirectConfig</a> | undefined</code>
+
+</p>
+
+Cho phép bạn truy cập route để redirect đến. Đây có thể là string hoặc object chứa thông tin về status code và destination của nó.
+
+#### `redirectRoute`
+
+<p>
+
+**Kiểu:** `IntegrationRouteData | undefined`
+
+</p>
+
+Khi giá trị của `RouteData.type` là `redirect`, giá trị sẽ chứa `IntegrationRouteData` của route để redirect đến. Nếu không, giá trị sẽ là undefined.
+
+## Cho phép cài đặt với `astro add`
+
+[Lệnh `astro add`](/vi/reference/cli-reference/#astro-add) cho phép người dùng dễ dàng thêm integrations và adapters vào dự án của họ. Nếu bạn muốn _integration của bạn_ có thể cài đặt được với tool này, **thêm `astro-integration` vào field `keywords` trong `package.json` của bạn**:
+
+```json
+{
+	"name": "example",
+	"keywords": ["astro-integration"]
+}
+```
+
+Khi bạn [publish integration của mình lên npm](https://docs.npmjs.com/cli/v8/commands/npm-publish), chạy `astro add example` sẽ cài đặt package của bạn với bất kỳ peer dependencies nào được chỉ định trong `package.json` của bạn. Điều này cũng sẽ áp dụng integration của bạn vào `astro.config.*` của người dùng như sau:
+
+```js ins={3,6}
+// astro.config.mjs
+import { defineConfig } from 'astro/config';
+import example from 'example';
+
+export default defineConfig({
+	integrations: [example()],
+});
+```
+
+:::caution
+Điều này giả định integration definition của bạn là 1) `default` export và 2) một function. Đảm bảo điều này đúng trước khi thêm keyword `astro-integration`!
+:::
+
+## Integration Ordering
+
+Tất cả integrations chạy theo thứ tự chúng được cấu hình. Ví dụ, với array `[react(), svelte()]` trong `astro.config.*` của người dùng, `react` sẽ chạy trước `svelte`.
+
+Integration của bạn lý tưởng nên chạy theo bất kỳ thứ tự nào. Nếu điều này không thể, chúng tôi khuyến nghị document rằng integration của bạn cần đến đầu tiên hoặc cuối cùng trong array cấu hình `integrations` của người dùng.
+
+## Kết hợp integrations thành presets
+
+Một integration cũng có thể được viết như một collection của nhiều integrations nhỏ hơn. Chúng tôi gọi những collections này là **presets.** Thay vì tạo factory function trả về single integration object, preset trả về _array_ của integration objects. Điều này hữu ích để xây dựng các tính năng phức tạp từ nhiều integrations.
+
+```js
+integrations: [
+	// Ví dụ: nơi examplePreset() trả về: [integrationOne, integrationTwo, ...etc]
+	examplePreset(),
+];
+```
+
+## Tài nguyên cộng đồng
+
+- [Build your own Astro Integrations](https://www.freecodecamp.org/news/how-to-use-the-astro-ui-framework/#chapter-8-build-your-own-astro-integrations-1) - bởi Emmanuel Ohans trên FreeCodeCamp
+- [Astro Integration Template](https://github.com/florian-lefebvre/astro-integration-template) - bởi Florian Lefebvre trên GitHub

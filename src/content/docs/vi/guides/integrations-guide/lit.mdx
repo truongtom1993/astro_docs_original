@@ -1,0 +1,21 @@
+---
+title: 'Lit'
+description: Sử dụng Lit để mở rộng hỗ trợ component trong dự án Astro của bạn.
+i18nReady: true
+---
+
+:::caution[Đã ngừng hỗ trợ]
+Tích hợp Astro này để bật rendering theo yêu cầu và hydration phía client cho các [Lit](https://lit.dev/) custom elements đã được ngừng hỗ trợ trong Astro 5.0.
+:::
+
+Bạn có thể tiếp tục sử dụng Lit cho các client components bằng cách thêm thẻ script phía client. Ví dụ:
+
+```astro
+<script>
+  import "../components/MyTabs";
+</script>
+
+<my-tabs title="Đây là các tab của tôi">...</my-tabs>
+```
+
+Nếu bạn quan tâm đến việc tự duy trì một tích hợp Lit, bạn có thể muốn sử dụng [phiên bản được xuất bản cuối cùng của `@astrojs/lit`](https://github.com/withastro/astro/tree/astro%404.13.0/packages/integrations/lit) làm điểm khởi đầu và nâng cấp các package liên quan.

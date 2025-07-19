@@ -1,0 +1,114 @@
+---
+title: Triển khai trang web Astro lên Netlify
+description: Cách triển khai trang web Astro lên web trên Netlify.
+sidebar:
+  label: Netlify
+type: deploy
+i18nReady: true
+---
+import ReadMore from '~/components/ReadMore.astro';
+import { Steps } from '@astrojs/starlight/components';
+
+[Netlify](https://netlify.com) cung cấp dịch vụ hosting và backend serverless cho các ứng dụng web và trang web tĩnh. Bất kỳ trang web Astro nào cũng có thể được host trên Netlify!
+
+Hướng dẫn này bao gồm các chỉ dẫn để triển khai lên Netlify thông qua giao diện web hoặc CLI của Netlify.
+
+## Cấu hình dự án
+
+Dự án Astro của bạn có thể được triển khai lên Netlify theo ba cách khác nhau: như một trang web tĩnh, trang web render phía server, hoặc trang web render tại edge.
+
+### Trang web tĩnh
+
+Dự án Astro của bạn mặc định là một trang web tĩnh. Bạn không cần cấu hình thêm gì để triển khai trang web Astro tĩnh lên Netlify.
+
+### Adapter cho render theo yêu cầu
+
+Thêm [adapter Netlify](/vi/guides/integrations-guide/netlify/) để kích hoạt render theo yêu cầu trong dự án Astro của bạn và triển khai lên Netlify với lệnh `astro add` sau. Điều này sẽ cài đặt adapter và thực hiện các thay đổi phù hợp cho file `astro.config.mjs` của bạn trong một bước.
+
+```bash
+npx astro add netlify
+```
+
+<ReadMore>Xem [hướng dẫn adapter Netlify](/vi/guides/integrations-guide/netlify/) để cài đặt thủ công thay thế, hoặc để có thêm tùy chọn cấu hình, chẳng hạn như triển khai middleware Astro của dự án bằng Edge Functions của Netlify.</ReadMore>
+
+## Cách triển khai
+
+Bạn có thể triển khai lên Netlify thông qua giao diện web hoặc sử dụng CLI của Netlify (giao diện dòng lệnh). Quy trình giống nhau cho cả trang web Astro tĩnh và render theo yêu cầu.
+
+### Triển khai qua giao diện web
+
+Nếu dự án của bạn được lưu trữ trên GitHub, GitLab, BitBucket, hoặc Azure DevOps, bạn có thể sử dụng giao diện web Netlify để triển khai trang web Astro của mình.
+
+<Steps>
+1. Nhấp <kbd>Add a new site</kbd> trong [dashboard Netlify](https://app.netlify.com/) của bạn
+
+2. Chọn <kbd>Import an existing project</kbd>
+
+    Khi bạn import repository Astro của mình từ nhà cung cấp Git, Netlify sẽ tự động phát hiện và điền sẵn các cài đặt cấu hình chính xác cho bạn.
+
+3. Đảm bảo rằng các cài đặt sau được nhập, sau đó nhấn nút <kbd>Deploy</kbd>:
+
+    - **Build Command:** `astro build` hoặc `npm run build`
+    - **Publish directory:** `dist`
+
+    Sau khi triển khai, bạn sẽ được chuyển hướng đến trang tổng quan trang web. Tại đó, bạn có thể chỉnh sửa chi tiết trang web của mình.
+</Steps>
+
+Bất kỳ thay đổi nào trong tương lai đối với source repository của bạn sẽ kích hoạt triển khai preview và production dựa trên cấu hình triển khai của bạn.
+
+#### File `netlify.toml`
+
+Bạn có thể tùy chọn tạo file `netlify.toml` mới ở cấp cao nhất của repository dự án để cấu hình build command và publish directory, cũng như các cài đặt dự án khác bao gồm biến môi trường và redirects. Netlify sẽ đọc file này và tự động cấu hình triển khai của bạn.
+
+Để cấu hình các cài đặt mặc định, tạo file `netlify.toml` với nội dung sau:
+
+```toml
+[build]
+  command = "npm run build"
+  publish = "dist"
+```
+
+<ReadMore>Thêm thông tin tại ["Deploying an existing Astro Git repository"](https://www.netlify.com/blog/how-to-deploy-astro/#deploy-an-existing-git-repository-to-netlify) trên blog của Netlify</ReadMore>
+
+### Triển khai CLI
+
+Bạn cũng có thể tạo trang web mới trên Netlify và liên kết repository Git của mình bằng cách cài đặt và sử dụng [Netlify CLI](https://cli.netlify.com/).
+
+<Steps>
+1. Cài đặt CLI của Netlify toàn cục
+
+    ```bash
+    npm install --global netlify-cli
+    ```
+
+2. Chạy `netlify login` và làm theo hướng dẫn để đăng nhập và ủy quyền Netlify
+
+3. Chạy `netlify init` và làm theo hướng dẫn
+
+4. Xác nhận build command của bạn (`astro build`)
+
+    CLI sẽ tự động phát hiện cài đặt build (`astro build`) và thư mục deploy (`dist`), và sẽ đề xuất tự động tạo [file `netlify.toml`](#netlifytoml-file) với những cài đặt đó.
+
+5. Build và deploy bằng cách push lên Git
+
+    CLI sẽ thêm deploy key vào repository, có nghĩa là trang web của bạn sẽ được tự động rebuild trên Netlify mỗi khi bạn `git push`.
+</Steps>
+
+<ReadMore>Chi tiết thêm từ Netlify về [Deploy an Astro site using the Netlify CLI](https://www.netlify.com/blog/how-to-deploy-astro/#link-your-astro-project-and-deploy-using-the-netlify-cli)</ReadMore>
+
+### Đặt phiên bản Node.js
+
+Nếu bạn đang sử dụng [build image](https://docs.netlify.com/configure-builds/get-started/#build-image-selection) cũ (Xenial) trên Netlify, hãy đảm bảo rằng phiên bản Node.js của bạn được đặt. Astro yêu cầu `v18.20.8` hoặc `v20.3.0` trở lên.
+
+Bạn có thể [chỉ định phiên bản Node.js trong Netlify](https://docs.netlify.com/configure-builds/manage-dependencies/#node-js-and-javascript) bằng cách sử dụng:
+- file [`.nvmrc`](https://github.com/nvm-sh/nvm#nvmrc) trong thư mục gốc của bạn.
+- biến môi trường `NODE_VERSION` trong cài đặt trang web của bạn sử dụng dashboard dự án Netlify.
+
+## Sử dụng Netlify Functions
+
+Không cần cấu hình đặc biệt để sử dụng Netlify Functions với Astro. Thêm thư mục `netlify/functions` vào root dự án của bạn và làm theo [tài liệu Netlify Functions](https://docs.netlify.com/functions/overview/) để bắt đầu!
+
+## Ví dụ
+
+- [Deploy An Astro site with Forms, Serverless Functions, and Redirects](https://www.netlify.com/blog/deploy-an-astro-site-with-forms-serverless-functions-and-redirects/) — Blog Netlify
+- [Deployment Walkthrough Video](https://youtu.be/GrSLYq6ZTes) — Kênh YouTube Netlify
