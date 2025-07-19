@@ -1,4 +1,4 @@
-a11y.sectionLink: Section titled
+a11y.sectionLink: Phần có tiêu đề
 # Site settings
 site.title: Tài liệu Astro
 # Left Sidebar
@@ -41,7 +41,7 @@ integrations.adapters: Adapters
 integrations.others: Integrations khác
 integrations.more: Thêm integrations
 # Checklist component
-checklist.or: or
+checklist.or: hoặc
 # Multiple Choice component
 multipleChoice.defaultCorrect: Đúng rồi!
 multipleChoice.defaultIncorrect: Thử lại!
@@ -75,32 +75,31 @@ docsearch.placeholder: Tìm kiếm tài liệu
 # # The below keys and values are not set in English, but can be translated.
 # # They provide UI strings for the DocSearch modal component.
 # # SEARCH BOX
-# docsearch.modal.searchBox.resetButtonTitle: Clear the query
-# docsearch.modal.searchBox.resetButtonAriaLabel: Clear the query
-# docsearch.modal.searchBox.cancelButtonText: Cancel
-# docsearch.modal.searchBox.cancelButtonAriaLabel: Cancel
-# docsearch.modal.searchBox.searchInputLabel: Search
+docsearch.modal.searchBox.resetButtonTitle: Xóa query
+docsearch.modal.searchBox.resetButtonAriaLabel: Xóa query
+docsearch.modal.searchBox.cancelButtonText: Hủy
+docsearch.modal.searchBox.cancelButtonAriaLabel: Hủy
+docsearch.modal.searchBox.searchInputLabel: Tìm kiếm
 # # START SCREEN
-# docsearch.modal.startScreen.recentSearchesTitle: Recent
-# docsearch.modal.startScreen.noRecentSearchesText: No recent searches
-# docsearch.modal.startScreen.saveRecentSearchButtonTitle: Save this search
-# docsearch.modal.startScreen.removeRecentSearchButtonTitle: Remove this search from history
-# docsearch.modal.startScreen.favoriteSearchesTitle: Favorite
-# docsearch.modal.startScreen.removeFavoriteSearchButtonTitle: Remove this search from favorites
+docsearch.modal.startScreen.recentSearchesTitle: Gần đây
+docsearch.modal.startScreen.noRecentSearchesText: Không có tìm kiếm gần đây
+docsearch.modal.startScreen.saveRecentSearchButtonTitle: Lưu tìm kiếm này
+docsearch.modal.startScreen.removeRecentSearchButtonTitle: Xóa tìm kiếm này
+docsearch.modal.startScreen.favoriteSearchesTitle: Yêu thích
+docsearch.modal.startScreen.removeFavoriteSearchButtonTitle: Xóa tìm kiếm yêu thích này
 # # ERROR SCREEN
-# docsearch.modal.errorScreen.titleText: Unable to fetch results
-# docsearch.modal.errorScreen.helpText: You might want to check your network connection.
+docsearch.modal.errorScreen.titleText: Không thể tìm thấy kết quả
+docsearch.modal.errorScreen.helpText: Hãy thử tìm kiếm khác hoặc kiểm tra kết nối internet của bạn.
 # # FOOTER
-# docsearch.modal.footer.selectText: to select
-# docsearch.modal.footer.selectKeyAriaLabel: Enter key
-# docsearch.modal.footer.navigateText: to navigate
-# docsearch.modal.footer.navigateUpKeyAriaLabel: Arrow up
-# docsearch.modal.footer.navigateDownKeyAriaLabel: Arrow down
-# docsearch.modal.footer.closeText: to close
-# docsearch.modal.footer.closeKeyAriaLabel: Escape key
-# docsearch.modal.footer.searchByText: Search by
-# # NO RESULTS SCREEN
-# docsearch.modal.noResultsScreen.noResultsText: No results for
-# docsearch.modal.noResultsScreen.suggestedQueryText: Try searching for
-# docsearch.modal.noResultsScreen.reportMissingResultsText: Believe this query should return results?
-# docsearch.modal.noResultsScreen.reportMissingResultsLinkText: Let us know.
+docsearch.modal.footer.selectText: để chọn
+docsearch.modal.footer.selectKeyAriaLabel: Phím Enter
+docsearch.modal.footer.navigateText: để điều hướng
+docsearch.modal.footer.navigateUpKeyAriaLabel: Mũii tên lên
+docsearch.modal.footer.navigateDownKeyAriaLabel: Mũii tên xuống
+docsearch.modal.footer.closeText: đóng
+docsearch.modal.footer.closeKeyAriaLabel: Phím Escape
+docsearch.modal.footer.searchByText: Tìm kiếm bởi
+docsearch.modal.noResultsScreen.noResultsText: Không có kết quả
+docsearch.modal.noResultsScreen.suggestedQueryText: Thử tìm kiếm khác
+docsearch.modal.noResultsScreen.reportMissingResultsText: Không tìm thấy kết quả bạn đang tìm kiếm?
+docsearch.modal.noResultsScreen.reportMissingResultsLinkText: Báo cáo vấn đề
