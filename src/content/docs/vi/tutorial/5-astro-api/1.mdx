@@ -1,9 +1,9 @@
 ---
 type: tutorial
-title: Create a blog post archive
+title: Tạo lưu trữ bài viết blog
 description: |-
-  Tutorial: Build your first Astro blog —
-  Use import.meta.glob() to access data from files in your project
+  Hướng dẫn: Xây dựng blog Astro đầu tiên của bạn —
+  Sử dụng import.meta.glob() để truy cập dữ liệu từ các tệp trong dự án của bạn
 i18nReady: true
 ---
 import Box from '~/components/tutorial/Box.astro';
@@ -13,18 +13,18 @@ import Option from '~/components/tutorial/Option.astro';
 import PreCheck from '~/components/tutorial/PreCheck.astro';
 import { Steps } from '@astrojs/starlight/components';
 
-Now that you have a few blog posts to link to, it's time to configure the Blog page to create a list of them automatically!
+Bây giờ bạn đã có một vài bài viết blog để liên kết, đã đến lúc cấu hình trang Blog để tự động tạo danh sách các bài viết đó!
 
 <PreCheck>
-  - Access data from all your posts at once using `import.meta.glob()`
-  - Display a dynamically generated list of posts on your Blog page
-  - Refactor to use a `<BlogPost />` component for each list item
+  - Truy xuất dữ liệu từ tất cả các bài viết cùng lúc bằng `import.meta.glob()`
+  - Hiển thị danh sách bài viết được tạo tự động trên trang Blog của bạn
+  - Tái cấu trúc để sử dụng một component `<BlogPost />` cho mỗi mục trong danh sách
 </PreCheck>
 
-## Dynamically display a list of posts
+## Hiển thị danh sách bài viết một cách động
 
 <Steps>
-1. Add the following code to `blog.astro` to return information about all your Markdown files. `import.meta.glob()` will return an array of objects, one for each blog post.
+1. Thêm đoạn mã sau vào `blog.astro` để trả về thông tin về tất cả các tệp Markdown của bạn. `import.meta.glob()` sẽ trả về một mảng các đối tượng, mỗi đối tượng là một bài viết.
 
     ```astro title="src/pages/blog.astro" ins={3}
     ---
@@ -33,7 +33,7 @@ Now that you have a few blog posts to link to, it's time to configure the Blog p
     const pageTitle = "My Astro Learning Blog";
     ---
     <BaseLayout pageTitle={pageTitle}>
-      <p>This is where I will post about my journey learning Astro.</p>
+      <p>Đây là nơi tôi sẽ viết về hành trình học Astro của mình.</p>
       <ul>
         <li><a href="/posts/post-1/">Post 1</a></li>
         <li><a href="/posts/post-2/">Post 2</a></li>
@@ -42,8 +42,7 @@ Now that you have a few blog posts to link to, it's time to configure the Blog p
     </BaseLayout>
       ```
 
-
-2. To generate the entire list of posts dynamically, using the post titles and URLs, replace your individual `<li>` tags with the following Astro code:
+2. Để tạo toàn bộ danh sách bài viết một cách động, sử dụng tiêu đề và URL của bài, hãy thay thế từng thẻ `<li>` của bạn bằng đoạn mã Astro sau:
 
     ```astro title="src/pages/blog.astro" del={9,10,11} ins={13}
     ---
@@ -52,7 +51,7 @@ Now that you have a few blog posts to link to, it's time to configure the Blog p
     const pageTitle = "My Astro Learning Blog";
     ---
     <BaseLayout pageTitle={pageTitle}>
-      <p>This is where I will post about my journey learning Astro.</p>
+      <p>Đây là nơi tôi sẽ viết về hành trình học Astro của mình.</p>
       <ul>
         <li><a href="/posts/post-1/">Post 1</a></li>
         <li><a href="/posts/post-2/">Post 2</a></li>
@@ -63,33 +62,33 @@ Now that you have a few blog posts to link to, it's time to configure the Blog p
     </BaseLayout>
     ```
 
-    Your entire list of blog posts is now being generated dynamically using Astro's built-in TypeScript support, by mapping over the array returned by `import.meta.glob()`.
+    Toàn bộ danh sách bài viết blog của bạn giờ đã được tạo động bằng TypeScript tích hợp của Astro, thông qua việc lặp qua mảng trả về từ `import.meta.glob()`.
 
-3. Add a new blog post by creating a new `post-4.md` file in `src/pages/posts/` and adding some Markdown content. Be sure to include at least the frontmatter properties used below.
+3. Thêm một bài viết mới bằng cách tạo tệp `post-4.md` trong `src/pages/posts/` và thêm nội dung Markdown. Hãy đảm bảo có đầy đủ các thuộc tính frontmatter như bên dưới.
 
     ```markdown
     ---
     layout: ../../layouts/MarkdownPostLayout.astro
-    title: My Fourth Blog Post
+    title: Bài viết blog thứ tư của tôi
     author: Astro Learner
-    description: "This post will show up on its own!"
+    description: "Bài viết này sẽ tự động xuất hiện!"
     image: 
         url: "https://docs.astro.build/default-og-image.png"
-        alt: "The word astro against an illustration of planets and stars."
+        alt: "Chữ astro trên nền minh họa các hành tinh và các vì sao."
     pubDate: 2022-08-08
     tags: ["astro", "successes"]
     ---
-    This post should show up with my other blog posts, because `import.meta.glob()` is returning a list of all my posts in order to create my list.
+    Bài viết này sẽ xuất hiện cùng các bài viết khác, bởi vì `import.meta.glob()` đang trả về danh sách tất cả các bài viết của tôi để tạo danh sách.
     ```
 
-4. Revisit your blog page in your browser preview at `http://localhost:4321/blog` and look for an updated list with four items, including your new blog post!
+4. Truy cập lại trang blog của bạn trong trình duyệt tại `http://localhost:4321/blog` và kiểm tra xem danh sách đã cập nhật với bốn bài viết, bao gồm cả bài mới chưa!
 </Steps>
 
 <Box icon="puzzle-piece">
 
-## Challenge: Create a BlogPost component
+## Thử thách: Tạo component BlogPost
 
-Try on your own to make all the necessary changes to your Astro project so that you can instead use the following code to generate your list of blog posts:
+Hãy tự mình thay đổi dự án Astro để có thể sử dụng đoạn mã sau đây để sinh ra danh sách bài viết blog:
 
 ```astro title="src/pages/blog.astro" del={2} ins={3}
 <ul>
@@ -99,22 +98,22 @@ Try on your own to make all the necessary changes to your Astro project so that 
 ```
 
 <details>
-<summary>Expand to see the steps</summary>
+<summary>Mở rộng xem các bước thực hiện</summary>
 
 <Steps>
-1. Create a new component in `src/components/`.
+1. Tạo một component mới trong `src/components/`.
 
     <details>
-    <summary>Show the filename</summary>
+    <summary>Xem tên tệp</summary>
     ```
     BlogPost.astro
     ```
     </details>
 
-2. Write the line of code in your component so that it will be able to receive a `title` and `url` as `Astro.props`.
+2. Viết dòng mã trong component của bạn để nhận `title` và `url` qua `Astro.props`.
 
     <details>
-    <summary>Show the code</summary>
+    <summary>Xem mã nguồn</summary>
     ```astro
     ---
     // src/components/BlogPost.astro
@@ -123,20 +122,20 @@ Try on your own to make all the necessary changes to your Astro project so that 
     ```
     </details>
 
-3. Add the templating used to create each item in your blog post list.
+3. Thêm đoạn template dùng để render từng mục trong danh sách bài viết blog.
 
     <details>
-    <summary>Show the code</summary>
+    <summary>Xem mã nguồn</summary>
     ```astro
     <!-- src/components/BlogPost.astro -->
     <li><a href={url}>{title}</a></li>
     ```
     </details>
 
-4. Import the new component into your Blog page.
+4. Import component mới vào trang Blog của bạn.
 
     <details>
-    <summary>Show the code</summary>
+    <summary>Xem mã nguồn</summary>
     ```astro title="src/pages/blog.astro" ins={3}
     ---
     import BaseLayout from '../layouts/BaseLayout.astro';
@@ -147,10 +146,10 @@ Try on your own to make all the necessary changes to your Astro project so that 
     ```
     </details>
 
-5. Check Yourself: see the finished component code.
+5. Tự kiểm tra: xem mã hoàn chỉnh của component.
 
     <details>
-    <summary>Show the code</summary>
+    <summary>Xem mã nguồn</summary>
     ```astro title="src/components/BlogPost.astro"
     ---
     const { title, url } = Astro.props
@@ -165,7 +164,7 @@ Try on your own to make all the necessary changes to your Astro project so that 
     const pageTitle = "My Astro Learning Blog"
     ---
     <BaseLayout pageTitle={pageTitle}>
-      <p>This is where I will post about my journey learning Astro.</p>
+      <p>Đây là nơi tôi sẽ viết về hành trình học Astro của mình.</p>
       <ul>
         {allPosts.map((post: any) => <BlogPost url={post.url} title={post.frontmatter.title} />)}
       </ul>
@@ -180,9 +179,9 @@ Try on your own to make all the necessary changes to your Astro project so that 
 
 <Box icon="question-mark">
 
-### Test your knowledge
+### Kiểm tra kiến thức của bạn
 
-If your Astro component contains the following line of code: 
+Nếu Astro component của bạn có dòng mã sau: 
 
 ```astro
 ---
@@ -190,9 +189,9 @@ const myPosts = Object.values(import.meta.glob('./posts/*.md', { eager:  true })
 ---
 ```
 
-Choose the syntax you could write to represent:
+Chọn cú pháp bạn có thể dùng để biểu diễn:
 
-1. The title of your third blog post.  
+1. Tiêu đề của bài viết blog thứ ba.  
 
     <MultipleChoice>
       <Option>
@@ -206,7 +205,7 @@ Choose the syntax you could write to represent:
       </Option>
     </MultipleChoice>
 
-2. A link to the URL of your first blog post. 
+2. Một liên kết tới URL của bài viết đầu tiên.
 
     <MultipleChoice>
       <Option>
@@ -220,7 +219,7 @@ Choose the syntax you could write to represent:
       </Option>
     </MultipleChoice>
 
-3. A component for each post, displaying the date that it was last updated.
+3. Một component cho mỗi bài viết, hiển thị ngày cập nhật cuối cùng.
 
     <MultipleChoice>
       <Option isCorrect>
@@ -236,16 +235,16 @@ Choose the syntax you could write to represent:
 
 </Box>
 
-## Checklist
+## Danh sách kiểm tra
 
 <Box icon="check-list">
 
 <Checklist>
-- [ ] I can query for data from my local files.
-- [ ] I can display a list of all my blog posts.
+- [ ] Tôi có thể truy vấn dữ liệu từ các tệp cục bộ.
+- [ ] Tôi có thể hiển thị danh sách tất cả bài viết blog của mình.
 </Checklist>
 </Box>
 
-### Resources
+### Tài nguyên
 
-- [Importing glob patterns in Astro](/vi/guides/imports/#importmetaglob)
+- [Nhập glob patterns trong Astro](/vi/guides/imports/#importmetaglob)

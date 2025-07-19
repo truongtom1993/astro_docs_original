@@ -1,11 +1,11 @@
 ---
 type: tutorial
-title: Send your first script to the browser
+title: Gửi script đầu tiên của bạn đến trình duyệt
 description: >-
-  Tutorial: Build your first Astro blog —
+  Hướng dẫn: Xây dựng blog Astro đầu tiên của bạn —
 
-  Add client-side interactivity to your mobile navigation with an Astro script
-  tag
+  Thêm tính tương tác phía client cho thanh điều hướng di động bằng thẻ script
+  của Astro
 i18nReady: true
 ---
 import Blanks from '~/components/tutorial/Blanks.astro';
@@ -16,23 +16,23 @@ import Option from '~/components/tutorial/Option.astro';
 import PreCheck from '~/components/tutorial/PreCheck.astro';
 import { Steps } from '@astrojs/starlight/components';
 
-Let's add a hamburger menu to open and close your links on mobile screen sizes, requiring some client-side interactivity!
+Hãy thêm một menu hamburger để mở và đóng các liên kết của bạn trên giao diện di động, điều này đòi hỏi một chút tính tương tác phía client!
 
 <PreCheck>
-  - Create a hamburger menu component
-  - Write a `<script>` to allow your site visitors to open and close the navigation menu
-  - Move your JavaScript to its `.js` file
+  - Tạo một component menu hamburger
+  - Viết một thẻ `<script>` để cho phép khách truy cập trang web mở và đóng menu điều hướng
+  - Di chuyển JavaScript của bạn sang tệp `.js` riêng
 </PreCheck>
 
-## Build a Hamburger component
+## Xây dựng một component Hamburger
 
-Create a `<Hamburger />` component to open and close your mobile menu.
+Tạo một component `<Hamburger />` để mở và đóng menu di động của bạn.
 
 <Steps>
-1. Create a file named `Hamburger.astro` in `src/components/`
+1. Tạo một file tên là `Hamburger.astro` trong `src/components/`
   
 
-2. Copy the following code into your component. This will represent your 3-line "hamburger" menu to open and close your navigation links on mobile. (You will add the new CSS styles to `global.css` later.)
+2. Sao chép đoạn mã sau vào component của bạn. Đây sẽ là biểu tượng "hamburger" với 3 dòng để mở và đóng các liên kết điều hướng trên di động. (Bạn sẽ thêm phần CSS mới vào `global.css` sau.)
 
     ```astro title="src/components/Hamburger.astro"
     --- 
@@ -44,10 +44,10 @@ Create a `<Hamburger />` component to open and close your mobile menu.
     </div>
     ```
 
-3. Place this new `<Hamburger />` component just before your `<Navigation />` component in `Header.astro`. 
+3. Đặt component `<Hamburger />` mới này ngay trước component `<Navigation />` trong file `Header.astro`. 
 
     <details>
-    <summary>Show me the code!</summary>
+    <summary>Hiển thị mã cho tôi!</summary>
 
     ```astro title="src/components/Header.astro" ins={2,7}
     ---
@@ -63,10 +63,10 @@ Create a `<Hamburger />` component to open and close your mobile menu.
     ```
     </details>
 
-4. Add the following styles for your Hamburger component:
+4. Thêm các style sau cho component Hamburger:
 
     ```css title="src/styles/global.css" ins={2-13, 56-58}
-    /* nav styles */
+    /* style cho nav */
     .hamburger {
       padding-right: 20px;
       cursor: pointer;
@@ -129,14 +129,14 @@ Create a `<Hamburger />` component to open and close your mobile menu.
 </Steps>
 
 
-## Write your first script tag
+## Viết thẻ script đầu tiên của bạn
 
-Your header is not yet **interactive** because it can't respond to user input, like clicking on the hamburger menu to show or hide the navigation links. 
+Header của bạn hiện chưa **tương tác** vì nó chưa thể phản hồi các thao tác của người dùng, như bấm vào menu hamburger để hiển thị hoặc ẩn các liên kết điều hướng. 
 
-Adding a `<script>` tag provides client-side JavaScript to "listen" for a user event and then respond accordingly.
+Thêm một thẻ `<script>` sẽ cung cấp JavaScript phía client để "lắng nghe" các sự kiện từ người dùng và phản hồi phù hợp.
 
 <Steps>
-1. Add the following `<script>` tag to `index.astro`, just before the closing `</body>` tag.
+1. Thêm thẻ `<script>` sau vào file `index.astro`, ngay trước thẻ đóng `</body>`.
 
     ```astro title="src/pages/index.astro" ins={2-6}
       <Footer />
@@ -148,15 +148,15 @@ Adding a `<script>` tag provides client-side JavaScript to "listen" for a user e
     </body>
     ```
 
-2. Check your browser preview again at various sizes, and verify that you have a working navigation menu that is both responsive to screen size and responds to user input on this page.
+2. Kiểm tra lại trang web của bạn trên các kích thước màn hình khác nhau, và xác nhận rằng bạn đã có một menu điều hướng hoạt động, vừa đáp ứng với kích thước màn hình vừa phản hồi thao tác người dùng trên trang này.
 </Steps>
 
-### Importing a `.js` file
+### Import một file `.js`
 
-Instead of writing your JavaScript directly on each page, you can move the contents of your `<script>` tag into its own `.js` file in your project.
+Thay vì viết JavaScript trực tiếp trên từng trang, bạn có thể chuyển nội dung của thẻ `<script>` sang một file `.js` riêng trong dự án.
 
 <Steps>
-1. Create `src/scripts/menu.js` (you will have to create a new `/scripts/` folder) and move your JavaScript into it.
+1. Tạo file `src/scripts/menu.js` (bạn cần tạo thư mục `/scripts/` mới) và chuyển đoạn JavaScript của bạn vào đó.
 
     ```js title="src/scripts/menu.js"
     document.querySelector('.hamburger').addEventListener('click', () => {
@@ -164,7 +164,7 @@ Instead of writing your JavaScript directly on each page, you can move the conte
     });
     ```
 
-2. Replace the contents of the `<script>` tag on `index.astro` with the following file import:
+2. Thay thế nội dung thẻ `<script>` trên `index.astro` bằng import file sau:
 
     ```astro title="src/pages/index.astro" ins={7} del={3-5}
       <Footer />
@@ -178,10 +178,10 @@ Instead of writing your JavaScript directly on each page, you can move the conte
     </body>
     ```
 
-3. Check your browser preview again at a smaller size and verify that the hamburger menu still opens and closes your navigation links. 
+3. Kiểm tra lại trang web của bạn ở kích thước màn hình nhỏ hơn và xác nhận rằng menu hamburger vẫn mở và đóng các liên kết điều hướng.
 
 
-4. Add the same `<script>` with import to your other two pages, `about.astro` and `blog.astro` and verify that you have a responsive, interactive header on each page.
+4. Thêm cùng một thẻ `<script>` với import vào hai trang khác, `about.astro` và `blog.astro` và xác nhận rằng bạn có một header tương tác, đáp ứng trên mỗi trang.
 
     ```astro title="src/pages/about.astro & src/pages/blog.astro" ins={2-4}
       <Footer />
@@ -193,59 +193,59 @@ Instead of writing your JavaScript directly on each page, you can move the conte
 </Steps>
 
 :::note[Takeaway]
-You had previously used some JavaScript to build parts of your site:
+Trước đây bạn đã sử dụng một chút JavaScript để xây dựng các phần của trang web:
 
-- Defining your page title and heading dynamically
-- Mapping through a list of skills on the About page
-- Conditionally displaying HTML elements
+- Đặt tiêu đề và heading động cho trang
+- Duyệt qua danh sách kỹ năng trên trang About
+- Hiển thị điều kiện các phần tử HTML
 
-Those commands are all executed at build time to create static HTML for your site, and then the code is "thrown away." 
+Những lệnh đó đều được thực thi trong quá trình build để tạo HTML tĩnh cho trang web, sau đó mã sẽ bị "loại bỏ".
 
-**The JavaScript in a `<script>` tag is sent to the browser**, and is available to run, based on user interactions like refreshing a page or toggling an input.
+**JavaScript trong thẻ `<script>` sẽ được gửi đến trình duyệt**, và sẵn sàng chạy dựa trên các thao tác của người dùng như làm mới trang hoặc bật/tắt một trường nhập liệu.
 :::
 
 
 
 <Box icon="question-mark">
 
-### Test your knowledge
+### Kiểm tra kiến thức của bạn
 
-1. When does Astro run any JavaScript written in a component's frontmatter?
+1. Khi nào Astro chạy bất kỳ JavaScript nào được viết trong frontmatter của component?
     <MultipleChoice>
       <Option>
-       Astro never runs JavaScript
+       Astro không bao giờ chạy JavaScript
       </Option>
       <Option isCorrect>
-        at build-time
+        vào thời điểm build
       </Option>
       <Option>
-         When a visitor clicks a button
+         Khi người dùng bấm vào nút
       </Option>
     </MultipleChoice>
 
-2. Optionally, Astro can send JavaScript to the browser to allow:
+2. Astro có thể gửi JavaScript ra trình duyệt để cho phép:
     <MultipleChoice>
       <Option>
-        users to click page links
+        người dùng bấm vào các liên kết trang
       </Option>
       <Option>
-        faster load times
+        tăng tốc độ tải trang
       </Option>
       <Option isCorrect>
-        client-side interactivity
+        tính tương tác phía client
       </Option>
     </MultipleChoice>
 
-3. The client-side JavaScript will be sent to a user’s browser when it is written or imported:
+3. JavaScript phía client sẽ được gửi đến trình duyệt người dùng khi nó được viết hoặc import:
     <MultipleChoice>
       <Option isCorrect>
-        in `<script>` tags
+        trong thẻ `<script>`
       </Option>
       <Option>
-        between a `.astro` file's code fences
+        giữa các khối mã của file `.astro`
       </Option>
       <Option>
-        in `global.css`
+        trong `global.css`
       </Option>
     </MultipleChoice>
 
@@ -253,15 +253,15 @@ Those commands are all executed at build time to create static HTML for your sit
 
 <Box icon="check-list">
 
-## Checklist
+## Danh sách kiểm tra
 
 <Checklist>
-- [ ] I can add client-side interactivity with JavaScript in a `<script>` tag.
-- [ ] I can import a `.js` file into a `<script>` tag.
+- [ ] Tôi có thể thêm tính tương tác phía client với JavaScript trong thẻ `<script>`.
+- [ ] Tôi có thể import một file `.js` vào thẻ `<script>`.
 </Checklist>
 
 </Box>
 
-### Resources
+### Tài liệu tham khảo
 
-[Client-side scripts in Astro](/vi/guides/client-side-scripts/)
+[Tài liệu script phía client trong Astro](/vi/guides/client-side-scripts/)

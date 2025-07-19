@@ -1,9 +1,9 @@
 ---
 type: tutorial
-title: 'Optional: Make a content collection'
+title: 'Tùy chọn: Tạo một bộ sưu tập nội dung'
 description: |-
-  Tutorial: Build your first Astro blog —
-  Convert your blog from file-based routing to content collections
+  Hướng dẫn: Xây dựng blog Astro đầu tiên của bạn —
+  Chuyển đổi blog của bạn từ định tuyến dựa trên tệp sang bộ sưu tập nội dung
 i18nReady: true
 ---
 import PackageManagerTabs from '~/components/tabs/PackageManagerTabs.astro';
@@ -14,110 +14,110 @@ import PreCheck from '~/components/tutorial/PreCheck.astro';
 import Option from '~/components/tutorial/Option.astro';
 import { Steps } from '@astrojs/starlight/components';
 
-Now that you have a blog using Astro's [built-in file-based routing](/vi/guides/routing/#static-routes), you will update it to use a [content collection](/vi/guides/content-collections/). Content collections are a powerful way to manage groups of similar content, such as blog posts.
+Bây giờ bạn đã có một blog sử dụng [định tuyến dựa trên tệp tích hợp sẵn của Astro](/vi/guides/routing/#static-routes), bạn sẽ cập nhật nó để sử dụng [bộ sưu tập nội dung](/vi/guides/content-collections/). Bộ sưu tập nội dung là một cách mạnh mẽ để quản lý các nhóm nội dung tương tự nhau, như các bài viết blog.
 
 <PreCheck>
-  - Move your folder of blog posts into `src/blog/`
-  - Create a schema to define your blog post frontmatter
-  - Use `getCollection()` to get blog post content and metadata
+  - Di chuyển thư mục các bài viết blog của bạn vào `src/blog/`
+  - Tạo một schema để định nghĩa frontmatter cho bài viết blog
+  - Sử dụng `getCollection()` để lấy nội dung và metadata của bài viết blog
 </PreCheck>
 
-## Learn: Pages vs Collections
+## Tìm hiểu: Trang vs Bộ sưu tập
 
-Even when using content collections, you will still use the `src/pages/` folder for individual pages, such as your About Me page. But, moving your blog posts outside of this special folder will allow you to use more powerful and performant APIs to generate your blog post index and display your individual blog posts.
+Ngay cả khi sử dụng bộ sưu tập nội dung, bạn vẫn sẽ sử dụng thư mục `src/pages/` cho các trang riêng lẻ, như trang Giới thiệu. Tuy nhiên, việc di chuyển các bài viết blog ra khỏi thư mục đặc biệt này sẽ cho phép bạn sử dụng các API mạnh mẽ và tối ưu hơn để tạo trang chỉ mục blog cũng như hiển thị từng bài viết blog của mình.
 
-At the same time, you'll receive better guidance and autocompletion in your code editor because you will have a **[schema](/vi/guides/content-collections/#defining-the-collection-schema)** to define a common structure for each post that Astro will help you enforce through [Zod](https://zod.dev/), a schema declaration and validation library for TypeScript. In your schema, you can specify when frontmatter properties are required, such as a description or an author, and which data type each property must be, such as a string or an array. This leads to catching many mistakes sooner, with descriptive error messages telling you exactly what the problem is.
+Đồng thời, bạn sẽ nhận được gợi ý và tự động hoàn thành tốt hơn trong trình soạn thảo mã vì bạn sẽ có một **[schema](/vi/guides/content-collections/#defining-the-collection-schema)** để định nghĩa cấu trúc chung cho từng bài viết mà Astro sẽ giúp bạn kiểm tra thông qua [Zod](https://zod.dev/), một thư viện khai báo và xác thực schema cho TypeScript. Trong schema, bạn có thể chỉ định thuộc tính frontmatter nào là bắt buộc, như mô tả hoặc tác giả, và kiểu dữ liệu từng thuộc tính, như chuỗi hoặc mảng. Điều này giúp phát hiện nhiều lỗi sớm hơn, với thông báo lỗi chi tiết cho biết chính xác vấn đề nằm ở đâu.
 
-Read more about [Astro's content collections](/vi/guides/content-collections/) in our guide, or get started with the instructions below to convert a basic blog from `src/pages/posts/` to `src/blog/`.
+Đọc thêm về [bộ sưu tập nội dung của Astro](/vi/guides/content-collections/) trong hướng dẫn của chúng tôi, hoặc bắt đầu với các bước dưới đây để chuyển đổi một blog cơ bản từ `src/pages/posts/` sang `src/blog/`.
 
 <Box icon="question-mark">
-### Test your knowledge
+### Kiểm tra kiến thức của bạn
 
-1. Which type of page would you probably keep in `src/pages/`?
+1. Loại trang nào bạn có thể sẽ giữ lại trong `src/pages/`?
 
     <MultipleChoice>
       <Option>
-        Blog posts that all contain the same basic structure and metadata
+        Các bài viết blog đều có cùng cấu trúc và metadata cơ bản
       </Option>
       <Option>
-        Product pages in an eCommerce site
+        Các trang sản phẩm trong một trang thương mại điện tử
       </Option>
       <Option isCorrect>
-        A contact page, because you do not have multiple similar pages of this type
+        Một trang liên hệ, vì bạn không có nhiều trang tương tự loại này
       </Option>
     </MultipleChoice>
 
-2. Which is **not** a benefit of moving blog posts to a content collection?
+2. Điều nào **không** phải là lợi ích của việc chuyển các bài viết blog sang bộ sưu tập nội dung?
 
     <MultipleChoice>
       <Option isCorrect>
-         Pages are automatically created for each file
+         Các trang được tạo tự động cho mỗi tệp
       </Option>
       <Option>
-        Better error messages, because Astro knows more about each file
+        Thông báo lỗi tốt hơn, vì Astro biết nhiều hơn về từng tệp
       </Option>
       <Option>
-        Better data fetching, with a more performant function
+        Lấy dữ liệu tốt hơn, với một hàm hiệu suất cao hơn
       </Option>
     </MultipleChoice>
 
-3. Content collections uses TypeScript . . .
+3. Bộ sưu tập nội dung sử dụng TypeScript . . .
     <MultipleChoice>
       <Option>
-        To make me feel bad
+        Để làm tôi cảm thấy tệ
       </Option>
       <Option isCorrect>
-        To understand and validate my collections, and to provide editor tooling
+        Để hiểu và xác thực bộ sưu tập của tôi, đồng thời cung cấp công cụ cho trình soạn thảo
       </Option>
       <Option>
-        Only if I have the `strictest` configuration set in `tsconfig.json`
+        Chỉ khi tôi bật cấu hình `strictest` trong `tsconfig.json`
       </Option>
     </MultipleChoice>
 
 </Box>
 
-The steps below show you how to extend the final product of the Build a Blog tutorial by creating a content collection for the blog posts.
+Các bước dưới đây sẽ hướng dẫn bạn mở rộng sản phẩm cuối cùng của hướng dẫn Xây dựng Blog bằng cách tạo một bộ sưu tập nội dung cho các bài viết blog.
 
-## Upgrade dependencies
+## Nâng cấp các phụ thuộc
 
-Upgrade to the latest version of Astro, and upgrade all integrations to their latest versions by running the following commands in your terminal:
+Nâng cấp lên phiên bản mới nhất của Astro và nâng cấp tất cả các tích hợp lên phiên bản mới nhất bằng cách chạy các lệnh sau trong terminal của bạn:
 
     <PackageManagerTabs>
       <Fragment slot="npm">
       ```shell
-      # Upgrade Astro and official integrations together
+      # Nâng cấp Astro và các tích hợp chính thức cùng lúc
       npx @astrojs/upgrade
       ```
       </Fragment>
       <Fragment slot="pnpm">
       ```shell
-      # Upgrade Astro and official integrations together
+      # Nâng cấp Astro và các tích hợp chính thức cùng lúc
       pnpm dlx @astrojs/upgrade
       ```
       </Fragment>
       <Fragment slot="yarn">
       ```shell
-      # Upgrade Astro and official integrations together
+      # Nâng cấp Astro và các tích hợp chính thức cùng lúc
       yarn dlx @astrojs/upgrade
       ```
       </Fragment>
     </PackageManagerTabs>
 
-## Create a collection for your posts
+## Tạo bộ sưu tập cho các bài viết của bạn
 
 <Steps>
-1. Create a new **collection** (folder) called `src/blog/`. 
+1. Tạo một **bộ sưu tập** (thư mục) mới có tên là `src/blog/`. 
 
-2. Move all your existing blog posts (`.md` files) from `src/pages/posts/` into this new collection.
+2. Di chuyển tất cả các bài viết blog hiện có (các tệp `.md`) từ `src/pages/posts/` vào bộ sưu tập mới này.
 
-3. Create a `src/content.config.ts` file to [define a schema](/vi/guides/content-collections/#defining-the-collection-schema) for your `postsCollection`. For the existing blog tutorial code, add the following contents to the file to define all the frontmatter properties used in its blog posts:
+3. Tạo tệp `src/content.config.ts` để [định nghĩa schema](/vi/guides/content-collections/#defining-the-collection-schema) cho `postsCollection` của bạn. Đối với mã hướng dẫn blog hiện có, thêm nội dung sau vào tệp để định nghĩa tất cả thuộc tính frontmatter được sử dụng trong các bài viết blog:
 
     ```ts title="src/content.config.ts"
-    // Import the glob loader
+    // Import glob loader
     import { glob } from "astro/loaders";
-    // Import utilities from `astro:content`
+    // Import các tiện ích từ `astro:content`
     import { z, defineCollection } from "astro:content";
-    // Define a `loader` and `schema` for each collection
+    // Định nghĩa `loader` và `schema` cho từng bộ sưu tập
     const blog = defineCollection({
         loader: glob({ pattern: '**/[^_]*.md', base: "./src/blog" }),
         schema: z.object({
@@ -132,19 +132,19 @@ Upgrade to the latest version of Astro, and upgrade all integrations to their la
           tags: z.array(z.string())
         })
     });
-    // Export a single `collections` object to register your collection(s)
+    // Xuất một đối tượng `collections` duy nhất để đăng ký bộ sưu tập của bạn
     export const collections = { blog };
     ```
 
-4. In order for Astro to recognize your schema, quit (`CTRL + C`) and restart the dev server to continue with the tutorial. This will define the `astro:content` module.
+4. Để Astro nhận diện schema của bạn, hãy thoát (`CTRL + C`) và khởi động lại server dev để tiếp tục hướng dẫn. Điều này sẽ định nghĩa module `astro:content`.
 </Steps>
 
-## Generate pages from a collection
+## Tạo trang từ bộ sưu tập
 
 <Steps>
-1. Create a page file called `src/pages/posts/[...slug].astro`. Your Markdown and MDX files no longer automatically become pages using Astro's file-based routing when they are inside a collection, so you must create a page responsible for generating each individual blog post.
+1. Tạo một tệp trang có tên `src/pages/posts/[...slug].astro`. Các tệp Markdown và MDX của bạn sẽ không còn tự động trở thành trang sử dụng định tuyến dựa trên tệp của Astro khi chúng nằm trong một bộ sưu tập, vì vậy bạn cần tạo một trang chịu trách nhiệm tạo từng bài viết blog.
 
-2. Add the following code to [query your collection](/vi/guides/content-collections/#querying-collections) to make each blog post's slug and page content available to each page it will generate:
+2. Thêm đoạn mã sau để [truy vấn bộ sưu tập của bạn](/vi/guides/content-collections/#querying-collections), giúp mỗi slug và nội dung trang của bài viết blog khả dụng cho từng trang sẽ được tạo:
 
     ```astro title="src/pages/posts/[...slug].astro"
     ---
@@ -162,7 +162,7 @@ Upgrade to the latest version of Astro, and upgrade all integrations to their la
     ---
     ```
 
-3. Render your post `<Content />` within the layout for Markdown pages. This allows you to specify a common layout for all of your posts.
+3. Hiển thị bài viết của bạn bằng `<Content />` trong layout cho các trang Markdown. Điều này cho phép bạn chỉ định một layout chung cho tất cả các bài viết.
 
     ```astro title="src/pages/posts/[...slug].astro" ins={3,15-17}
     ---
@@ -184,22 +184,22 @@ Upgrade to the latest version of Astro, and upgrade all integrations to their la
     </MarkdownPostLayout>
     ```
 
-4. Remove the `layout` definition in each individual post's frontmatter. Your content is now wrapped in a layout when rendered, and this property is no longer needed.
+4. Xóa thuộc tính `layout` trong frontmatter của từng bài viết riêng lẻ. Nội dung của bạn giờ đã được bao bọc trong một layout khi render, và thuộc tính này không còn cần thiết nữa.
 
     ```md title="src/content/posts/post-1.md" del={2}
     ---
     layout: ../../layouts/MarkdownPostLayout.astro
-    title: 'My First Blog Post'
+    title: 'Bài viết blog đầu tiên của tôi'
     pubDate: 2022-07-01
     ...
     ---
     ```
 </Steps>
 
-## Replace `import.meta.glob()` with `getCollection()`
+## Thay thế `import.meta.glob()` bằng `getCollection()`
 
 <Steps>
-5. Anywhere you have a list of blog posts, like the tutorial's Blog page (`src/pages/blog.astro/`), you will need to replace `import.meta.glob()` with [`getCollection()`](/vi/reference/modules/astro-content/#getcollection) as the way to fetch content and metadata from your Markdown files.
+5. Ở bất kỳ nơi nào bạn có danh sách các bài viết blog, như trang Blog của hướng dẫn (`src/pages/blog.astro/`), bạn sẽ cần thay thế `import.meta.glob()` bằng [`getCollection()`](/vi/reference/modules/astro-content/#getcollection) để lấy nội dung và metadata từ các tệp Markdown của bạn.
 
     ```astro title="src/pages/blog.astro" "post.data" "getCollection(\"blog\")" "/posts/${post.id}/" del={7} ins={2,8}
     ---
@@ -207,13 +207,13 @@ Upgrade to the latest version of Astro, and upgrade all integrations to their la
     import BaseLayout from "../layouts/BaseLayout.astro";
     import BlogPost from "../components/BlogPost.astro";
 
-    const pageTitle = "My Astro Learning Blog";
+    const pageTitle = "Blog Học Astro của tôi";
     const allPosts = Object.values(import.meta.glob("../pages/posts/*.md", { eager: true }));
     const allPosts = await getCollection("blog");
     ---
     ```
 
-6. You will also need to update references to the data returned for each `post`. You will now find your frontmatter values on the `data` property of each object. Also, when using collections each `post` object will have a page `slug`, not a full URL.
+6. Bạn cũng sẽ cần cập nhật các tham chiếu đến dữ liệu trả về cho từng `post`. Bây giờ bạn sẽ tìm thấy giá trị frontmatter của mình trong thuộc tính `data` của mỗi object. Ngoài ra, khi sử dụng bộ sưu tập, mỗi object `post` sẽ có một `slug` trang, không phải một URL đầy đủ.
 
     ```astro title="src/pages/blog.astro" "data" "/posts/$\{post.id\}/" del={14} ins={15}
     ---
@@ -221,11 +221,11 @@ Upgrade to the latest version of Astro, and upgrade all integrations to their la
     import BaseLayout from "../layouts/BaseLayout.astro";
     import BlogPost from "../components/BlogPost.astro";
 
-    const pageTitle = "My Astro Learning Blog";
+    const pageTitle = "Blog Học Astro của tôi";
     const allPosts = await getCollection("blog");
     ---
     <BaseLayout pageTitle={pageTitle}>
-      <p>This is where I will post about my journey learning Astro.</p>
+      <p>Đây là nơi tôi sẽ viết về hành trình học Astro của mình.</p>
       <ul>
         {
           allPosts.map((post) => (
@@ -237,15 +237,15 @@ Upgrade to the latest version of Astro, and upgrade all integrations to their la
     </BaseLayout> 
     ```
 
-7. The tutorial blog project also dynamically generates a page for each tag using `src/pages/tags/[tag].astro` and displays a list of tags at `src/pages/tags/index.astro`. 
+7. Dự án blog trong hướng dẫn cũng tự động tạo trang cho từng tag bằng `src/pages/tags/[tag].astro` và hiển thị danh sách tag ở `src/pages/tags/index.astro`. 
    
-          Apply the same changes as above to these two files:
+          Áp dụng các thay đổi như trên cho hai tệp này:
       
-          - fetch data about all your blog posts using `getCollection("blog")` instead of using `import.meta.glob()`
-          - access all frontmatter values using `data` instead of `frontmatter`
-          - create a page URL by adding the post's `slug` to the `/posts/` path
+          - lấy dữ liệu về tất cả các bài viết blog bằng `getCollection("blog")` thay vì dùng `import.meta.glob()`
+          - truy cập tất cả giá trị frontmatter bằng `data` thay vì `frontmatter`
+          - tạo URL trang bằng cách thêm `slug` của bài viết vào đường dẫn `/posts/`
         
-        The page that generates individual tag pages now becomes:
+        Trang tạo từng trang tag giờ sẽ như sau:
 
         ```astro title="src/pages/tags/[tag].astro" "post.data.tags" "getCollection(\"blog\")" "post.data.title" ins={2} "/posts/${post.id}/"
         ---
@@ -273,7 +273,7 @@ Upgrade to the latest version of Astro, and upgrade all integrations to their la
         ---
 
         <BaseLayout pageTitle={tag}>
-          <p>Posts tagged with {tag}</p>
+          <p>Các bài viết được gắn thẻ {tag}</p>
           <ul>
             { posts.map((post) => <BlogPost url={`/posts/${post.id}/`} title={post.data.title} />) }
           </ul>
@@ -281,19 +281,19 @@ Upgrade to the latest version of Astro, and upgrade all integrations to their la
         ```
 
         <Box icon="puzzle-piece">
-          ### Try it yourself - Update the query in the Tag Index page
+          ### Tự thực hành - Cập nhật truy vấn trong trang chỉ mục Tag
 
-          Import and use `getCollection` to fetch the tags used in the blog posts on `src/pages/tags/index.astro`, following the [same steps as above](#replace-importmetaglob-with-getcollection).
+          Import và sử dụng `getCollection` để lấy các tag sử dụng trong các bài viết blog ở `src/pages/tags/index.astro`, theo [các bước tương tự ở trên](#replace-importmetaglob-with-getcollection).
 
           <details>
-          <summary>Show me the code.</summary>
+          <summary>Xem mã ví dụ.</summary>
           ```astro title="src/pages/tags/index.astro" "post.data" "getCollection(\"blog\")" ins={2}
           ---
           import { getCollection } from "astro:content";
           import BaseLayout from "../../layouts/BaseLayout.astro";     
           const allPosts = await getCollection("blog");
           const tags = [...new Set(allPosts.map((post) => post.data.tags).flat())];
-          const pageTitle = "Tag Index";
+          const pageTitle = "Chỉ mục Tag";
           ---
           <!-- ... -->
           ```
@@ -301,28 +301,28 @@ Upgrade to the latest version of Astro, and upgrade all integrations to their la
       </Box>
 </Steps>
 
-## Update any frontmatter values to match your schema
+## Cập nhật các giá trị frontmatter để khớp với schema
 
-If necessary, update any frontmatter values throughout your project, such as in your layout, that do not match your collections schema. 
+Nếu cần thiết, hãy cập nhật bất kỳ giá trị frontmatter nào trong toàn dự án, chẳng hạn trong layout của bạn, chưa khớp với schema của bộ sưu tập.
 
-In the blog tutorial example, `pubDate` was a string. Now, according to the schema that defines types for the post frontmatter, `pubDate` will be a `Date`
-object. You can now take advantage of this to use the methods available for any `Date` object to format the date.
+Trong ví dụ hướng dẫn blog, `pubDate` là một chuỗi. Bây giờ, theo schema xác định kiểu cho frontmatter bài viết, `pubDate` sẽ là một đối tượng `Date`.
+Bạn có thể tận dụng điều này để sử dụng các phương thức của đối tượng `Date` nhằm định dạng ngày.
 
-To render the date in the blog post layout, convert it to a string using `toLocaleDateString()` method:
+Để hiển thị ngày trong layout bài viết blog, hãy chuyển nó thành chuỗi bằng phương thức `toLocaleDateString()`:
 
 ```astro title="src/layouts/MarkdownPostLayout.astro" ins="toString()"
 <!-- ... -->
 <BaseLayout pageTitle={frontmatter.title}>
     <p>{frontmatter.pubDate.toLocaleDateString()}</p>
     <p><em>{frontmatter.description}</em></p>
-    <p>Written by: {frontmatter.author}</p>
+    <p>Tác giả: {frontmatter.author}</p>
     <img src={frontmatter.image.url} width="300" alt={frontmatter.image.alt} />
 <!-- ... -->
 ```
 
-## Update the RSS function
+## Cập nhật hàm RSS
 
-The tutorial blog project includes an RSS feed. This function must also use `getCollection()` to return information from your blog posts. You will then generate the RSS items using the `data` object returned.
+Dự án blog trong hướng dẫn có bao gồm RSS feed. Hàm này cũng phải sử dụng `getCollection()` để trả về thông tin từ các bài viết blog của bạn. Bạn sẽ tạo các mục RSS sử dụng object `data` trả về.
 
     ```js title="src/pages/rss.xml.js" del={2,11} ins={3,6,12-17}
     import rss from '@astrojs/rss';
@@ -333,7 +333,7 @@ The tutorial blog project includes an RSS feed. This function must also use `get
       const posts = await getCollection("blog");
       return rss({
         title: 'Astro Learner | Blog',
-        description: 'My journey learning Astro',
+        description: 'Hành trình học Astro của tôi',
         site: context.site,
         items: await pagesGlobToRssItems(import.meta.glob('./**/*.md')),
         items: posts.map((post) => ({
@@ -347,12 +347,12 @@ The tutorial blog project includes an RSS feed. This function must also use `get
     }
     ```
 
-For the full example of the blog tutorial using content collections, see the [Content Collections branch](https://github.com/withastro/blog-tutorial-demo/tree/content-collections) of the tutorial repo.
+Để xem ví dụ đầy đủ về hướng dẫn blog sử dụng bộ sưu tập nội dung, hãy xem [nhánh Content Collections](https://github.com/withastro/blog-tutorial-demo/tree/content-collections) của kho hướng dẫn.
 
 <Box icon="check-list">
 
-## Checklist
+## Danh sách kiểm tra
 <Checklist>
-- [ ] I can use content collections to manage groups of similar content for better performance and organization.
+- [ ] Tôi có thể sử dụng bộ sưu tập nội dung để quản lý nhóm nội dung tương tự cho hiệu suất và tổ chức tốt hơn.
 </Checklist>
 </Box>

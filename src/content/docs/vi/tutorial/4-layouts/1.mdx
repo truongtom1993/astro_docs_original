@@ -1,9 +1,9 @@
 ---
 type: tutorial
-title: Build your first layout
+title: Xây dựng layout đầu tiên của bạn
 description: |-
-  Tutorial: Build your first Astro blog —
-  Refactor common elements into a reusable page layout
+  Hướng dẫn: Xây dựng blog Astro đầu tiên của bạn —
+  Tái cấu trúc các thành phần chung thành một layout trang có thể tái sử dụng
 i18nReady: true
 ---
 import Box from '~/components/tutorial/Box.astro';
@@ -15,19 +15,19 @@ import { Steps } from '@astrojs/starlight/components';
 
 
 <PreCheck>
-  - Refactor common elements into a page layout
-  - Use an Astro `<slot />` element to place page contents within a layout
-  - Pass page-specific values as props to its layout
+  - Tái cấu trúc các thành phần chung thành một layout trang
+  - Sử dụng phần tử Astro `<slot />` để chèn nội dung trang vào trong layout
+  - Truyền giá trị riêng cho từng trang làm props vào layout
 </PreCheck>
 
-You still have some Astro components repeatedly rendered on every page. It's time to refactor again to create a shared page layout!
+Bạn vẫn còn một số component Astro được render lặp lại trên mọi trang. Đã đến lúc tiếp tục tái cấu trúc để tạo một layout trang dùng chung!
 
-## Create your first layout component
+## Tạo component layout đầu tiên của bạn
 
 <Steps>
-1. Create a new file at the location `src/layouts/BaseLayout.astro`. (You will need to create a new `layouts` folder first.)
+1. Tạo một file mới tại vị trí `src/layouts/BaseLayout.astro`. (Bạn sẽ cần tạo một thư mục `layouts` mới trước.)
 
-2. Copy the **entire contents** of `index.astro` into your new file, `BaseLayout.astro`.
+2. Sao chép **toàn bộ nội dung** của `index.astro` vào file mới của bạn là `BaseLayout.astro`.
 
     ```astro title="src/layouts/BaseLayout.astro"
     ---
@@ -56,10 +56,10 @@ You still have some Astro components repeatedly rendered on every page. It's tim
     ```
 </Steps>
 
-## Use your layout on a page
+## Sử dụng layout của bạn trên một trang
 
 <Steps>
-3. Replace the code at `src/pages/index.astro` with the following:
+3. Thay thế mã tại `src/pages/index.astro` bằng nội dung sau:
 
     ```astro title="src/pages/index.astro"
     ---
@@ -67,13 +67,13 @@ You still have some Astro components repeatedly rendered on every page. It's tim
     const pageTitle = "Home Page";
     ---
     <BaseLayout>
-      <h2>My awesome blog subtitle</h2>
+      <h2>Phụ đề blog tuyệt vời của tôi</h2>
     </BaseLayout>
     ```
 
-4. Check the browser preview again to notice what did (or, spoiler alert: did _not_!) change.
+4. Kiểm tra lại phần xem trước trên trình duyệt để xem điều gì đã (hoặc, tiết lộ nhẹ: thực ra _chưa_!) thay đổi.
 
-5. Add a `<slot />` element to `src/layouts/BaseLayout.astro` just above the footer component, then check the browser preview of your Home page and notice what really _did_ change this time!
+5. Thêm phần tử `<slot />` vào `src/layouts/BaseLayout.astro` ngay trên component footer, sau đó kiểm tra lại phần xem trước trang Chủ và để ý điều gì thực sự _đã_ thay đổi lần này!
 
     ```astro title="src/layouts/BaseLayout.astro" ins={18}
     ---
@@ -103,12 +103,12 @@ You still have some Astro components repeatedly rendered on every page. It's tim
     ```
 </Steps>
 
- The `<slot />` allows you to inject (or "slot in") **child content** written between opening and closing `<Component></Component>` tags to any `Component.astro` file.
+ Phần tử `<slot />` cho phép bạn chèn (hoặc "slot vào") **nội dung con** được viết giữa cặp thẻ mở và đóng `<Component></Component>` vào bất kỳ file `Component.astro` nào.
 
-## Pass page-specific values as props
+## Truyền giá trị riêng cho từng trang qua props
 
 <Steps>
-6. Pass the page title to your layout component from `index.astro` using a component attribute:
+6. Truyền tiêu đề trang tới component layout từ `index.astro` bằng cách sử dụng thuộc tính component:
 
     ```astro title="src/pages/index.astro" 'pageTitle={pageTitle}'
     ---
@@ -116,11 +116,11 @@ You still have some Astro components repeatedly rendered on every page. It's tim
     const pageTitle = "Home Page";
     ---
     <BaseLayout pageTitle={pageTitle}>
-      <h2>My awesome blog subtitle</h2>
+      <h2>Phụ đề blog tuyệt vời của tôi</h2>
     </BaseLayout>
     ```
 
-7. Change the script of your `BaseLayout.astro` layout component to receive a page title via `Astro.props` instead of defining it as a constant.
+7. Thay đổi script trong component layout `BaseLayout.astro` để nhận tiêu đề trang qua `Astro.props` thay vì khai báo nó là một hằng số.
 
     ```astro title="src/layouts/BaseLayout.astro" del={5} ins={6}
     ---
@@ -132,34 +132,34 @@ You still have some Astro components repeatedly rendered on every page. It's tim
     ---
     ```
 
-8. Check your browser preview to verify that your page title has not changed. It has the same value, but is now being rendered dynamically. And now, each individual page can specify its own title to the layout.
+8. Kiểm tra lại phần xem trước trên trình duyệt để xác nhận rằng tiêu đề trang của bạn không thay đổi. Nó vẫn giữ nguyên giá trị, nhưng bây giờ đã được render một cách động. Và giờ đây, mỗi trang riêng lẻ có thể chỉ định tiêu đề riêng cho layout.
 </Steps>
 
 <Box icon="puzzle-piece">
 
-## Try it yourself - Use your layout everywhere
+## Tự thực hành - Sử dụng layout ở mọi nơi
 
-**Refactor** your other pages (`blog.astro` and `about.astro`) so that they use your new `<BaseLayout>` component to render the common page elements.
+**Tái cấu trúc** các trang khác của bạn (`blog.astro` và `about.astro`) để sử dụng component `<BaseLayout>` mới nhằm render các phần tử chung của trang.
 
-Don't forget to:
+Đừng quên:
 
-- Pass a page title as props via a component attribute.
+- Truyền tiêu đề trang làm props thông qua thuộc tính component.
 
-- Let the layout be responsible for the HTML rendering of any common elements.
+- Để layout chịu trách nhiệm render HTML cho các thành phần chung.
 
-- Move any existing `<style>` tags in the page `<head>` with styles you wish to keep to the page HTML template.
+- Di chuyển bất kỳ thẻ `<style>` nào trong phần `<head>` của trang với các style bạn muốn giữ lại sang template HTML của trang.
 
-- Delete anything from each individual page that is now being handled by the layout, including:
+- Xóa bất cứ thứ gì trong mỗi trang riêng lẻ hiện đã được xử lý bởi layout, bao gồm:
 
-  - HTML elements
-  - Components and their imports
-  - CSS rules in a `<style>` tag (e.g. `<h1>` in your About page)
-  - `<script>` tags
+  - Các phần tử HTML
+  - Các component và import của chúng
+  - Quy tắc CSS trong thẻ `<style>` (ví dụ: `<h1>` trong trang About của bạn)
+  - Các thẻ `<script>`
 
-:::note[Keeping your About page styles]
-Using the `<BaseLayout>` to render your `about.astro` page means you will lose the `<style>` tag added to the `<head>` of this page. To continue to style items only at the page level using Astro's scoped styling, move the `<style>`  tag to the body of the page component. This allows you to style **elements created in this page component** (e.g. your list of skills).
+:::note[Giữ lại style cho trang About]
+Việc sử dụng `<BaseLayout>` để render trang `about.astro` sẽ khiến bạn mất đi thẻ `<style>` đã thêm vào `<head>` của trang này. Để tiếp tục tạo style chỉ ở cấp độ trang bằng cách sử dụng style scope của Astro, hãy di chuyển thẻ `<style>` vào phần body của component trang. Điều này cho phép bạn style **các phần tử được tạo trong component trang này** (ví dụ: danh sách kỹ năng của bạn).
 
-Since your `<h1>` is now created by your layout component, you can add the `is:global` attribute to your style tag to affect every element on this page, including those created by other components: `<style is:global define:vars={{ skillColor, fontWeight, textCase }}>`
+Vì `<h1>` bây giờ được tạo bởi component layout, bạn có thể thêm thuộc tính `is:global` vào thẻ style để ảnh hưởng đến mọi phần tử trên trang này, kể cả những phần tử được tạo bởi các component khác: `<style is:global define:vars={{ skillColor, fontWeight, textCase }}>`
 :::
 </Box>
 
@@ -167,48 +167,48 @@ Since your `<h1>` is now created by your layout component, you can add the `is:g
 
 <Box icon="question-mark">
 
-### Test your knowledge
+### Kiểm tra kiến thức
 
-1. An Astro component (`.astro` file) can function as a:
+1. Một component Astro (file `.astro`) có thể hoạt động như một:
 
     <MultipleChoice>
-      <Option>page</Option>
-      <Option>UI component</Option>
+      <Option>trang</Option>
+      <Option>component UI</Option>
       <Option>layout</Option>
-      <Option isCorrect>all of the above, because Astro components are so functional! 🏗️</Option>
+      <Option isCorrect>tất cả các ý trên, vì component Astro rất linh hoạt! 🏗️</Option>
     </MultipleChoice>
 
-2. To display a page title on the page, you can:
+2. Để hiển thị tiêu đề trang, bạn có thể:
 
     <MultipleChoice>
       <Option>
-        use a standard HTML element on the page with static text (e.g `<h1>Home Page</h1>`)
+        sử dụng phần tử HTML thông thường trên trang với nội dung tĩnh (ví dụ `<h1>Home Page</h1>`)
       </Option>
       <Option>
-        use a standard HTML element on the page referring to a variable defined in your component's frontmatter script (e.g. `<h1>{pageTitle}</h1>`)
+        sử dụng phần tử HTML thông thường tham chiếu đến biến được định nghĩa trong frontmatter script của component (ví dụ `<h1>{pageTitle}</h1>`)
       </Option>
       <Option>
-        use a layout component on the page, passing the title as a component attribute (e.g. `<BaseLayout title="Home Page" />` or `<BaseLayout title={pageTitle} />`)
+        sử dụng một component layout trên trang, truyền tiêu đề qua thuộc tính component (ví dụ `<BaseLayout title="Home Page" />` hoặc `<BaseLayout title={pageTitle} />`)
       </Option>
       <Option isCorrect>
-        all of the above, because Astro lets you use plain HTML or supercharge it with some script and components! 💪
+        tất cả các ý trên, vì Astro cho phép bạn dùng HTML thuần hoặc tăng sức mạnh bằng script và component! 💪
       </Option>
     </MultipleChoice>
 
-3. Information can be passed from one component to another by:
+3. Thông tin có thể được truyền từ component này sang component khác bằng cách:
 
     <MultipleChoice>
       <Option>
-        importing a UI component and rendering it in the template of another component
+        import một component UI và render nó trong template của component khác
       </Option>
       <Option>
-        passing props to a component where it is rendered via a component attribute
+        truyền props đến component khi render thông qua thuộc tính component
       </Option>
       <Option>
-        sending HTML content to be rendered inside another component using a `<slot />` placeholder
+        gửi nội dung HTML để render bên trong một component khác bằng placeholder `<slot />`
       </Option>
       <Option isCorrect>
-        all of the above, because Astro was built to take advantage of component-based design! 🧩
+        tất cả các ý trên, vì Astro được xây dựng để tận dụng thiết kế dựa trên component! 🧩
       </Option>
     </MultipleChoice>
 
@@ -216,16 +216,16 @@ Since your `<h1>` is now created by your layout component, you can add the `is:g
 
 <Box icon="check-list">
 
-## Checklist
+## Danh sách kiểm tra
 
 <Checklist>
-- [ ] I can create an Astro layout component with a `<slot />`.
-- [ ] I can send page-specific properties to a layout.
+- [ ] Tôi có thể tạo component layout Astro với một `<slot />`.
+- [ ] Tôi có thể gửi thuộc tính riêng của trang cho layout.
 </Checklist>
 </Box>
 
-### Resources
+### Tài nguyên
 
-- [Astro layout components](/vi/basics/layouts/)
+- [Các component layout của Astro](/vi/basics/layouts/)
 
 - [Astro `<slot />`](/vi/basics/astro-components/#slots)

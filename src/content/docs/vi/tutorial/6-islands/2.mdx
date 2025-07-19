@@ -1,9 +1,9 @@
 ---
 type: tutorial
-title: 'Back on dry land. Take your blog from day to night, no island required!'
+title: 'Trở lại đất liền. Đưa blog của bạn từ ngày sang đêm, không cần đảo!'
 description: |-
-  Tutorial: Build your first Astro blog —
-  Build a light/dark theme toggle using only JavaScript and CSS
+  Hướng dẫn: Xây dựng blog Astro đầu tiên của bạn —
+  Tạo nút chuyển đổi chế độ sáng/tối chỉ bằng JavaScript và CSS
 i18nReady: true
 ---
 import Box from '~/components/tutorial/Box.astro';
@@ -13,19 +13,19 @@ import Option from '~/components/tutorial/Option.astro';
 import PreCheck from '~/components/tutorial/PreCheck.astro';
 import { Steps } from '@astrojs/starlight/components';
 
-Now that you can build Astro islands for interactive elements, don't forget that you can go pretty far with just vanilla JavaScript and CSS!
+Bây giờ bạn đã có thể xây dựng các island Astro cho các thành phần tương tác, đừng quên rằng bạn có thể làm được rất nhiều thứ chỉ với JavaScript và CSS thuần!
 
-Let's build a clickable icon to let your users toggle between light or dark mode using another `<script>` tag for interactivity... with no framework JavaScript sent to the browser.
+Hãy tạo một biểu tượng có thể nhấp để cho phép người dùng chuyển đổi giữa chế độ sáng hoặc tối chỉ bằng một thẻ `<script>` để tạo tính tương tác... mà không cần gửi JavaScript của framework nào xuống trình duyệt.
 
 <PreCheck>
-  - Build an interactive theme toggle with only JavaScript and CSS
-  - Send as little JavaScript to the browser as possible!
+  - Xây dựng nút chuyển đổi giao diện chủ đề chỉ với JavaScript và CSS
+  - Gửi càng ít JavaScript xuống trình duyệt càng tốt!
 </PreCheck>
 
-## Add and style a theme toggle icon
+## Thêm và tạo kiểu cho biểu tượng chuyển đổi chủ đề
 
 <Steps>
-1. Create a new file at `src/components/ThemeIcon.astro` and paste the following code into it:
+1. Tạo file mới tại `src/components/ThemeIcon.astro` và dán đoạn mã sau vào:
 
     ```astro title="src/components/ThemeIcon.astro"
     ---
@@ -50,7 +50,7 @@ Let's build a clickable icon to let your users toggle between light or dark mode
     </style>
     ```
 
-2. Add the icon to `Header.astro` so that it will be displayed on all pages. Don't forget to import the component.
+2. Thêm biểu tượng vào `Header.astro` để nó hiển thị trên tất cả các trang. Đừng quên import component này.
 
     ```astro title="src/components/Header.astro" ins={4,9}
     ---
@@ -67,15 +67,15 @@ Let's build a clickable icon to let your users toggle between light or dark mode
     </header>
     ```
 
-3. Visit your browser preview at `http://localhost:4321` to see the icon now on all your pages. You can try clicking it, but you have not written a script to make it interactive yet.
+3. Truy cập trang xem trước trên trình duyệt tại `http://localhost:4321` để thấy biểu tượng xuất hiện ở tất cả các trang. Bạn có thể thử nhấp vào nhưng vẫn chưa có script nào giúp nó tương tác.
 </Steps>
 
-## Add CSS styling for a dark theme
+## Thêm CSS cho chế độ tối
 
-Choose some alternate colors to use in dark mode.
+Chọn một số màu khác để sử dụng cho chế độ tối.
 
 <Steps>
-1. In `global.css`, define some dark styles. You can choose your own, or copy and paste:
+1. Trong `global.css`, định nghĩa một số kiểu cho chế độ tối. Bạn có thể tự chọn hoặc sao chép đoạn sau:
 
     ```css title="src/styles/global.css"
     html.dark {
@@ -89,11 +89,12 @@ Choose some alternate colors to use in dark mode.
     ```
 </Steps>
 
-## Add client-side interactivity
+## Thêm tính tương tác phía client
 
-To add interactivity to an Astro component, you can use a `<script>` tag. This script can check and set the current theme from `localStorage` and toggle the theme when the icon is clicked. 
+Để thêm tính tương tác cho một component Astro, bạn có thể dùng thẻ `<script>`. Đoạn script này sẽ kiểm tra và thiết lập chủ đề hiện tại từ `localStorage` và chuyển đổi chủ đề khi nhấn vào biểu tượng.
+
 <Steps>
-1. Add the following `<script>` tag in `src/components/ThemeIcon.astro` after your `<style>` tag:
+1. Thêm thẻ `<script>` sau thẻ `<style>` trong `src/components/ThemeIcon.astro` như sau:
 
     ```astro title="src/components/ThemeIcon.astro" ins={9-38}
     <style>
@@ -136,95 +137,95 @@ To add interactivity to an Astro component, you can use a `<script>` tag. This s
     </script>
     ```
 
-2. Check your browser preview at `http://localhost:4321` and click the theme icon. Verify that you can change between light and dark modes.
+2. Kiểm tra trang xem trước trên trình duyệt tại `http://localhost:4321` và nhấn vào biểu tượng chủ đề. Đảm bảo bạn có thể chuyển đổi giữa chế độ sáng và tối.
 </Steps>
 
 <Box icon="question-mark">
 
-### Test your knowledge
+### Kiểm tra kiến thức của bạn
 
-Choose whether each of the following statements describes Astro `<script>` tags, UI framework components, or both.
+Chọn xem mỗi phát biểu sau mô tả thẻ `<script>` của Astro, thành phần của UI framework, hay cả hai.
 
-1. They allow you to include interactive UI elements on your website.
+1. Chúng cho phép bạn thêm các phần tử giao diện tương tác vào website của mình.
 
     <MultipleChoice>
       <Option>
-        Astro `<script>` tags
+        Thẻ `<script>` Astro
       </Option>
       <Option>
-        UI framework components
+        Thành phần UI framework
       </Option>
       <Option isCorrect>
-        both
+        cả hai
       </Option>
     </MultipleChoice>
 
-2. They will create static elements on your site unless you include a `client:` to send their JavaScript to the client and run in the browser.
+2. Chúng sẽ tạo ra các phần tử tĩnh trên trang của bạn trừ khi bạn thêm `client:` để gửi JavaScript tới client và chạy trên trình duyệt.
 
     <MultipleChoice>
       <Option>
-        Astro `<script>` tags
+        Thẻ `<script>` Astro
       </Option>
       <Option isCorrect>
-        UI framework components
+        Thành phần UI framework
       </Option>
       <Option>
-        both
+        cả hai
       </Option>
     </MultipleChoice>
 
-3. They allow you to "try out" a new framework without requiring you to start an entirely new project using that tech stack.
+3. Chúng cho phép bạn "thử nghiệm" một framework mới mà không cần bắt đầu một dự án hoàn toàn mới với tech stack đó.
 
     <MultipleChoice>
       <Option>
-        Astro `<script>` tags
+        Thẻ `<script>` Astro
       </Option>
       <Option isCorrect>
-        UI framework components
+        Thành phần UI framework
       </Option>
       <Option>
-        both
+        cả hai
       </Option>
     </MultipleChoice>
 
-4. They allow you to reuse code you have written in other frameworks and you can often just drop them right into your site.
+4. Chúng cho phép bạn tái sử dụng mã đã viết ở framework khác và thường chỉ cần copy-dán vào trang.
 
     <MultipleChoice>
       <Option>
-        Astro `<script>` tags
+        Thẻ `<script>` Astro
       </Option>
       <Option isCorrect>
-        UI framework components
+        Thành phần UI framework
       </Option>
       <Option>
-        both
+        cả hai
       </Option>
     </MultipleChoice>
 
-5. They allow you to add interactivity without needing to know or learn any other JavaScript frameworks.
+5. Chúng cho phép bạn thêm tính tương tác mà không cần biết hoặc học thêm bất kỳ framework JavaScript nào khác.
 
     <MultipleChoice>
       <Option isCorrect>
-        Astro `<script>` tags
+        Thẻ `<script>` Astro
       </Option>
       <Option>
-        UI framework components
+        Thành phần UI framework
       </Option>
       <Option>
-        both
+        cả hai
       </Option>
     </MultipleChoice>
 </Box>
 
 <Box icon="check-list">
 
-## Checklist
+## Danh sách kiểm tra
 
 <Checklist>
-- [ ] I can use JavaScript for interactivity when I don't want to add a framework.
+- [ ] Tôi có thể sử dụng JavaScript để tạo tính tương tác khi không muốn thêm framework.
 </Checklist>
 </Box>
 
-### Resources
+### Tài nguyên
 
-- [Client-side `<script>` in Astro](/vi/guides/client-side-scripts/)
+- [Thẻ `<script>` phía client trong Astro](/vi/guides/client-side-scripts/)

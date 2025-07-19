@@ -1,9 +1,9 @@
 ---
 type: tutorial
-title: Combine layouts to get the best of both worlds
+title: Kết hợp các layout để tận dụng ưu điểm của cả hai
 description: |-
-  Tutorial: Build your first Astro blog —
-  Add your basic page layout to the layout that formats your blog posts
+  Hướng dẫn: Xây dựng blog Astro đầu tiên của bạn —
+  Thêm bố cục trang cơ bản vào bố cục định dạng bài đăng blog của bạn
 i18nReady: true
 ---
 import Blanks from '~/components/tutorial/Blanks.astro';
@@ -14,20 +14,20 @@ import Option from '~/components/tutorial/Option.astro';
 import PreCheck from '~/components/tutorial/PreCheck.astro';
 import { Steps } from '@astrojs/starlight/components';
 
-Now that you have added a layout to each blog post, it's time to make your posts look like the rest of the pages on your website!
+Bây giờ bạn đã thêm một layout cho từng bài đăng blog, đã đến lúc làm cho các bài đăng của bạn trông giống với các trang khác trên website!
 
 <PreCheck>
-  - Nest your blog post layout inside your main page layout
+  - Lồng layout bài đăng blog của bạn vào bên trong layout trang chính
 </PreCheck>
 
-## Nest your two layouts
+## Lồng hai layout của bạn
 
-You already have a `BaseLayout.astro` for defining the overall layout of your pages. 
+Bạn đã có một `BaseLayout.astro` để định nghĩa bố cục tổng thể cho các trang. 
 
-`MarkdownPostLayout.astro` gives you some additional templating for common blog post properties such as `title` and `date`, but your blog posts don't look like the other pages on your site. You can match the look of your blog posts to the rest of your site by **nesting layouts**.
+`MarkdownPostLayout.astro` cung cấp thêm một số mẫu cho các thuộc tính chung của bài blog như `title` và `date`, nhưng các bài đăng blog của bạn lại không giống với các trang khác trên trang web. Bạn có thể làm cho giao diện của các bài đăng blog giống với phần còn lại của trang web bằng cách **lồng các layout**.
 
 <Steps>
-1. In `src/layouts/MarkdownPostLayout.astro`, import `BaseLayout.astro` and use it to wrap the entire template content. Don't forget to pass the `pageTitle` prop:
+1. Trong `src/layouts/MarkdownPostLayout.astro`, nhập `BaseLayout.astro` và sử dụng nó để bao quanh toàn bộ nội dung template. Đừng quên truyền prop `pageTitle`:
 
     ```astro title="src/layouts/MarkdownPostLayout.astro" ins={2,5,13}
     ---
@@ -39,13 +39,13 @@ You already have a `BaseLayout.astro` for defining the overall layout of your pa
       <h1>{frontmatter.title}</h1>
       <p>{frontmatter.pubDate.toString().slice(0,10)}</p>
       <p><em>{frontmatter.description}</em></p>
-      <p>Written by: {frontmatter.author}</p>
+      <p>Viết bởi: {frontmatter.author}</p>
       <img src={frontmatter.image.url} width="300" alt={frontmatter.image.alt} />
       <slot />
     </BaseLayout>
     ```
 
-2. In `src/layouts/MarkdownPostLayout.astro`, you can now remove the `meta` tag as it is already included in your `BaseLayout`:
+2. Trong `src/layouts/MarkdownPostLayout.astro`, bây giờ bạn có thể loại bỏ thẻ `meta` vì nó đã được bao gồm trong `BaseLayout`:
 
     ```astro title="src/layouts/MarkdownPostLayout.astro" del={6}
     ---
@@ -57,80 +57,80 @@ You already have a `BaseLayout.astro` for defining the overall layout of your pa
       <h1>{frontmatter.title}</h1>
       <p>{frontmatter.pubDate.toString().slice(0,10)}</p>
       <p><em>{frontmatter.description}</em></p>
-      <p>Written by: {frontmatter.author}</p>
+      <p>Viết bởi: {frontmatter.author}</p>
       <img src={frontmatter.image.url} width="300" alt={frontmatter.image.alt} />
       <slot />
     </BaseLayout>
     ```
 
-3. Check your browser preview at `http://localhost:4321/posts/post-1`. Now you should see content rendered by:
+3. Kiểm tra bản xem trước trên trình duyệt tại `http://localhost:4321/posts/post-1`. Bây giờ bạn sẽ thấy nội dung được hiển thị bởi:
 
-    - Your **main page layout**, including your styles, navigation links, and social footer.
-    - Your **blog post layout**, including frontmatter properties like the description, date, title, and image.
-    - Your **individual blog post Markdown content**, including just the text written in this post.
+    - **Layout trang chính** của bạn, bao gồm các kiểu dáng, liên kết điều hướng và chân trang mạng xã hội.
+    - **Layout bài đăng blog**, bao gồm các thuộc tính frontmatter như mô tả, ngày, tiêu đề và hình ảnh.
+    - **Nội dung Markdown bài đăng blog riêng lẻ**, chỉ bao gồm văn bản được viết trong bài viết này.
 
-4. Notice that your page title is now displayed twice, once by each layout.
+4. Lưu ý rằng tiêu đề trang của bạn hiện đang được hiển thị hai lần, một lần bởi mỗi layout.
 
-    Remove the line that displays your page title from `MarkdownPostLayout.astro`:
+    Hãy loại bỏ dòng hiển thị tiêu đề trang khỏi `MarkdownPostLayout.astro`:
 
     ```astro title="src/layouts/MarkdownPostLayout.astro" del={2}
     <BaseLayout pageTitle={frontmatter.title}>
       <h1>{frontmatter.title}</h1>
       <p>{frontmatter.pubDate.toString().slice(0,10)}</p>
       <p><em>{frontmatter.description}</em></p>
-      <p>Written by: {frontmatter.author}</p>
+      <p>Viết bởi: {frontmatter.author}</p>
       <img src={frontmatter.image.url} width="300" alt={frontmatter.image.alt} />
       <slot />
     </BaseLayout>
     ```
 
-5. Check your browser preview again at `http://localhost:4321/posts/post-1` and verify that this line is no longer displayed and that your title is only displayed once. Make any other adjustments necessary to ensure that you do not have any duplicated content.
+5. Kiểm tra lại bản xem trước trên trình duyệt tại `http://localhost:4321/posts/post-1` và xác nhận rằng dòng này không còn hiển thị nữa cũng như tiêu đề của bạn chỉ xuất hiện một lần. Thực hiện các điều chỉnh cần thiết khác để đảm bảo rằng không có nội dung bị lặp lại.
 </Steps>
 
 
-  Make sure that:
+  Đảm bảo rằng:
 
-    - Each blog post shows the same page template, and no content is missing. (If one of your blog posts is missing content, check its frontmatter properties.)
+    - Mỗi bài đăng blog đều hiển thị đúng mẫu trang và không bị thiếu nội dung. (Nếu một bài đăng blog bị thiếu nội dung, hãy kiểm tra các thuộc tính frontmatter của nó.)
 
-    - No content is duplicated on a page. (If something is being rendered twice, then be sure to remove it from `MarkdownPostLayout.astro`.)
+    - Không có nội dung bị lặp lại trên trang. (Nếu có thứ gì đó được hiển thị hai lần, hãy chắc chắn xóa nó khỏi `MarkdownPostLayout.astro`.)
 
-    If you'd like to customize your page template, you can.
+    Nếu bạn muốn tùy chỉnh mẫu trang, bạn hoàn toàn có thể làm điều đó.
 
 
 
 <Box icon="question-mark">
 
-### Test your knowledge
+### Kiểm tra kiến thức của bạn
 
-1. This allows you to nest one layout inside another and take advantage of working with modular pieces.
+1. Điều này cho phép bạn lồng một layout vào trong layout khác và tận dụng lợi ích của thiết kế dạng mô-đun.
 
     <MultipleChoice>
       <Option>
-        continuous deployment
+        triển khai liên tục
       </Option>
       <Option>
-        responsive design
+        thiết kế đáp ứng
       </Option>
       <Option isCorrect>
-        component-based design
+        thiết kế dựa trên thành phần
       </Option>
     </MultipleChoice>
 
-2. Multiple layouts are particularly useful for projects that contain Markdown pages, like a...
+2. Nhiều layout đặc biệt hữu ích cho các dự án có trang Markdown, ví dụ như...
 
     <MultipleChoice>
       <Option isCorrect>
         blog
       </Option>
       <Option>
-        dashboard
+        bảng điều khiển
       </Option>
       <Option>
-        chat app
+        ứng dụng chat
       </Option>
     </MultipleChoice>
 
-3. Which of these provides templating for all your pages?
+3. Cái nào sau đây cung cấp template cho tất cả các trang của bạn?
 
     <MultipleChoice>
       <Option>
@@ -147,13 +147,13 @@ You already have a `BaseLayout.astro` for defining the overall layout of your pa
 
 <Box icon="check-list">
 
-## Checklist
+## Danh sách kiểm tra
 
 <Checklist>
-- [ ] I can nest layouts, checking for any duplicated elements.
+- [ ] Tôi có thể lồng các layout, kiểm tra xem có phần tử nào bị lặp lại không.
 </Checklist>
 </Box>
 
-### Resources
+### Tài nguyên
 
-- [Nesting Layouts in Astro](/vi/basics/layouts/#nesting-layouts)
+- [Lồng Layouts trong Astro](/vi/basics/layouts/#nesting-layouts)

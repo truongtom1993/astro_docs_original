@@ -1,9 +1,9 @@
 ---
 type: tutorial
-title: Build your first Astro island
+title: Xây dựng Astro island đầu tiên của bạn
 description: |-
-  Tutorial: Build your first Astro blog —
-  Use a Preact component to greet your visitors with a randomly-selected message
+  Hướng dẫn: Xây dựng blog Astro đầu tiên của bạn —
+  Sử dụng một component Preact để chào đón khách truy cập bằng một thông điệp được chọn ngẫu nhiên
 i18nReady: true
 ---
 import Box from '~/components/tutorial/Box.astro';
@@ -15,20 +15,20 @@ import PreCheck from '~/components/tutorial/PreCheck.astro';
 import PackageManagerTabs from '~/components/tabs/PackageManagerTabs.astro';
 import { Steps } from '@astrojs/starlight/components';
 
- Use a Preact component to greet your visitors with a randomly-selected welcome message!
+ Sử dụng một component Preact để chào đón khách truy cập của bạn bằng một thông điệp chào mừng được chọn ngẫu nhiên!
 
 <PreCheck>
-  - Add Preact to your Astro project
-  - Include Astro islands (Preact `.jsx` components) on your home page
-  - Use `client:` directives to make islands interactive
+  - Thêm Preact vào dự án Astro của bạn
+  - Bao gồm các Astro island (các component Preact `.jsx`) trên trang chủ của bạn
+  - Sử dụng các chỉ thị `client:` để làm cho island trở nên tương tác
 </PreCheck>
 
-## Add Preact to your Astro project
+## Thêm Preact vào dự án Astro của bạn
 
 <Steps>
-1. If it’s running, quit the dev server to have access to the terminal (keyboard shortcut: <kbd>Ctrl + C</kbd>).
+1. Nếu dev server đang chạy, hãy tắt nó để có thể truy cập vào terminal (phím tắt: <kbd>Ctrl + C</kbd>).
 
-2. Add the ability to use Preact components in your Astro project with a single command:
+2. Thêm khả năng sử dụng các component Preact vào dự án Astro của bạn chỉ với một lệnh:
 
     <PackageManagerTabs>
       <Fragment slot="npm">
@@ -48,20 +48,20 @@ import { Steps } from '@astrojs/starlight/components';
       </Fragment>
     </PackageManagerTabs>
 
-3. Follow the command line instructions to confirm adding Preact to your project.
+3. Làm theo hướng dẫn trên dòng lệnh để xác nhận thêm Preact vào dự án của bạn.
 </Steps>
  
 
-## Include a Preact greeting banner
+## Thêm một banner chào mừng sử dụng Preact
 
-This component will take an array of greeting messages as a prop and randomly select one of them to show as a welcome message. The user can click a button to get a new random message.
+Component này sẽ nhận một mảng các thông điệp chào mừng dưới dạng prop và ngẫu nhiên chọn một thông điệp để hiển thị. Người dùng có thể nhấn nút để nhận một thông điệp ngẫu nhiên mới.
 
 <Steps>
-1. Create a new file in `src/components/` named `Greeting.jsx`
+1. Tạo một file mới trong `src/components/` tên là `Greeting.jsx`
 
-    Note the `.jsx` file extension. This file will be written in Preact, not Astro.
+    Lưu ý phần mở rộng file là `.jsx`. File này sẽ được viết bằng Preact, không phải Astro.
 
-2. Add the following code to `Greeting.jsx`:
+2. Thêm đoạn mã sau vào `Greeting.jsx`:
 
     ```jsx title="src/components/Greeting.jsx"
     import { useState } from 'preact/hooks';
@@ -83,7 +83,7 @@ This component will take an array of greeting messages as a prop and randomly se
     }
     ```
 
-3. Import and use this component on your Home page `index.astro`.
+3. Import và sử dụng component này trên trang chủ `index.astro`.
 
     ```astro title="src/pages/index.astro" ins={3,8}
     ---
@@ -97,10 +97,10 @@ This component will take an array of greeting messages as a prop and randomly se
     </BaseLayout>
     ```
 
-    Check the preview in your browser: you should see a random greeting, but the button won't work!
+    Kiểm tra bản xem trước trên trình duyệt: bạn sẽ thấy một thông điệp chào mừng ngẫu nhiên, nhưng nút sẽ không hoạt động!
 
 
-4. Add a second `<Greeting />` component with the `client:load` directive.
+4. Thêm một component `<Greeting />` thứ hai với chỉ thị `client:load`.
 
     ```astro title="src/pages/index.astro" ins={9} "client:load"
     ---
@@ -115,9 +115,9 @@ This component will take an array of greeting messages as a prop and randomly se
     </BaseLayout>
     ```
 
-  5. Revisit your page and compare the two components. The second button works because the `client:load` directive tells Astro to send and rerun its JavaScript on the _client_ when the page _loads_, making the component interactive. This is called a **hydrated** component.
+  5. Truy cập lại trang của bạn và so sánh hai component. Nút ở component thứ hai hoạt động vì chỉ thị `client:load` yêu cầu Astro gửi và chạy lại JavaScript của nó trên _client_ khi trang _tải_, giúp component trở nên tương tác. Điều này được gọi là component **hydrated**.
   
-  6. Once the difference is clear, remove the non-hydrated Greeting component.
+  6. Khi bạn đã hiểu sự khác biệt, hãy xóa component Greeting không được hydrated.
 
 
       ```astro title="src/pages/index.astro" del={8} "client:load"
@@ -136,11 +136,11 @@ This component will take an array of greeting messages as a prop and randomly se
 
 <Box icon="question-mark">
 
-### Analyze the Pattern
+### Phân tích mẫu
 
-There are other `client:` directives to explore. Each sends the JavaScript to the client at a different time. `client:visible`, for example, will only send the component's JavaScript when it is visible on the page.
+Có nhiều chỉ thị `client:` khác để bạn khám phá. Mỗi chỉ thị sẽ gửi JavaScript của component đến phía client tại một thời điểm khác nhau. Ví dụ, `client:visible` sẽ chỉ gửi JavaScript của component khi nó hiển thị trên trang.
 
-Consider an Astro component with the following code:
+Hãy xem xét một component Astro với mã sau:
 
 ```astro
 ---
@@ -158,22 +158,22 @@ import SvelteCounter from '../components/SvelteCounter.svelte';
 </BaseLayout>
 ```
 
-1. Which of the five components will be **hydrated** islands, sending JavaScript to the client?
+1. Trong năm component trên, component nào sẽ là island **hydrated**, gửi JavaScript đến phía client?
 
     <p>
-      <Spoiler>`<PreactBanner client:load />` and `<SvelteCounter client:visible />` will be hydrated islands.</Spoiler>
+      <Spoiler>`<PreactBanner client:load />` và `<SvelteCounter client:visible />` sẽ là các island được hydrated.</Spoiler>
     </p>
 
-2. In what way(s) will the two `<PreactBanner />` components be the same? In what way(s) will they be different? 
+2. Hai component `<PreactBanner />` sẽ giống nhau ở điểm nào? Khác nhau ở điểm nào? 
 
     <p>
-      <Spoiler>**Same**: They both show the same HTML elements and look the same initially. **Different**: The component with the `client:load` directive will rerender after the page is loaded, and any interactive elements that it has will work.</Spoiler>
+      <Spoiler>**Giống nhau**: Cả hai đều hiển thị cùng một phần tử HTML và có giao diện giống nhau ban đầu. **Khác nhau**: Component có chỉ thị `client:load` sẽ được render lại sau khi trang tải xong, và các phần tương tác của nó sẽ hoạt động.</Spoiler>
     </p>
 
-3. Assume the `SvelteCounter` component shows a number and has a button to increase it. If you couldn't see your website's code, only the live published page, how would you tell which of the two `<SvelteCounter />` components used `client:visible`? 
+3. Giả sử component `SvelteCounter` hiển thị một số và có một nút để tăng số đó. Nếu bạn không xem được mã nguồn website, chỉ nhìn trang đã xuất bản, làm sao bạn biết component nào trong hai `<SvelteCounter />` đã dùng `client:visible`? 
 
     <p>
-      <Spoiler>Try clicking the button, and see which one is interactive. If it responds to your input, it must have had a `client:` directive.</Spoiler>
+      <Spoiler>Hãy thử nhấn nút và xem component nào có thể tương tác. Nếu phản hồi với thao tác của bạn, chắc chắn nó đã được thêm chỉ thị `client:`.</Spoiler>
     </p>
 </Box>
 
@@ -181,18 +181,18 @@ import SvelteCounter from '../components/SvelteCounter.svelte';
 
 <Box icon="question-mark">
 
-### Test your knowledge
+### Kiểm tra kiến thức của bạn
 
-For each of the following components, identify what will be sent to the browser:
+Với mỗi component sau, xác định dữ liệu nào sẽ được gửi đến trình duyệt:
 
 1. `<ReactCounter client:load />`
 
     <MultipleChoice>
       <Option>
-        HTML and CSS only
+        Chỉ HTML và CSS
       </Option>
       <Option isCorrect>
-        HTML, CSS, and JavaScript
+        HTML, CSS, và JavaScript
       </Option>
     </MultipleChoice>
 
@@ -200,29 +200,29 @@ For each of the following components, identify what will be sent to the browser:
 
     <MultipleChoice>
       <Option  isCorrect>
-        HTML and CSS only
+        Chỉ HTML và CSS
       </Option>
       <Option>
-        HTML, CSS, and JavaScript
+        HTML, CSS, và JavaScript
       </Option>
     </MultipleChoice>
 </Box>
 
 <Box icon="check-list">
 
-## Checklist
+## Danh sách kiểm tra
 
 <Checklist>
-- [ ] I can install an Astro integration.
-- [ ] I can write UI framework components in their own language.
-- [ ] I can use a `client:` directive for hydration on my UI framework component.
+- [ ] Tôi có thể cài đặt một integration cho Astro.
+- [ ] Tôi có thể viết các component UI framework bằng ngôn ngữ của chúng.
+- [ ] Tôi có thể sử dụng chỉ thị `client:` để hydration cho component UI framework của mình.
 </Checklist>
 </Box>
 
-### Resources
+### Tài nguyên
 
-- [Astro Integrations Guide](/vi/guides/integrations-guide/)
+- [Hướng dẫn sử dụng Astro Integration](/vi/guides/integrations-guide/)
 
-- [Using UI Framework Components in Astro](/vi/guides/framework-components/#using-framework-components)
+- [Sử dụng component UI framework trong Astro](/vi/guides/framework-components/#using-framework-components)
 
-- [Astro client directives reference](/vi/reference/directives-reference/#client-directives)
+- [Tham khảo chỉ thị client của Astro](/vi/reference/directives-reference/#client-directives)

@@ -1,9 +1,9 @@
 ---
 type: tutorial
-title: Generate tag pages
+title: Tạo trang theo thẻ (tag)
 description: |-
-  Tutorial: Build your first Astro blog —
-  Use getStaticPaths() to create multiple pages (routes) at once
+  Hướng dẫn: Xây dựng blog Astro đầu tiên của bạn —
+  Sử dụng getStaticPaths() để tạo nhiều trang (route) cùng lúc
 i18nReady: true
 ---
 import Box from '~/components/tutorial/Box.astro';
@@ -14,18 +14,18 @@ import PreCheck from '~/components/tutorial/PreCheck.astro';
 import { Steps } from '@astrojs/starlight/components';
 
 <PreCheck>
-  - Create a page to generate multiple pages
-  - Specify which page routes to build, and pass each page its own props
+  - Tạo một trang để sinh ra nhiều trang con
+  - Xác định những route trang nào sẽ được xây dựng, và truyền từng trang các props riêng của nó
 </PreCheck>
 
-## Dynamic page routing
+## Định tuyến trang động
 
-You can create entire sets of pages dynamically using `.astro` files that export a `getStaticPaths()` function. 
+Bạn có thể tạo toàn bộ tập hợp các trang một cách động bằng cách sử dụng các file `.astro` xuất ra một hàm `getStaticPaths()`.
 
-## Create pages dynamically
+## Tạo trang động
 
 <Steps>
-1. Create a new file at `src/pages/tags/[tag].astro`. (You will have to create a new folder.) Notice that the file name (`[tag].astro`) uses square brackets. Paste the following code into the file:
+1. Tạo một file mới tại `src/pages/tags/[tag].astro`. (Bạn sẽ cần tạo mới một thư mục.) Lưu ý rằng tên file (`[tag].astro`) sử dụng dấu ngoặc vuông. Dán đoạn mã sau vào file:
 
     ```astro title="src/pages/tags/[tag].astro"
     ---
@@ -45,25 +45,25 @@ You can create entire sets of pages dynamically using `.astro` files that export
     const { tag } = Astro.params;
     ---
     <BaseLayout pageTitle={tag}>
-      <p>Posts tagged with {tag}</p>
+      <p>Bài viết có thẻ {tag}</p>
     </BaseLayout>
     ```
 
-    The `getStaticPaths` function returns an array of page routes, and all of the pages at those routes will use the same template defined in the file.
+    Hàm `getStaticPaths` trả về một mảng các route trang, và tất cả các trang ở các route đó sẽ sử dụng cùng một template được định nghĩa trong file này.
 
-2. If you have customized your blog posts, then replace the individual tag values (e.g. "astro", "successes", "community", etc.) with the tags used in your own posts.
+2. Nếu bạn đã tùy chỉnh các bài blog của mình, hãy thay thế các giá trị thẻ cụ thể (vd: "astro", "successes", "community", v.v.) bằng các thẻ thực tế bạn dùng trong các bài viết của mình.
 
-3. Make sure that every blog post contains at least one tag, written as an array, e.g. `tags: ["blogging"]`.
+3. Đảm bảo rằng mỗi bài blog đều có ít nhất một thẻ, được viết dưới dạng mảng, ví dụ: `tags: ["blogging"]`.
 
-4. Visit `http://localhost:4321/tags/astro` in your browser preview and you should see a page, generated dynamically from `[tag].astro`. Check that you also have pages created for each of your tags at `/tags/successes`, `/tags/community`, and `/tags/learning%20in%20public`, etc., or at each of your custom tags. You may need to first quit and restart the dev server to see these new pages.
+4. Truy cập `http://localhost:4321/tags/astro` trên trình duyệt xem trước của bạn và bạn sẽ thấy một trang được tạo động từ `[tag].astro`. Kiểm tra rằng bạn cũng có các trang được tạo cho từng thẻ như `/tags/successes`, `/tags/community`, và `/tags/learning%20in%20public`, v.v, hoặc các thẻ tuỳ chỉnh khác của bạn. Có thể bạn cần dừng rồi khởi động lại server phát triển để thấy các trang mới này.
 </Steps>
 
-## Use props in dynamic routes
+## Sử dụng props trong các route động
 
 <Steps>
-1. Add the following props to your `getStaticPaths()` function in order to make data from all your blog posts available to each page route.
+1. Thêm các props sau vào hàm `getStaticPaths()` của bạn để dữ liệu từ tất cả các bài blog có sẵn cho từng route trang.
 
-    Be sure to give each route in your array the new props, and then make those props available to your component template outside of your function.
+    Hãy chắc chắn rằng từng route trong mảng trả về đều có các props mới này, và sau đó truyền các props này ra ngoài hàm để có thể sử dụng ở template component.
 
     ```astro title="src/pages/tags/[tag].astro" ins={5,18} ins="props: {posts: allPosts}" 
     ---
@@ -87,7 +87,7 @@ You can create entire sets of pages dynamically using `.astro` files that export
     ---
     ```
 
-2. Filter your list of posts, using Astro's built-in TypeScript support, to only include posts that contain the page's own tag.
+2. Lọc danh sách bài viết của bạn, sử dụng hỗ trợ TypeScript tích hợp của Astro, để chỉ bao gồm các bài viết chứa thẻ của chính trang này.
 
     ```astro title="src/pages/tags/[tag].astro" ins={4}
     ---
@@ -97,22 +97,22 @@ You can create entire sets of pages dynamically using `.astro` files that export
     ---
     ```
 
-3. Now you can update your HTML template to show a list of each blog post containing the page's own tag. Add the following code to `[tag].astro`:
+3. Bây giờ bạn có thể cập nhật template HTML để hiển thị danh sách các bài blog chứa thẻ của chính trang này. Thêm đoạn mã sau vào `[tag].astro`:
 
     ```astro title="src/pages/tags/[tag].astro" ins={3-5}
     <BaseLayout pageTitle={tag}>   
-      <p>Posts tagged with {tag}</p>
+      <p>Bài viết có thẻ {tag}</p>
       <ul>
         {filteredPosts.map((post: any) => <li><a href={post.url}>{post.frontmatter.title}</a></li>)}
       </ul>
     </BaseLayout>
     ```
 
-4. You can even refactor this to use your `<BlogPost />` component instead! (Don't forget to import this component at the top of `[tag].astro`.)
+4. Thậm chí bạn có thể refactor lại để sử dụng component `<BlogPost />` của mình! (Đừng quên import component này ở đầu file `[tag].astro`.)
 
     ```astro title="src/pages/tags/[tag].astro" del={4} ins={5}
     <BaseLayout pageTitle={tag}>
-      <p>Posts tagged with {tag}</p>
+      <p>Bài viết có thẻ {tag}</p>
       <ul>
         {filteredPosts.map((post: any) => <li><a href={post.url}>{post.frontmatter.title}</a></li>)}
         {filteredPosts.map((post: any) => <BlogPost url={post.url} title={post.frontmatter.title}/>)}
@@ -120,63 +120,63 @@ You can create entire sets of pages dynamically using `.astro` files that export
     </BaseLayout>
     ```
 
-5. Check your browser preview for your individual tag pages, and you should now see a list of all of your blog posts containing that particular tag.
+5. Kiểm tra xem ở trình duyệt preview các trang thẻ riêng lẻ của bạn, bạn sẽ thấy danh sách tất cả các bài blog có chứa thẻ đó.
 </Steps>
 
 <Box icon="question-mark">
 
-### Analyze the pattern
+### Phân tích mẫu (pattern)
 
-For each of the following, state whether the code is written **inside** the `getStaticPaths()` function, or **outside** of it.
+Với mỗi mục sau, hãy xác định đoạn code được viết **bên trong** hàm `getStaticPaths()`, hay **bên ngoài** nó.
 
-1. The `import.meta.glob()` call to receive information about all your `.md` files to pass to each page route.
+1. Lệnh gọi `import.meta.glob()` để lấy thông tin về tất cả các file `.md` để truyền cho từng route trang.
 
     <MultipleChoice>
-    <Option isCorrect>inside `getStaticPaths`</Option>
-    <Option>outside `getStaticPaths`</Option>
+    <Option isCorrect>bên trong `getStaticPaths`</Option>
+    <Option>bên ngoài `getStaticPaths`</Option>
     </MultipleChoice>
 
-2. The list of routes to be generated (returned) by `getStaticPaths()`
+2. Danh sách các route sẽ được sinh ra (trả về) bởi `getStaticPaths()`
 
     <MultipleChoice>
-    <Option isCorrect>inside `getStaticPaths`</Option>
-    <Option>outside `getStaticPaths`</Option>
+    <Option isCorrect>bên trong `getStaticPaths`</Option>
+    <Option>bên ngoài `getStaticPaths`</Option>
     </MultipleChoice>
 
-3. The received values of `props` and `params` to be used in the HTML template.
+3. Các giá trị nhận được của `props` và `params` để sử dụng trong template HTML.
 
     <MultipleChoice>
-    <Option>inside `getStaticPaths`</Option>
-    <Option isCorrect>outside `getStaticPaths`</Option>
+    <Option>bên trong `getStaticPaths`</Option>
+    <Option isCorrect>bên ngoài `getStaticPaths`</Option>
     </MultipleChoice>
 </Box>
 
-:::note[Takeaway]
-If you need information to construct the page routes, write it **inside** `getStaticPaths()`.
+:::note[Điều rút ra]
+Nếu bạn cần thông tin để xây dựng các route trang, hãy viết nó **bên trong** `getStaticPaths()`.
 
-To receive information in the HTML template of a page route, write it **outside** `getStaticPaths()`.
+Để nhận thông tin ở template HTML của một route trang, hãy viết nó **bên ngoài** `getStaticPaths()`.
 :::
 
 
-## Advanced JavaScript: Generate pages from existing tags
+## JavaScript nâng cao: Sinh trang từ các thẻ hiện có
 
-Your tag pages are now defined statically in `[tag].astro`. If you add a new tag to a blog post, you will also have to revisit this page and update your page routes.
+Các trang thẻ của bạn hiện đang được định nghĩa tĩnh trong `[tag].astro`. Nếu bạn thêm một thẻ mới vào bài blog, bạn cũng sẽ phải quay lại đây và cập nhật các route trang.
 
-The following example shows how to replace your code on this page with code that will automatically look for, and generate pages for, each tag used on your blog pages.
+Ví dụ sau sẽ chỉ cho bạn cách thay thế đoạn code của trang này bằng đoạn code tự động tìm kiếm và tạo trang cho từng thẻ được sử dụng trên các trang blog của bạn.
 
 :::note
-Even if it looks challenging, you can try following along with the steps to build this function yourself! If you don't want to walk through the JavaScript required right now, you can skip ahead to the [finished version of the code](#final-code-sample) and use it directly in your project, replacing the existing content.
+Ngay cả khi điều này có vẻ khó, bạn có thể thử làm theo từng bước để tự xây dựng hàm này! Nếu bạn chưa muốn tìm hiểu về JavaScript bây giờ, bạn có thể chuyển đến [đoạn mã hoàn chỉnh](#final-code-sample) và dùng ngay trong dự án, thay thế nội dung hiện tại.
 :::
 
 <Steps>
 
-1. Check that all your blog posts contain tags
+1. Kiểm tra rằng tất cả bài blog của bạn đều có thẻ
 
-   Revisit each of your existing Markdown pages and ensure that every post contains a `tags` array in its frontmatter. Even if you only have one tag, it should still be written as an array, e.g. `tags: ["blogging"]`.
+   Xem lại từng trang Markdown hiện có và đảm bảo mỗi bài viết đều có một mảng `tags` trong frontmatter. Dù chỉ có một thẻ, bạn vẫn nên viết dưới dạng mảng, ví dụ: `tags: ["blogging"]`.
 
-2. Create an array of all your existing tags using Astro's built-in TypeScript support.
+2. Tạo một mảng tất cả các thẻ hiện có bằng hỗ trợ TypeScript tích hợp của Astro.
 
-   Add the following code to provide you with a list of every tag used in your blog posts.
+   Thêm đoạn mã sau để cung cấp cho bạn danh sách tất cả thẻ đã sử dụng trong các bài blog.
 
    ```astro title="src/pages/tags/[tag].astro" ins={7}
    ---
@@ -190,16 +190,16 @@ Even if it looks challenging, you can try following along with the steps to buil
    ```
 
    <details>
-   <summary>Tell me what this line of code is doing in more detail!</summary>
+   <summary>Giải thích chi tiết cho dòng code này!</summary>
 
-   It's OK if this isn't something you would have written yourself yet!
+   Không sao nếu bạn chưa tự viết được đoạn này!
 
-   It goes through each Markdown post, one by one, and combines each array of tags into one single larger array. Then, it makes a new `Set` from all the individual tags it found (to ignore repeated values). Finally, it turns that set into an array (with no duplications), that you can use to show a list of tags on your page.
+   Nó sẽ duyệt qua từng bài Markdown, kết hợp từng mảng thẻ thành một mảng lớn hơn duy nhất. Sau đó, nó tạo một `Set` mới từ tất cả các thẻ tìm được (để loại bỏ giá trị trùng lặp). Cuối cùng, nó chuyển set đó thành mảng (không còn trùng lặp), để bạn sử dụng hiển thị danh sách thẻ trên trang.
    </details>
 
-    You now have an array `uniqueTags` with element items `"astro"`, `"successes"`, `"community"`, `"blogging"`, `"setbacks"`, `"learning in public"` 
+    Giờ bạn đã có một mảng `uniqueTags` với các phần tử như `"astro"`, `"successes"`, `"community"`, `"blogging"`, `"setbacks"`, `"learning in public"`
 
-3. Replace the `return` value of the `getStaticPaths` function
+3. Thay thế giá trị `return` của hàm `getStaticPaths`
 
    ```js title="src/pages/tags/[tag].astro" del={1-8} ins={10-16}
    return [
@@ -219,11 +219,11 @@ Even if it looks challenging, you can try following along with the steps to buil
      };
    });
    ```
-4. A `getStaticPaths` function should always return a list of objects containing `params` (what to call each page route) and optionally any `props` (data that you want to pass to those pages). Earlier, you defined each tag name that you knew was used in your blog and passed the entire list of posts as props to each page.
+4. Một hàm `getStaticPaths` luôn cần trả về một danh sách các object chứa `params` (tên mỗi route trang) và tùy chọn thêm `props` (dữ liệu bạn muốn truyền cho các trang đó). Trước đó, bạn đã tự định nghĩa tên từng thẻ biết chắc mình sẽ dùng, và truyền toàn bộ danh sách bài viết cho từng trang.
 
-   Now, you generate this list of objects automatically using your `uniqueTags` array to define each parameter.
+   Bây giờ, bạn sinh danh sách object này tự động bằng mảng `uniqueTags` để xác định từng tham số.
 
-   And, now the list of all blog posts is filtered **before** it is sent to each page as props. Be sure to remove the previous line of code filtering the posts, and update your HTML template to use `posts` instead of `filteredPosts`.
+   Và, danh sách các bài blog được lọc **trước khi** truyền cho từng trang qua props. Hãy chắc chắn loại bỏ dòng code lọc posts trước đó, và cập nhật template HTML để sử dụng `posts` thay vì `filteredPosts`.
 
    ```astro title="src/pages/tags/[tag].astro" del={3,7} ins={8}
    const { tag } = Astro.params;
@@ -239,9 +239,9 @@ Even if it looks challenging, you can try following along with the steps to buil
 
 </Steps>
 
-### Final code sample
+### Đoạn mã hoàn chỉnh
 
-To check your work, or if you just want complete, correct code to copy into `[tag].astro`, here is what your Astro component should look like:
+Để kiểm tra lại kết quả, hoặc nếu bạn chỉ muốn lấy đoạn mã hoàn thiện để sao chép vào `[tag].astro`, đây là component Astro của bạn nên như sau:
 
 ```astro title="src/pages/tags/[tag].astro"
 ---
@@ -266,50 +266,50 @@ const { tag } = Astro.params;
 const { posts } = Astro.props;
 ---
 <BaseLayout pageTitle={tag}>
-  <p>Posts tagged with {tag}</p>
+  <p>Bài viết có thẻ {tag}</p>
   <ul>
     {posts.map((post: any) => <BlogPost url={post.url} title={post.frontmatter.title}/>)}
   </ul>
 </BaseLayout>
 ```
 
-Now, you should be able to visit any of your tag pages in your browser preview. 
+Bây giờ, bạn có thể truy cập bất kỳ trang thẻ nào trên trình duyệt preview.
 
-Navigate to `http://localhost:4321/tags/community` and you should see a list of only your blog posts with the tag `community`. Similarly `http://localhost:4321/tags/learning%20in%20public` should display a list of the blog posts tagged `learning in public`.
+Truy cập `http://localhost:4321/tags/community` và bạn sẽ thấy danh sách chỉ các bài blog có thẻ `community`. Tương tự, `http://localhost:4321/tags/learning%20in%20public` sẽ hiển thị danh sách các bài blog được gắn thẻ `learning in public`.
 
-In the next section, you will create navigation links to these pages.
+Ở phần tiếp theo, bạn sẽ tạo các liên kết điều hướng đến các trang này.
 
 
 
 <Box icon="question-mark">
 
-### Test your knowledge
+### Kiểm tra kiến thức
 
-Choose the term that matches the description.
+Chọn thuật ngữ phù hợp với mô tả.
 
-1. A function that returns an array of page routes.
+1. Một hàm trả về mảng các route trang.
 
     <MultipleChoice>
       <Option>params</Option>
-      <Option>dynamic routing</Option>
+      <Option>định tuyến động</Option>
       <Option isCorrect>`getStaticPaths()`</Option>
       <Option>props</Option>
     </MultipleChoice>
 
-2. The process of creating multiple page routes from one file in Astro.
+2. Quá trình tạo ra nhiều route trang từ một file duy nhất trong Astro.
 
     <MultipleChoice>
       <Option>params</Option>
-      <Option isCorrect>dynamic routing</Option>
+      <Option isCorrect>định tuyến động</Option>
       <Option>`getStaticPaths()`</Option>
       <Option>props</Option>
     </MultipleChoice>
 
-4. A value that defines the name of a page route generated dynamically.
+4. Một giá trị xác định tên của route trang được sinh động.
 
     <MultipleChoice>
       <Option isCorrect>params</Option>
-      <Option>dynamic routing</Option>
+      <Option>định tuyến động</Option>
       <Option>`getStaticPaths()`</Option>
       <Option>props</Option>
     </MultipleChoice>
@@ -318,16 +318,16 @@ Choose the term that matches the description.
 
 <Box icon="check-list">
 
-## Checklist
+## Danh sách kiểm tra
 
 <Checklist>
-- [ ] I can generate pages dynamically.
-- [ ] I can pass `props` to each page route.
+- [ ] Tôi có thể sinh trang động.
+- [ ] Tôi có thể truyền `props` cho từng route trang.
 </Checklist>
 </Box>
 
-### Resources
+### Tài nguyên
 
-- [Dynamic Page Routing in Astro](/vi/guides/routing/#dynamic-routes)
+- [Định tuyến trang động trong Astro](/vi/guides/routing/#dynamic-routes)
 
-- [`getStaticPaths()` API documentation](/vi/reference/routing-reference/#getstaticpaths)
+- [Tài liệu API `getStaticPaths()`](/vi/reference/routing-reference/#getstaticpaths)

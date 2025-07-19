@@ -1,9 +1,9 @@
 ---
 type: tutorial
-title: Create a social media footer
+title: Tạo footer mạng xã hội
 description: |-
-  Tutorial: Build your first Astro blog —
-  Build a new component from scratch, then add it to your pages
+  Hướng dẫn: Xây dựng blog Astro đầu tiên của bạn —
+  Tạo một component mới từ đầu, sau đó thêm nó vào các trang của bạn
 i18nReady: true
 ---
 import Checklist from '~/components/Checklist.astro';
@@ -15,17 +15,17 @@ import { Steps } from '@astrojs/starlight/components';
 
 
 <PreCheck>
-  - Create a Footer component
-  - Create and pass props to a Social Media component
+  - Tạo một component Footer
+  - Tạo và truyền props cho một component Mạng Xã Hội
 </PreCheck>
 
-Now that you have used Astro components on a page, it's time to use a component within another component!
+Bây giờ bạn đã sử dụng các component Astro trên một trang, đã đến lúc sử dụng một component bên trong một component khác!
 
-## Create a Footer Component
+## Tạo Component Footer
 <Steps>
-1. Create a new file at the location `src/components/Footer.astro`.
+1. Tạo một file mới tại vị trí `src/components/Footer.astro`.
 
-2. Copy the following code into your new file, `Footer.astro`.
+2. Sao chép đoạn mã sau vào file mới của bạn, `Footer.astro`.
 
     ```astro title="src/components/Footer.astro"
     ---
@@ -34,21 +34,21 @@ Now that you have used Astro components on a page, it's time to use a component 
     ---
 
     <footer>
-      <p>Learn more about my projects on <a href={`https://www.${platform}.com/${username}`}>{platform}</a>!</p>
+      <p>Tìm hiểu thêm về các dự án của tôi trên <a href={`https://www.${platform}.com/${username}`}>{platform}</a>!</p>
     </footer>
     ```
 </Steps>
 
-### Import and use `Footer.astro`
+### Import và sử dụng `Footer.astro`
 
 <Steps>
-1. Add the following import statement to the frontmatter in each of your three Astro pages (`index.astro`, `about.astro`, and `blog.astro`):
+1. Thêm câu lệnh import sau vào phần frontmatter trong mỗi của ba trang Astro của bạn (`index.astro`, `about.astro`, và `blog.astro`):
 
     ```js
     import Footer from '../components/Footer.astro';
     ```
 
-2. Add a new `<Footer />` component in your Astro template on each page, just before the closing `</body>` tag to display your footer at the bottom of the page. 
+2. Thêm một component `<Footer />` mới vào template Astro trên mỗi trang, ngay trước thẻ đóng `</body>` để hiển thị footer ở cuối trang.
 
     ```astro ins={1}
         <Footer />
@@ -56,19 +56,19 @@ Now that you have used Astro components on a page, it's time to use a component 
     </html>
     ```
 
-3. In your browser preview, check that you can see your new footer text on each page.
+3. Trong phần xem trước trên trình duyệt, kiểm tra xem bạn đã thấy nội dung footer mới trên từng trang chưa.
 </Steps>
 
 <Box icon="puzzle-piece">
 
-## Try it yourself - Personalize your footer
+## Tự thử - Cá nhân hóa footer của bạn
 
-Customize your footer to display multiple social networks (e.g. Instagram, Twitter, LinkedIn) and include your username to link directly to your own profile.
+Tùy chỉnh footer để hiển thị nhiều mạng xã hội (ví dụ: Instagram, Twitter, LinkedIn) và bao gồm tên người dùng của bạn để liên kết trực tiếp đến hồ sơ cá nhân.
 
 </Box>
 
-### Code Check-In
-If you've been following along with each step in the tutorial, your `index.astro` file should look like this:
+### Kiểm tra mã
+Nếu bạn đã làm theo từng bước trong hướng dẫn, file `index.astro` của bạn sẽ trông như sau:
 
 ```astro title="src/pages/index.astro"
 ---
@@ -95,14 +95,14 @@ const pageTitle = 'Home Page';
 </html>
 ```
 
-## Create a Social Media component
+## Tạo component Mạng Xã Hội
 
-Since you might have multiple online accounts you can link to, you can make a single, reusable component and display it multiple times. Each time, you will pass it different properties (`props`) to use: the online platform and your username there.
+Vì bạn có thể có nhiều tài khoản trực tuyến để liên kết, bạn có thể tạo một component dùng lại nhiều lần và hiển thị nó nhiều lần. Mỗi lần, bạn sẽ truyền các thuộc tính (props) khác nhau: nền tảng mạng xã hội và tên người dùng của bạn trên đó.
 
 <Steps>
-1. Create a new file at the location `src/components/Social.astro`.
+1. Tạo file mới tại `src/components/Social.astro`.
 
-2. Copy the following code into your new file, `Social.astro`.
+2. Sao chép đoạn mã sau vào file mới của bạn, `Social.astro`.
 
     ```astro title="src/components/Social.astro"
     ---
@@ -112,10 +112,10 @@ Since you might have multiple online accounts you can link to, you can make a si
     ```
 </Steps>
 
-### Import and use `Social.astro` in your Footer
+### Import và sử dụng `Social.astro` trong Footer
 
 <Steps>
-1. Change the code in `src/components/Footer.astro` to import, then use this new component three times, passing different **component attributes** as props each time:
+1. Thay đổi mã trong `src/components/Footer.astro` để import, sau đó sử dụng component mới này ba lần, truyền các **thuộc tính component** làm props mỗi lần:
 
     ```astro title="src/components/Footer.astro" del={2,3,8} ins={4,9-11}
     ---
@@ -125,20 +125,20 @@ Since you might have multiple online accounts you can link to, you can make a si
     ---
 
     <footer>
-      <p>Learn more about my projects on <a href={`https://www.${platform}.com/${username}`}>{platform}</a>!</p>
+      <p>Tìm hiểu thêm về các dự án của tôi trên <a href={`https://www.${platform}.com/${username}`}>{platform}</a>!</p>
       <Social platform="twitter" username="astrodotbuild" />
       <Social platform="github" username="withastro" />
       <Social platform="youtube" username="astrodotbuild" />
     </footer>
     ```
 
-2. Check your browser preview, and you should see your new footer displaying links to these three platforms on each page.
+2. Kiểm tra bản xem trước trên trình duyệt, bạn sẽ thấy footer mới hiển thị liên kết đến ba nền tảng này trên mỗi trang.
 </Steps>
 
-## Style your Social Media Component
+## Thêm style cho Component Mạng Xã Hội
 
 <Steps>
-1. Customize the appearance of your links by adding a `<style>` tag to `src/components/Social.astro`.
+1. Tùy chỉnh giao diện của các liên kết bằng cách thêm thẻ `<style>` vào `src/components/Social.astro`.
 
     ```astro title="src/components/Social.astro" ins={6-17} 'class="social-platform'
     ---
@@ -156,7 +156,7 @@ Since you might have multiple online accounts you can link to, you can make a si
     </style>
     ```
 
-2. Add a `<style>` tag to `src/components/Footer.astro` to improve the layout of its contents.
+2. Thêm thẻ `<style>` vào `src/components/Footer.astro` để cải thiện bố cục nội dung.
 
     ```astro title="src/components/Footer.astro" ins={4-10}
     ---
@@ -177,14 +177,14 @@ Since you might have multiple online accounts you can link to, you can make a si
     </footer>
     ```
 
-3. Check your browser preview again and confirm that each page shows an updated footer.
+3. Kiểm tra lại trên trình duyệt và xác nhận rằng mỗi trang đều hiển thị footer đã được cập nhật.
 </Steps>
 
 <Box icon="question-mark">
 
-### Test Yourself
+### Tự kiểm tra
 
-1. What line of code do you need to write in an Astro component's frontmatter to receive values of `title`, `author`, and `date` as props?
+1. Dòng mã nào bạn cần viết trong frontmatter của một component Astro để nhận giá trị của `title`, `author`, và `date` dưới dạng props?
 
     <MultipleChoice>
       <Option isCorrect>
@@ -199,7 +199,7 @@ Since you might have multiple online accounts you can link to, you can make a si
     </MultipleChoice>
     
 
-2. How do you **pass values as props** to an Astro component?
+2. Làm thế nào để **truyền giá trị như props** cho một component Astro?
     <MultipleChoice>
       <Option>
         `const { title, author, date } = Astro.props;`
@@ -208,7 +208,7 @@ Since you might have multiple online accounts you can link to, you can make a si
         `import BlogPost from '../components/BlogPost.astro'`
       </Option>
       <Option isCorrect>
-        `<BlogPost title="My First Post" author="Dan" date="12 Aug 2022" />`
+        `<BlogPost title="Bài viết đầu tiên của tôi" author="Dan" date="12 Aug 2022" />`
       </Option>
     </MultipleChoice>
 </Box>
@@ -217,15 +217,15 @@ Since you might have multiple online accounts you can link to, you can make a si
 
 <Box icon="check-list">
 
-## Checklist
+## Danh sách kiểm tra
 
 <Checklist>
-- [ ] I can create new `.astro` components in `src/components/`
-- [ ] I can import and use Astro components inside other Astro components.
-- [ ] I can pass props to an Astro component.
+- [ ] Tôi có thể tạo các component `.astro` mới trong `src/components/`
+- [ ] Tôi có thể import và sử dụng component Astro bên trong các component Astro khác.
+- [ ] Tôi có thể truyền props cho một component Astro.
 </Checklist>
 </Box>
 
-### Resources
+### Tài nguyên
 
-- [Component Props in Astro](/vi/basics/astro-components/#component-props)
+- [Props cho Component trong Astro](/vi/basics/astro-components/#component-props)

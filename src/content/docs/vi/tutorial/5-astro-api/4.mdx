@@ -1,11 +1,10 @@
 ---
 type: tutorial
-title: Add an RSS feed
+title: Thêm nguồn cấp RSS
 description: >-
-  Tutorial: Build your first Astro blog —
+  Hướng dẫn: Xây dựng blog Astro đầu tiên của bạn —
 
-  Install Astro's official package for creating a feed that your readers can
-  subscribe to
+  Cài đặt gói chính thức của Astro để tạo nguồn cấp mà độc giả của bạn có thể đăng ký theo dõi
 i18nReady: true
 ---
 import Box from '~/components/tutorial/Box.astro';
@@ -15,20 +14,20 @@ import PackageManagerTabs from '~/components/tabs/PackageManagerTabs.astro';
 import { Steps } from '@astrojs/starlight/components';
 
 <PreCheck>
-  - Install an Astro package for creating an RSS feed for your website
-  - Create a feed that can be subscribed to and read by RSS feed readers
+  - Cài đặt một gói Astro để tạo nguồn cấp RSS cho trang web của bạn
+  - Tạo nguồn cấp mà người dùng có thể đăng ký và đọc bằng các trình đọc RSS
 </PreCheck>
 
-## Install Astro's RSS package
+## Cài đặt gói RSS của Astro
 
-Astro provides a custom package to quickly add an RSS feed to your website. 
+Astro cung cấp một gói tùy chỉnh để nhanh chóng thêm nguồn cấp RSS vào trang web của bạn.
 
-This official package generates a non-HTML document with information about all of your blog posts that can be read by **feed readers** like Feedly, The Old Reader, and more. This document is updated every time your site is rebuilt.
+Gói chính thức này tạo ra một tài liệu không phải HTML với thông tin về tất cả các bài viết trên blog của bạn mà **trình đọc nguồn cấp** như Feedly, The Old Reader, và nhiều hơn nữa có thể đọc được. Tài liệu này sẽ được cập nhật mỗi khi trang web của bạn được xây dựng lại.
 
-Individuals can subscribe to your feed in a feed reader, and receive a notification when you publish a new blog post on your site, making it a popular blog feature.
+Người dùng có thể đăng ký nguồn cấp của bạn trong trình đọc nguồn cấp, và nhận thông báo khi bạn xuất bản một bài viết mới trên trang web, khiến đây trở thành một tính năng phổ biến của blog.
 
 <Steps>
-1. In your terminal, quit the Astro development server (<kbd>Ctrl + C</kbd>) and run the following command to install Astro's RSS package.
+1. Trong terminal, hãy dừng máy chủ phát triển Astro (<kbd>Ctrl + C</kbd>) và chạy lệnh sau để cài đặt gói RSS của Astro.
 
     <PackageManagerTabs>
       <Fragment slot="npm">
@@ -48,7 +47,7 @@ Individuals can subscribe to your feed in a feed reader, and receive a notificat
       </Fragment>
     </PackageManagerTabs>
 
-2. Restart the dev server to begin working on your Astro project again.
+2. Khởi động lại máy chủ phát triển để tiếp tục làm việc với dự án Astro của bạn.
 
     <PackageManagerTabs>
       <Fragment slot="npm">
@@ -69,12 +68,12 @@ Individuals can subscribe to your feed in a feed reader, and receive a notificat
     </PackageManagerTabs>
 </Steps>
 
-## Create an `.xml` feed document
+## Tạo tài liệu nguồn cấp `.xml`
 
 <Steps>
-1. Create a new file in `src/pages/` called `rss.xml.js`
+1. Tạo một file mới trong `src/pages/` tên là `rss.xml.js`
 
-2. Copy the following code into this new document. Customize the `title` and `description` properties, and if necessary, specify a different language in `customData`:
+2. Sao chép đoạn mã sau vào tài liệu mới này. Tùy chỉnh các thuộc tính `title` và `description`, và nếu cần, chỉ định ngôn ngữ khác trong `customData`:
 
     ```js title="src/pages/rss.xml.js"
 
@@ -83,7 +82,7 @@ Individuals can subscribe to your feed in a feed reader, and receive a notificat
     export async function GET(context) {
       return rss({
         title: 'Astro Learner | Blog',
-        description: 'My journey learning Astro',
+        description: 'Hành trình học Astro của tôi',
         site: context.site,
         items: await pagesGlobToRssItems(import.meta.glob('./**/*.md')),
         customData: `<language>en-us</language>`,
@@ -91,7 +90,7 @@ Individuals can subscribe to your feed in a feed reader, and receive a notificat
     }
     ```
 
-3. Add the `site` property to the Astro config with your site's own unique Netlify URL.
+3. Thêm thuộc tính `site` vào cấu hình Astro với URL Netlify riêng của trang web bạn.
 
     ```js title="astro.config.mjs" ins={4}
     import { defineConfig } from "astro/config";
@@ -101,24 +100,24 @@ Individuals can subscribe to your feed in a feed reader, and receive a notificat
     });
     ```
     
-4. Visit `http://localhost:4321/rss.xml` and verify that you can see (unformatted) text on the page with an `item` for each of your `.md` files. Each item should contain blog post information such as `title`, `url`, and `description`.
+4. Truy cập `http://localhost:4321/rss.xml` và kiểm tra xem bạn có thể nhìn thấy văn bản (không định dạng) trên trang với một `item` cho mỗi file `.md` của bạn không. Mỗi item nên chứa thông tin bài viết blog như `title`, `url`, và `description`.
 
-    :::tip[View your RSS feed in a reader]
-    Download a feed reader, or sign up for an online feed reader service and subscribe to your site by adding your own Netlify URL. You can also share this link with others so they can subscribe to your posts, and be notified when a new one is published.
+    :::tip[Xem nguồn cấp RSS của bạn bằng trình đọc]
+    Tải về một trình đọc nguồn cấp, hoặc đăng ký sử dụng dịch vụ trình đọc nguồn cấp trực tuyến và đăng ký theo dõi trang web của bạn bằng cách thêm URL Netlify của bạn. Bạn cũng có thể chia sẻ liên kết này với người khác để họ có thể đăng ký các bài viết của bạn và được thông báo khi có bài mới được xuất bản.
     :::
 
 </Steps>
 
 <Box icon="check-list">
 
-## Checklist
+## Danh sách kiểm tra
 
 <Checklist>
-- [ ] I can install an Astro package using the command line.
-- [ ] I can create an RSS feed for my website.
+- [ ] Tôi có thể cài đặt một gói Astro bằng dòng lệnh.
+- [ ] Tôi có thể tạo nguồn cấp RSS cho trang web của mình.
 </Checklist>
 </Box>
 
-### Resources
+### Tài nguyên
 
-- [RSS item generation in Astro](/vi/recipes/rss/#using-glob-imports)
+- [Tạo mục RSS trong Astro](/vi/recipes/rss/#using-glob-imports)

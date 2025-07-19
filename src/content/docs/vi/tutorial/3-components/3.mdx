@@ -1,11 +1,10 @@
 ---
 type: tutorial
-title: Build it yourself - Header
+title: Tự xây dựng - Header
 description: >-
-  Tutorial: Build your first Astro blog —
+  Hướng dẫn: Xây dựng blog Astro đầu tiên của bạn —
 
-  Use everything you've learned so far to build a header with responsive
-  navigation
+  Sử dụng tất cả những gì bạn đã học để xây dựng một header với điều hướng phản hồi
 i18nReady: true
 ---
 import Box from '~/components/tutorial/Box.astro';
@@ -14,25 +13,25 @@ import PreCheck from '~/components/tutorial/PreCheck.astro';
 import { Steps } from '@astrojs/starlight/components';
 import Badge from "~/components/Badge.astro"
 
-Since your site will be viewed on different devices, it's time to create a page navigation that can respond to multiple screen sizes!
+Vì trang web của bạn sẽ được xem trên nhiều thiết bị khác nhau, đã đến lúc tạo một thanh điều hướng có thể đáp ứng với nhiều kích thước màn hình!
 
 <PreCheck>
-  - Create a Header for your site that contains the Navigation component
-  - Make the Navigation component responsive
+  - Tạo một Header cho trang web của bạn chứa thành phần Navigation
+  - Làm cho thành phần Navigation có khả năng phản hồi
 </PreCheck>
 
 
 <Box icon="puzzle-piece">
 
-## Try it yourself - Build a new Header component
+## Tự làm - Xây dựng một thành phần Header mới
 
 <Steps>
-1. Create a new Header component. Import and use your existing `Navigation.astro` component inside a `<nav>` element which is inside a `<header>` element.
+1. Tạo một thành phần Header mới. Import và sử dụng thành phần `Navigation.astro` hiện có của bạn bên trong một thẻ `<nav>`, nằm trong một thẻ `<header>`.
 
     <details>
-    <summary>Show me the code!</summary>
+    <summary>Hiển thị mã nguồn!</summary>
 
-    Create a file named `Header.astro` in `src/components/`
+    Tạo một tệp tên là `Header.astro` trong `src/components/`
     ```astro title="src/components/Header.astro"
     ---
     import Navigation from './Navigation.astro';
@@ -54,13 +53,13 @@ Since your site will be viewed on different devices, it's time to create a page 
 
 <Box icon="puzzle-piece">
 
-## Try it yourself - Update your pages
+## Tự làm - Cập nhật các trang của bạn
 
 <Steps>
-1. On each page, replace your existing `<Navigation/>` component with your new header.
+1. Trên mỗi trang, thay thế thành phần `<Navigation/>` hiện có bằng header mới của bạn.
 
     <details>
-    <summary>Show me the code!</summary>
+    <summary>Hiển thị mã nguồn!</summary>
 
     ```astro title="src/pages/index.astro" ins={3,18} del={2,17}
     ---
@@ -88,14 +87,14 @@ Since your site will be viewed on different devices, it's time to create a page 
     ```
     </details>
 
-2. Check your browser preview and verify that your header is displayed on every page. It won't look different yet, but if you inspect your preview using dev tools, you will see that you now have elements like `<header>` and `<nav>` around your navigation links.
+2. Kiểm tra bản xem trước trên trình duyệt và xác nhận rằng header của bạn hiển thị trên mọi trang. Hiện tại, nó sẽ chưa khác biệt, nhưng nếu bạn kiểm tra bằng công cụ phát triển, bạn sẽ thấy các phần tử như `<header>` và `<nav>` bao quanh các liên kết điều hướng của bạn.
 </Steps>
 </Box>
 
-## Add responsive styles
+## Thêm kiểu responsive
 
 <Steps>
-1. Update `Navigation.astro` with the CSS class to control your navigation links. Wrap the existing navigation links in a `<div>` with the class `nav-links`.
+1. Cập nhật `Navigation.astro` với lớp CSS để kiểm soát các liên kết điều hướng của bạn. Bọc các liên kết điều hướng hiện có trong một thẻ `<div>` với lớp `nav-links`.
 
     ```astro title="src/components/Navigation.astro" ins={3,7}
     ---
@@ -107,14 +106,14 @@ Since your site will be viewed on different devices, it's time to create a page 
     </div>
     ```
 
-2. Copy the CSS styles below into `global.css`. These styles:
+2. Sao chép các kiểu CSS dưới đây vào `global.css`. Các kiểu này:
 
-    - Style and position the navigation links for mobile
-    - Include an `expanded` class that can be toggled to display or hide the links on mobile
-    - Use a `@media` query to define different styles for larger screen sizes
+    - Định kiểu và vị trí các liên kết điều hướng cho di động
+    - Bao gồm một lớp `expanded` có thể bật/tắt để hiển thị hoặc ẩn các liên kết trên di động
+    - Sử dụng truy vấn `@media` để định nghĩa các kiểu khác nhau cho màn hình lớn hơn
 
-    :::tip[Mobile-first design]
-    Start by defining what should happen on small screen sizes first! Smaller screen sizes require simpler layouts. Then, adjust your styles to accommodate larger devices. If you design the complicated case first, then you have to work to try to make it simple again.
+    :::tip[Thiết kế ưu tiên di động]
+    Hãy bắt đầu bằng cách xác định điều gì sẽ xảy ra trên các kích thước màn hình nhỏ trước! Màn hình nhỏ yêu cầu bố cục đơn giản hơn. Sau đó, điều chỉnh các kiểu để phù hợp với thiết bị lớn hơn. Nếu bạn thiết kế trường hợp phức tạp trước, bạn sẽ phải làm cho nó đơn giản lại.
     :::
 
     ```css title="src/styles/global.css" ins={23-100}
@@ -188,23 +187,23 @@ Since your site will be viewed on different devices, it's time to create a page 
     ```
 </Steps>
 
-Resize your window and look for different styles being applied at different screen widths. Your header is now **responsive** to screen size through the use of `@media` queries.
+Thay đổi kích thước cửa sổ của bạn và quan sát các kiểu khác nhau được áp dụng tại các độ rộng màn hình khác nhau. Header của bạn giờ đã **phản hồi** kích thước màn hình nhờ sử dụng các truy vấn `@media`.
 
 
 
 <Box icon="check-list">
 
-## Checklist
+## Danh sách kiểm tra
 
 <Checklist>
-- [ ] I can use CSS to add responsive elements to my site.
+- [ ] Tôi có thể sử dụng CSS để thêm các phần tử responsive cho trang web của mình.
 </Checklist>
 </Box>
 
-### Resources
+### Tài nguyên
 
-- [Component-based Design](https://www.droptica.com/blog/component-based-design/) <Badge class="neutral-badge" text="external" />
+- [Thiết kế dựa trên thành phần](https://www.droptica.com/blog/component-based-design/) <Badge class="neutral-badge" text="external" />
 
-- [Semantic HTML Tags](https://www.dofactory.com/html/semantics) <Badge class="neutral-badge" text="external" />
+- [Thẻ HTML ngữ nghĩa](https://www.dofactory.com/html/semantics) <Badge class="neutral-badge" text="external" />
 
-- [Mobile-first Design](https://www.mobileapps.com/blog/mobile-first-design) <Badge class="neutral-badge" text="external" />
+- [Thiết kế ưu tiên di động](https://www.mobileapps.com/blog/mobile-first-design) <Badge class="neutral-badge" text="external" />

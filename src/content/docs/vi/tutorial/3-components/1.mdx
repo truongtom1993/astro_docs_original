@@ -1,9 +1,9 @@
 ---
 type: tutorial
-title: Make a reusable Navigation component
+title: Tạo một component Điều hướng có thể tái sử dụng
 description: |-
-  Tutorial: Build your first Astro blog —
-  Replace elements repeated on multiple pages with a reusable component
+  Hướng dẫn: Xây dựng blog Astro đầu tiên của bạn —
+  Thay thế các phần tử lặp lại trên nhiều trang bằng một component có thể tái sử dụng
 i18nReady: true
 ---
 import Box from '~/components/tutorial/Box.astro';
@@ -14,25 +14,25 @@ import PreCheck from '~/components/tutorial/PreCheck.astro';
 import { Steps } from '@astrojs/starlight/components';
 import Badge from "~/components/Badge.astro"
 
-Now that you have the same HTML written in multiple pages of your Astro site, it's time to replace that duplicated content with a reusable Astro component!
+Bây giờ bạn đã có cùng một mã HTML xuất hiện ở nhiều trang trên trang web Astro của mình, đã đến lúc thay thế nội dung bị lặp lại đó bằng một component Astro có thể tái sử dụng!
 
 <PreCheck>
-  - Create a new folder for components
-  - Build an Astro component to display your navigation links
-  - Replace existing HTML with a new, reusable navigation component
+  - Tạo một thư mục mới cho các component
+  - Xây dựng một component Astro để hiển thị các liên kết điều hướng của bạn
+  - Thay thế HTML hiện tại bằng một component điều hướng mới có thể tái sử dụng
 </PreCheck>
 
-## Create a new `src/components/` folder
+## Tạo thư mục `src/components/` mới
 
-To hold `.astro` files that will generate HTML but that will not become new pages on your website, you will need a new folder in your project: `src/components/`. 
+Để lưu các tệp `.astro` sẽ sinh HTML nhưng không trở thành các trang mới trên website của bạn, bạn cần một thư mục mới trong dự án: `src/components/`. 
 
 
-## Create a Navigation component
+## Tạo component Điều hướng
 
 <Steps>
-1. Create a new file: `src/components/Navigation.astro`.
+1. Tạo một tệp mới: `src/components/Navigation.astro`.
 
-2. Copy your links to navigate between pages from the top of any page and paste them into your new file, `Navigation.astro`:
+2. Sao chép các liên kết điều hướng giữa các trang từ đầu bất kỳ trang nào và dán chúng vào tệp mới `Navigation.astro`:
 
     ```astro title="src/components/Navigation.astro" "---"
     ---
@@ -42,14 +42,14 @@ To hold `.astro` files that will generate HTML but that will not become new page
     <a href="/blog/">Blog</a>
     ```
     :::tip
-    If there is nothing in the frontmatter of your `.astro` file, you don't have to write the code fences. You can always add them back in when you need them.
+    Nếu không có gì trong frontmatter của tệp `.astro` của bạn, bạn không cần phải viết các dấu code fences. Bạn luôn có thể thêm chúng lại khi cần.
     :::
 </Steps>
 
-### Import and use Navigation.astro
+### Import và sử dụng Navigation.astro
 
 <Steps>
-1. Go back to `index.astro` and import your new component inside the code fence:
+1. Quay lại `index.astro` và import component mới của bạn vào bên trong phần code fence:
 
     ```astro title="src/pages/index.astro" ins={2}
     ---
@@ -60,7 +60,7 @@ To hold `.astro` files that will generate HTML but that will not become new page
     ---
     ```
 
-2. Then below, replace the existing navigation HTML link elements with the new navigation component you just imported:
+2. Sau đó, bên dưới, thay thế các phần tử HTML liên kết điều hướng hiện tại bằng component điều hướng mà bạn vừa import:
 
     ```astro title="src/pages/index.astro" del={1-3} ins={4}
     <a href="/">Home</a>
@@ -69,90 +69,90 @@ To hold `.astro` files that will generate HTML but that will not become new page
     <Navigation />
     ```
 
-3. Check the preview in your browser and notice that it should look exactly the same... and that's what you want! 
+3. Xem trước trên trình duyệt và để ý rằng nó sẽ trông giống hệt như trước... và đó là điều bạn mong muốn! 
 </Steps>
 
-Your site contains the same HTML as it did before. But now, those three lines of code are provided by your `<Navigation />` component. 
+Trang web của bạn chứa cùng một mã HTML như trước. Nhưng bây giờ, ba dòng mã đó được cung cấp bởi component `<Navigation />`. 
 
 <Box icon="puzzle-piece">
 
-## Try it yourself - Add navigation to the rest of your site
+## Thực hành - Thêm điều hướng cho các trang còn lại
 
-Import and use the `<Navigation />` component in the other two pages on your site (`about.astro` and `blog.astro`) using the same method.
+Hãy import và sử dụng component `<Navigation />` trong hai trang còn lại của bạn (`about.astro` và `blog.astro`) theo cách tương tự.
 
-Don't forget to
-- Add an import statement at the top of the component script, inside the code fence.
-- Replace the existing code with the navigation component.
+Đừng quên
+- Thêm câu lệnh import ở đầu script của component, bên trong code fence.
+- Thay thế mã cũ bằng component điều hướng.
 
 </Box>
 
 :::note
-When you restructure your code but do not change the way your page looks in the browser, you are **refactoring**. You will **refactor** several times in this unit as you replace parts of your page HTML with components. 
+Khi bạn cấu trúc lại mã nguồn nhưng không thay đổi giao diện trang trên trình duyệt, bạn đang **refactor** (tái cấu trúc). Bạn sẽ **refactor** nhiều lần trong phần này khi thay thế các phần của mã HTML bằng các component.
 
-This allows you to get started quickly with any working code, often duplicated throughout your project. Then, you can improve your existing code's design incrementally without changing the outward appearance of your site.
+Điều này cho phép bạn bắt đầu nhanh chóng với mã nguồn hoạt động, thường bị lặp lại trong dự án. Sau đó, bạn có thể cải thiện thiết kế mã hiện tại từng bước mà không làm thay đổi giao diện bên ngoài của trang web.
 :::
 
 
 
 <Box icon="question-mark">
 
-### Test your knowledge
+### Kiểm tra kiến thức của bạn
 
 
 
-1. You can do this when you have elements repeated on multiple pages:
+1. Khi có các phần tử lặp lại trên nhiều trang, bạn có thể làm điều này:
     <MultipleChoice>
       <Option>
-        restart the dev server
+        khởi động lại máy chủ dev
       </Option>
       <Option isCorrect>
-        refactor to use a reusable component
+        refactor để sử dụng component có thể tái sử dụng
       </Option>
       <Option>
-        make a new page
+        tạo một trang mới
       </Option>
     </MultipleChoice>
 
-2. Astro components are:
+2. Các component Astro là:
     <MultipleChoice>
       <Option>
-        reusable
+        có thể tái sử dụng
       </Option>
       <Option>
-        fragments of HTML
+        đoạn mã HTML
       </Option>
       <Option isCorrect>
-        both of the above!
+        cả hai ý trên!
       </Option>
     </MultipleChoice>
 
-3. Astro components will automatically create a new page on your site when you...
+3. Component Astro sẽ tự động tạo một trang mới trên trang web của bạn khi bạn...
     <MultipleChoice>
       <Option>
-        include `<html></html>`
+        chèn `<html></html>`
       </Option>
       <Option>
         refactor
       </Option>
       <Option isCorrect>
-        put the `.astro` file within `src/pages/`
+        đặt tệp `.astro` trong `src/pages/`
       </Option>
     </MultipleChoice>
 </Box>
 
 <Box icon="check-list">
 
-## Checklist
+## Danh sách kiểm tra
 
 <Checklist>
-- [ ] I can refactor content into reusable components.
-- [ ] I can add a new component to an `.astro` page.
+- [ ] Tôi có thể refactor nội dung thành các component có thể tái sử dụng.
+- [ ] Tôi có thể thêm một component mới vào một trang `.astro`.
 </Checklist>
 
 </Box>
 
-### Resources 
+### Tài nguyên 
 
-- [Astro Component Overview](/vi/basics/astro-components/)
+- [Tổng quan về Component Astro](/vi/basics/astro-components/)
 
 - [Refactoring](https://refactoring.com/) <Badge class="neutral-badge" text="external" />
