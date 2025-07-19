@@ -1,9 +1,9 @@
 ---
 type: tutorial
-title: Create your first Astro project
+title: Tạo dự án Astro đầu tiên của bạn
 description: |-
-  Tutorial: Build your first Astro blog —
-  Create a new project for the Astro tutorial and get ready to code
+  Hướng dẫn: Xây dựng blog Astro đầu tiên của bạn —
+  Tạo một dự án mới cho hướng dẫn Astro và sẵn sàng để lập trình
 i18nReady: true
 ---
 import Checklist from '~/components/Checklist.astro';
@@ -15,86 +15,86 @@ import { Steps } from '@astrojs/starlight/components';
 import Badge from "~/components/Badge.astro"
 
 <PreCheck>
-  - Run the `create astro` setup wizard to create a new Astro project
-  - Start the Astro server in development (dev) mode
-  - View a live preview of your website in your browser
+  - Chạy trình hướng dẫn thiết lập `create astro` để tạo một dự án Astro mới
+  - Khởi động máy chủ Astro ở chế độ phát triển (dev)
+  - Xem bản xem trước trực tiếp của trang web trong trình duyệt của bạn
 </PreCheck>
 
-## Launch the Astro setup wizard
+## Khởi động trình hướng dẫn thiết lập Astro
 
-The preferred way to create a new Astro site is through our `create astro` setup wizard.
+Cách ưu tiên để tạo một trang Astro mới là sử dụng trình hướng dẫn thiết lập `create astro`.
 
 <Steps>
-1. In the command line of your terminal, run the following command using your preferred package manager:
+1. Trong dòng lệnh của terminal, hãy chạy lệnh sau bằng trình quản lý gói mà bạn ưa thích:
 
     <PackageManagerTabs>
       <Fragment slot="npm">
       ```shell
-      # create a new project with npm
+      # tạo một dự án mới với npm
       npm create astro@latest
       ```
       </Fragment>
       <Fragment slot="pnpm">
       ```shell
-      # create a new project with pnpm
+      # tạo một dự án mới với pnpm
       pnpm create astro@latest
       ```
       </Fragment>
       <Fragment slot="yarn">
       ```shell
-      # create a new project with yarn
+      # tạo một dự án mới với yarn
       yarn create astro
       ```
       </Fragment>
     </PackageManagerTabs>
 
-2. Enter `y` to install `create-astro`.
-3. When the prompt asks you where to create the project, type in the name of a folder to create a new directory for your project, e.g.
+2. Nhập `y` để cài đặt `create-astro`.
+3. Khi được hỏi bạn muốn tạo dự án ở đâu, hãy nhập tên thư mục để tạo thư mục mới cho dự án của bạn, ví dụ:
 `./tutorial`
 
     :::note
-    A new Astro project can only be created in a completely empty folder, so choose a name for your folder that does not already exist!
+    Một dự án Astro mới chỉ có thể được tạo trong một thư mục hoàn toàn trống, vì vậy hãy chọn tên thư mục mà chưa tồn tại!
     :::
 
-4. You will see a short list of starter templates to choose from. Use the arrow keys (up and down) to navigate to the minimal (empty) template, and then press return (enter) to submit your choice.
+4. Bạn sẽ thấy một danh sách ngắn các mẫu khởi đầu để lựa chọn. Sử dụng phím mũi tên (lên và xuống) để di chuyển đến mẫu minimal (trống), sau đó nhấn phím enter để xác nhận lựa chọn.
 
-5. When the prompt asks you whether or not to install dependencies, enter `y`.
+5. Khi được hỏi có muốn cài đặt các phụ thuộc không, hãy nhập `y`.
 
-6. When the prompt asks you whether or not to initialize a new git repository, enter `y`.
+6. Khi được hỏi có muốn khởi tạo một kho git mới không, hãy nhập `y`.
 </Steps>
 
-When the install wizard is complete, you no longer need this terminal. You can now open VS Code to continue.
+Khi trình hướng dẫn cài đặt hoàn tất, bạn không cần sử dụng terminal này nữa. Bây giờ bạn có thể mở VS Code để tiếp tục.
 
-## Open your project in VS Code
+## Mở dự án của bạn trong VS Code
 
 <Steps>
-7. Open VS Code. You will be prompted to open a folder. Choose the folder that you created during the setup wizard.
+7. Mở VS Code. Bạn sẽ được nhắc chọn một thư mục. Hãy chọn thư mục mà bạn đã tạo trong trình hướng dẫn thiết lập.
 
-8. If this is your first time opening an Astro project, you should see a notification asking if you would like to install recommended extensions. Click to see the recommended extensions, and choose the [Astro language support extension](https://marketplace.visualstudio.com/items?itemName=astro-build.astro-vscode). This will provide syntax highlighting and autocompletions for your Astro code.
+8. Nếu đây là lần đầu tiên bạn mở dự án Astro, bạn sẽ thấy một thông báo hỏi bạn có muốn cài đặt các tiện ích mở rộng được đề xuất không. Hãy nhấn để xem các tiện ích mở rộng được đề xuất, và chọn [tiện ích hỗ trợ ngôn ngữ Astro](https://marketplace.visualstudio.com/items?itemName=astro-build.astro-vscode). Tiện ích này sẽ cung cấp tô màu cú pháp và tự động hoàn thành cho mã Astro của bạn.
 
-9. Make sure the terminal is visible and that you can see the command prompt, such as:
+9. Đảm bảo rằng terminal đang hiển thị và bạn có thể nhìn thấy dấu nhắc lệnh, ví dụ:
 
     ```sh
     user@machine:~/tutorial$
     ```
 
-    :::tip[Keyboard shortcut]
-    To toggle the visibility of the terminal, use <kbd>Ctrl + J</kbd> (macOS: <kbd>Cmd ⌘ + J</kbd>).
+    :::tip[Phím tắt]
+    Để bật/tắt hiển thị terminal, sử dụng <kbd>Ctrl + J</kbd> (macOS: <kbd>Cmd ⌘ + J</kbd>).
     :::
 </Steps>
 
-You can now use the terminal built right into this window, instead of your computer's Terminal app, for the rest of this tutorial.
+Bạn giờ có thể sử dụng terminal tích hợp ngay trong cửa sổ này, thay vì ứng dụng Terminal trên máy tính, cho phần còn lại của hướng dẫn này.
 
 
 
-## Run Astro in dev mode
+## Chạy Astro ở chế độ phát triển
 
-In order to preview your project files _as a website_ while you work, you will need Astro to be running in development (dev) mode.
+Để xem trước các tệp dự án _dưới dạng một trang web_ trong khi làm việc, bạn cần chạy Astro ở chế độ phát triển (dev).
 
-### Start the dev server
+### Khởi động máy chủ dev
 
 <Steps>
-10. Run the command to start the Astro dev server by typing into VS Code's terminal:
+10. Chạy lệnh để khởi động máy chủ dev của Astro bằng cách nhập vào terminal của VS Code:
 
     <PackageManagerTabs>
       <Fragment slot="npm">
@@ -114,42 +114,42 @@ In order to preview your project files _as a website_ while you work, you will n
       </Fragment>
     </PackageManagerTabs>
 
-    Now you should see confirmation in the terminal that Astro is running in dev mode. 🚀
+    Bây giờ bạn sẽ thấy xác nhận trong terminal rằng Astro đang chạy ở chế độ dev. 🚀
 </Steps>
 
-## View a preview of your website
+## Xem bản xem trước trang web của bạn
 
-Your project files contain all the code necessary to display an Astro website, but the browser is responsible for displaying your code as web pages.
+Các tệp dự án của bạn đã chứa tất cả mã cần thiết để hiển thị một trang web Astro, nhưng trình duyệt sẽ chịu trách nhiệm hiển thị mã của bạn thành các trang web.
 
 <Steps>
-11. Click on the `localhost` link in your terminal window to see a live preview of your new Astro website! 
+11. Nhấp vào liên kết `localhost` trong cửa sổ terminal để xem bản xem trước trực tiếp của trang web Astro mới của bạn! 
 
-    (Astro uses `http://localhost:4321` by default if port `4321` is available.)
+    (Astro sử dụng `http://localhost:4321` theo mặc định nếu cổng `4321` còn trống.)
 
-    Here's what the Astro "Empty Project" starter website should look like in the browser preview:
+    Đây là giao diện của trang web "Empty Project" mẫu của Astro trong bản xem trước trình duyệt:
 
-    ![A blank white page with the word Astro at the top.](/tutorial/minimal.png)
+    ![Một trang trắng trống với dòng chữ Astro ở phía trên.](/tutorial/minimal.png)
 
 </Steps>
 
-:::tip[Using the Astro dev server]
+:::tip[Sử dụng máy chủ dev của Astro]
 
-While the Astro server is running in dev mode, you will NOT be able to run commands in your terminal window. Instead, this pane will give you feedback as you preview your site.
+Khi máy chủ Astro đang chạy ở chế độ dev, bạn sẽ KHÔNG thể chạy các lệnh khác trong cửa sổ terminal này. Thay vào đó, khung này sẽ cung cấp phản hồi khi bạn xem trước trang web của mình.
 
-You can stop the dev server at any time and return to the command prompt by typing <kbd>Ctrl + C</kbd> in the terminal.
+Bạn có thể dừng máy chủ dev bất cứ lúc nào và trở về dấu nhắc lệnh bằng cách nhấn <kbd>Ctrl + C</kbd> trong terminal.
 
-Sometimes the dev server will stop on its own while you are working. If your live preview stops working, go back to the terminal and restart the dev server by typing `npm run dev`.
+Đôi khi máy chủ dev sẽ tự động dừng khi bạn đang làm việc. Nếu bản xem trước trực tiếp bị ngừng, hãy quay lại terminal và khởi động lại máy chủ dev bằng cách nhập `npm run dev`.
 :::
 
 <Box icon="check-list">
-## Checklist
+## Danh sách kiểm tra
 
 <Checklist>
-- [ ] I can create a new Astro project.
-- [ ] I can start the Astro dev server.
+- [ ] Tôi có thể tạo một dự án Astro mới.
+- [ ] Tôi có thể khởi động máy chủ dev của Astro.
 </Checklist>
 </Box>
 
-### Resources
+### Tài nguyên
 
-- <p>[Getting Started with Visual Studio Code](https://code.visualstudio.com/docs/introvideos/basics) <Badge class="neutral-badge" text="external" /> — a video tutorial for installing, setting up and working with VS Code</p>
+- <p>[Bắt đầu với Visual Studio Code](https://code.visualstudio.com/docs/introvideos/basics) <Badge class="neutral-badge" text="external" /> — video hướng dẫn cài đặt, thiết lập và làm việc với VS Code</p>

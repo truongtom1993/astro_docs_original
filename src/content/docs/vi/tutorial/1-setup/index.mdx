@@ -1,65 +1,63 @@
 ---
 type: tutorial
-unitTitle: Create and deploy your first Astro site
-title: 'Check in: Unit 1 - Setup'
+unitTitle: Tạo và triển khai trang Astro đầu tiên của bạn
+title: 'Kiểm tra: Đơn vị 1 - Thiết lập'
 description: >-
-  Tutorial: Build your first Astro blog —
+  Hướng dẫn: Xây dựng blog Astro đầu tiên của bạn —
 
-  Prepare your development environment, and create and deploy your first Astro
-  site
+  Chuẩn bị môi trường phát triển và tạo, triển khai trang Astro đầu tiên
 i18nReady: true
 ---
 import Checklist from '~/components/Checklist.astro';
 import Box from '~/components/tutorial/Box.astro';
 import { Steps } from '@astrojs/starlight/components';
 
-Now that you know what you're going to build, it's time to set up all the tools you'll need! 
+Bây giờ bạn đã biết mình sẽ xây dựng gì, đã đến lúc thiết lập tất cả các công cụ cần thiết!
 
-This unit shows you how to set up your development environment and deploy to Netlify. Skip ahead to [Unit 2](/vi/tutorial/2-pages/) if you are already comfortable with your environment and workflow.
+Phần này sẽ hướng dẫn bạn cách thiết lập môi trường phát triển và triển khai lên Netlify. Bỏ qua và chuyển sang [Đơn vị 2](/vi/tutorial/2-pages/) nếu bạn đã quen với môi trường và quy trình làm việc của mình.
 
-:::tip[Take the tutorial in an online code editor]
+:::tip[Thực hiện hướng dẫn trên trình chỉnh sửa mã trực tuyến]
 
-Want to complete this tutorial in an online code editor instead? Follow the instructions below for getting started on Google IDX.
+Bạn muốn hoàn thành hướng dẫn này trên trình chỉnh sửa mã trực tuyến? Hãy làm theo hướng dẫn bên dưới để bắt đầu với Google IDX.
 
 <details>
-<summary>Using Google IDX: Follow these instructions, then go directly to Unit 2!</summary>
+<summary>Sử dụng Google IDX: Làm theo hướng dẫn này, sau đó chuyển ngay sang Đơn vị 2!</summary>
 
-**Set up IDX**
-
-<Steps>
-1. Follow the external link to [open the "Empty Project" template in a new workspace on IDX](https://astro.new/minimal?on=idx).
-
-2. Follow the prompt to log into your Google account if you are not already logged in.
-
-3. Enter a name for your project if you want to change it from the default "Empty Project". Click **Create**.
-
-4. Wait for the workspace to be created. This may take 30 - 60 seconds. If all goes well, you will see the Astro project loaded in an online code editor.
-
-5. Wait for IDX to run two scripts: one to install Astro and another to start the development server. Note that you may briefly see a message that your workspace "couldn't find Astro" if your workspace loads before Astro has finished installing. This message can be ignored and cancelled if it does not clear itself. 
-</Steps>
-
-**Make a Change**
-
-If all goes well, you should see the code for the file `src/pages/index.astro` opened in split screen with a live preview of the website. Follow the instruction to ["Write your first line of Astro"](/vi/tutorial/1-setup/3/) to make a change to this file.
-
-**Create a GitHub Repository**
+**Thiết lập IDX**
 
 <Steps>
-1. Navigate to the "Source Control" navigation item in the vertical menu bar, or open with <kbd>CTRL + SHIFT + G</kbd>. 
+1. Truy cập liên kết ngoài để [mở mẫu "Empty Project" trong không gian làm việc mới trên IDX](https://astro.new/minimal?on=idx).
 
-2. Select the option to Publish to GitHub. This will create a new repository in your GitHub account.
-3. Follow the prompts to sign in to your GitHub account.
-4. Once you are signed in, return to the IDX tab and you will be given the choice to name your new repository, and whether you want to create a private or public repository. You can choose any name and either kind of repository for this tutorial.
-5. IDX will make an initial commit and publish to your new GitHub repo.
-6. Going forward, whenever you have changes to be committed back to GitHub, the Source Control navigation icon will show a number. This is the number of files that have changed since your last commit. Navigating to this tab and performing two steps (commit and publish) will allow you to enter a commit message, and update your repository.
+2. Làm theo hướng dẫn để đăng nhập vào tài khoản Google nếu bạn chưa đăng nhập.
+
+3. Nhập tên cho dự án nếu bạn muốn thay đổi tên mặc định "Empty Project". Nhấn **Create**.
+
+4. Chờ không gian làm việc được tạo. Quá trình này có thể mất 30 - 60 giây. Nếu mọi thứ suôn sẻ, bạn sẽ thấy dự án Astro được tải trong trình chỉnh sửa mã trực tuyến.
+
+5. Chờ IDX chạy hai script: một để cài đặt Astro và một để khởi động máy chủ phát triển. Lưu ý rằng bạn có thể thấy thông báo rằng không gian làm việc "không tìm thấy Astro" nếu nó tải trước khi Astro được cài đặt xong. Có thể bỏ qua và hủy thông báo này nếu nó không tự biến mất.
 </Steps>
 
-**Deploy your Site**
+**Thực hiện thay đổi**
 
-If you'd like to deploy to Netlify, and have a live published version of your site while you work, go ahead in Unit 1 to [Deploy your site to the web](/vi/tutorial/1-setup/5/).
+Nếu mọi việc suôn sẻ, bạn sẽ thấy mã của file `src/pages/index.astro` được mở song song với bản xem trước trực tiếp của website. Làm theo hướng dẫn ["Viết dòng Astro đầu tiên của bạn"](/vi/tutorial/1-setup/3/) để thay đổi file này.
 
-Otherwise, skip to [Unit 2](/vi/tutorial/2-pages/) to start building with Astro!
+**Tạo kho lưu trữ GitHub**
 
+<Steps>
+1. Điều hướng đến mục "Source Control" trên thanh menu dọc, hoặc mở bằng <kbd>CTRL + SHIFT + G</kbd>.
+
+2. Chọn tùy chọn Publish to GitHub. Thao tác này sẽ tạo một kho lưu trữ mới trong tài khoản GitHub của bạn.
+3. Làm theo hướng dẫn để đăng nhập vào tài khoản GitHub của bạn.
+4. Sau khi đăng nhập, quay lại tab IDX và bạn sẽ được chọn tên kho lưu trữ mới, cũng như loại kho lưu trữ (riêng tư hoặc công khai). Bạn có thể chọn bất kỳ tên và loại nào cho hướng dẫn này.
+5. IDX sẽ tạo một commit đầu tiên và xuất bản lên kho GitHub mới của bạn.
+6. Sau này, khi có thay đổi cần commit lên GitHub, biểu tượng Source Control sẽ hiển thị số lượng file đã thay đổi kể từ lần commit gần nhất. Điều hướng đến tab này và thực hiện hai bước (commit và publish) để nhập thông điệp commit và cập nhật kho lưu trữ.
+</Steps>
+
+**Triển khai trang web của bạn**
+
+Nếu muốn triển khai lên Netlify và có một phiên bản trực tiếp của trang web trong quá trình làm việc, hãy tiếp tục Đơn vị 1 đến [Triển khai trang web lên internet](/vi/tutorial/1-setup/5/).
+
+Hoặc, chuyển sang [Đơn vị 2](/vi/tutorial/2-pages/) để bắt đầu xây dựng với Astro!
 </details>
 
 {/* StackBlitz instructions 
@@ -100,20 +98,20 @@ Otherwise, skip to [Unit 2](/vi/tutorial/2-pages/) to start building with Astro!
 */}
 :::
 
-## Where are you going?
+## Bạn sẽ đi đâu?
 
-In this unit, you will **create a new project** that is **stored online in GitHub** and **connected to Netlify**. 
+Trong phần này, bạn sẽ **tạo một dự án mới** được **lưu trữ trực tuyến trên GitHub** và **kết nối với Netlify**.
 
-As you write code, you will periodically commit your changes to GitHub. Netlify will use the files in your GitHub repository to build your website, and then publish it on the internet at a unique address where anyone can view it.
+Khi bạn viết mã, hãy định kỳ commit các thay đổi lên GitHub. Netlify sẽ sử dụng các file trong kho lưu trữ GitHub của bạn để xây dựng website, sau đó xuất bản nó lên internet với một địa chỉ duy nhất mà bất kỳ ai cũng có thể truy cập.
 
-Every time you commit a change to GitHub, a notification will be sent to Netlify. Then, Netlify will automatically rebuild and republish your live site to reflect those changes.
+Mỗi khi bạn commit thay đổi lên GitHub, một thông báo sẽ được gửi đến Netlify. Sau đó, Netlify sẽ tự động xây dựng lại và xuất bản lại trang web trực tiếp để phản ánh các thay đổi đó.
 
 
 
 <Box icon="check-list">
-## Checklist
+## Danh sách kiểm tra
 
 <Checklist>
-- [ ] I'm ready to prepare a development environment for an Astro project!
+- [ ] Tôi đã sẵn sàng chuẩn bị môi trường phát triển cho dự án Astro!
 </Checklist>
 </Box>

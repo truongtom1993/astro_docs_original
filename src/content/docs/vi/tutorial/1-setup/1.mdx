@@ -1,9 +1,9 @@
 ---
 type: tutorial
-title: Prepare your dev environment
+title: Chuẩn bị môi trường phát triển của bạn
 description: |-
-  Tutorial: Build your first Astro blog —
-  Install the local tools that you’ll need to complete the tutorial
+  Hướng dẫn: Xây dựng blog Astro đầu tiên của bạn —
+  Cài đặt các công cụ cục bộ mà bạn sẽ cần để hoàn thành hướng dẫn
 i18nReady: true
 ---
 import Checklist from '~/components/Checklist.astro';
@@ -15,57 +15,57 @@ import { Steps } from '@astrojs/starlight/components';
 import Badge from "~/components/Badge.astro"
 
 <PreCheck>
-  - Install any tools that you will use to build your Astro website
+  - Cài đặt bất kỳ công cụ nào mà bạn sẽ sử dụng để xây dựng trang web Astro của mình
 </PreCheck>
 
-## Get the dev tools you need
+## Nhận các công cụ phát triển cần thiết
 
 ### Terminal
 
-You will use a **command line (terminal)** to create your Astro project and to run key commands to build, develop, and test your site.
+Bạn sẽ sử dụng **dòng lệnh (terminal)** để tạo dự án Astro của mình và chạy các lệnh quan trọng để xây dựng, phát triển và kiểm thử trang web.
 
-You can access the command line through a local terminal program for your operating system. Common applications include **Terminal** (MacOS/Linux), **Command Prompt** (Windows), and **Termux** (Android). One of these will probably already be on your machine. 
+Bạn có thể truy cập dòng lệnh thông qua một chương trình terminal cục bộ cho hệ điều hành của mình. Các ứng dụng phổ biến bao gồm **Terminal** (MacOS/Linux), **Command Prompt** (Windows) và **Termux** (Android). Một trong số các ứng dụng này có thể đã có sẵn trên máy của bạn.
 
 ### Node.js
 
-For Astro to run on your system, you will also need to have a compatible version of [**Node.js**](https://nodejs.org/vi/) installed. Astro supports **even-numbered** Node.js versions. The current minimum supported versions of each are:  `v18.20.8`, `v20.3.0`, and `v22.0.0`. (`v19` and `v21` are not supported.)
+Để Astro có thể chạy trên hệ thống của bạn, bạn cũng cần cài đặt một phiên bản [**Node.js**](https://nodejs.org/vi/) tương thích. Astro hỗ trợ các phiên bản Node.js **số chẵn**. Các phiên bản tối thiểu hiện tại được hỗ trợ là:  `v18.20.8`, `v20.3.0`, và `v22.0.0`. (`v19` và `v21` không được hỗ trợ.)
 
-To check to see whether you already have a compatible version installed, run the following command in your terminal:
+Để kiểm tra xem bạn đã có phiên bản phù hợp chưa, hãy chạy lệnh sau trong terminal:
 
 ```sh
 node -v
 
-// Example output
+// Ví dụ kết quả đầu ra
 v18.20.8
 ```
 
-If the command returns a version number supported by Astro, you're good to go!
+Nếu lệnh trả về một số phiên bản được Astro hỗ trợ, bạn đã sẵn sàng!
 
-If the command returns an error message like `Command 'node' not found`, or a version number lower than the required, then you need to [install a compatible Node.js version](https://docs.npmjs.com/downloading-and-installing-node-js-and-npm).
+Nếu lệnh trả về thông báo lỗi như `Command 'node' not found`, hoặc số phiên bản thấp hơn mức yêu cầu, thì bạn cần [cài đặt phiên bản Node.js tương thích](https://docs.npmjs.com/downloading-and-installing-node-js-and-npm).
 
-### Code Editor
+### Trình soạn thảo mã nguồn
 
-Additionally, you will need to download and install a **code editor** to write your code. 
+Ngoài ra, bạn sẽ cần tải xuống và cài đặt một **trình soạn thảo mã nguồn** để viết mã.
 
-:::tip[We'll use...]
-This tutorial will use **VS Code**, but you can use any editor for your operating system.
+:::tip[Chúng ta sẽ dùng...]
+Hướng dẫn này sẽ sử dụng **VS Code**, nhưng bạn có thể dùng bất kỳ trình soạn thảo nào phù hợp với hệ điều hành của mình.
 :::
 
 <Steps>
-1. [Download and install VS Code](https://code.visualstudio.com/#alt-downloads) or another code editor of your choice. 
+1. [Tải xuống và cài đặt VS Code](https://code.visualstudio.com/#alt-downloads) hoặc một trình soạn thảo mã nguồn khác mà bạn lựa chọn.
 </Steps>
 
 
 <Box icon="question-mark">
 
-### Test your knowledge
+### Kiểm tra kiến thức của bạn
 
-Which of the following is...
-1. A code editor, for making changes to your files and their content?
+Đâu là...
+1. Trình soạn thảo mã nguồn, dùng để chỉnh sửa tệp và nội dung của bạn?
 
     <MultipleChoice>
       <Option>
-        web browser
+        trình duyệt web
       </Option>
       <Option>
         Terminal
@@ -75,7 +75,7 @@ Which of the following is...
       </Option>
     </MultipleChoice>
 
-2. An online version control provider for your repository?
+2. Nhà cung cấp quản lý mã nguồn trực tuyến cho kho lưu trữ của bạn?
 
     <MultipleChoice>
       <Option isCorrect>
@@ -89,7 +89,7 @@ Which of the following is...
       </Option>
     </MultipleChoice>
 
-3. An application for running commands?
+3. Ứng dụng dùng để chạy lệnh?
     <MultipleChoice>
       <Option>
         GitHub
@@ -98,23 +98,23 @@ Which of the following is...
         Terminal
       </Option>
       <Option>
-        web browser
+        trình duyệt web
       </Option>
     </MultipleChoice>
 
 </Box>
 
 <Box icon="check-list">
-## Checklist for moving on
+## Danh sách kiểm tra trước khi tiếp tục
 
 <Checklist>
-- [ ] I can access the command line in a terminal.
-- [ ] I have Node.js installed.
-- [ ] I have a code editor like VS Code.
+- [ ] Tôi có thể truy cập dòng lệnh trong terminal.
+- [ ] Tôi đã cài đặt Node.js.
+- [ ] Tôi có một trình soạn thảo mã nguồn như VS Code.
 </Checklist>
 </Box>
 
 
-### Resources
+### Tài nguyên
 
-- <p>[FreeCodeCamp.org](https://freecodecamp.org) <Badge class="neutral-badge" text="external" /> — a free educational site with full courses or quick refreshers in HTML, CSS, JS, and more.</p>
+- <p>[FreeCodeCamp.org](https://freecodecamp.org) <Badge class="neutral-badge" text="external" /> — một trang web giáo dục miễn phí với các khóa học đầy đủ hoặc tài liệu ôn tập nhanh về HTML, CSS, JS và nhiều hơn nữa.</p>

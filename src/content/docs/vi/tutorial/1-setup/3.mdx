@@ -1,9 +1,9 @@
 ---
 type: tutorial
-title: Write your first line of Astro
+title: Viết dòng mã Astro đầu tiên của bạn
 description: |-
-  Tutorial: Build your first Astro blog —
-  Make your first edits to your tutorial project's home page
+  Hướng dẫn: Xây dựng blog Astro đầu tiên của bạn —
+  Thực hiện chỉnh sửa đầu tiên trên trang chủ dự án hướng dẫn của bạn
 i18nReady: true
 ---
 import Checklist from '~/components/Checklist.astro';
@@ -14,15 +14,15 @@ import PreCheck from '~/components/tutorial/PreCheck.astro';
 import { Steps } from '@astrojs/starlight/components';
 
 <PreCheck>
-  - Make your first edit to your new website
+  - Thực hiện chỉnh sửa đầu tiên trên trang web mới của bạn
 </PreCheck>
 
-## Edit your home page
+## Chỉnh sửa trang chủ của bạn
 
 <Steps>
-1. In your code editor, navigate in the Explorer file pane to `src/pages/index.astro` and click on it to open the file's contents in an editable tab.
+1. Trong trình soạn thảo mã, hãy điều hướng trong khung Explorer đến `src/pages/index.astro` và nhấp vào tệp này để mở nội dung tệp ở một tab có thể chỉnh sửa.
 
-    The contents of your `index.astro` file should look like this:
+    Nội dung của tệp `index.astro` của bạn sẽ trông như sau:
 
     ```astro title="src/pages/index.astro"
     ---
@@ -42,9 +42,9 @@ import { Steps } from '@astrojs/starlight/components';
     </html>
     ```
 
-2. Edit the content of your page `<body>`.
+2. Chỉnh sửa nội dung trong thẻ `<body>` của trang.
 
-    Type in the editor to change the heading text on your page and save the change.
+    Gõ vào trình chỉnh sửa để thay đổi dòng tiêu đề trên trang của bạn và lưu lại thay đổi.
 
     ```astro title="src/pages/index.astro" del={2} ins={3}
     <body>
@@ -53,20 +53,20 @@ import { Steps } from '@astrojs/starlight/components';
     </body>
     ```
 
-3. Check the browser preview and you should see your page content updated to the new text.
+3. Kiểm tra bản xem trước trên trình duyệt và bạn sẽ thấy nội dung trang đã được cập nhật với văn bản mới.
 </Steps>
 
-Congratulations! You are now an Astro developer!
+Chúc mừng! Bây giờ bạn đã là một nhà phát triển Astro!
 
-The rest of this unit will set you up for success with version control and a published website you can show off.
+Các phần còn lại của bài này sẽ giúp bạn thiết lập kiểm soát phiên bản và xuất bản website để bạn có thể tự hào chia sẻ.
 
 
 
 <Box icon="check-list">
-## Checklist
+## Danh sách kiểm tra
 
 <Checklist>
-- [ ] I can make changes and see them in the browser.
-- [ ] I am an Astro developer!
+- [ ] Tôi có thể thực hiện thay đổi và xem chúng trên trình duyệt.
+- [ ] Tôi là một nhà phát triển Astro!
 </Checklist>
 </Box>

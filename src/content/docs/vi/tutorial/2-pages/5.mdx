@@ -1,9 +1,9 @@
 ---
 type: tutorial
-title: Add site-wide styling
+title: Thêm kiểu dáng cho toàn bộ trang web
 description: |-
-  Tutorial: Build your first Astro blog —
-  Create a global stylesheet for site-wide styling
+  Hướng dẫn: Xây dựng blog Astro đầu tiên của bạn —
+  Tạo một stylesheet toàn cục cho kiểu dáng toàn trang
 i18nReady: true
 ---
 import Checklist from '~/components/Checklist.astro';
@@ -12,22 +12,22 @@ import Box from '~/components/tutorial/Box.astro';
 import PreCheck from '~/components/tutorial/PreCheck.astro';
 import { Steps } from '@astrojs/starlight/components';
 
-Now that you have a styled About page, it's time to add some global styles for the rest of your site!
+Bây giờ bạn đã có một trang About được thiết kế, đã đến lúc thêm các kiểu dáng toàn cục cho phần còn lại của trang web!
 
 <PreCheck>
-  - Apply styles globally
+  - Áp dụng kiểu dáng toàn trang
 </PreCheck>
 
-## Add a global stylesheet
+## Thêm stylesheet toàn cục
 
-You have seen that the Astro `<style>` tag is **scoped by default**, meaning that it only affects the elements in its own file.
+Bạn đã thấy rằng thẻ `<style>` của Astro được **giới hạn phạm vi theo mặc định**, nghĩa là nó chỉ ảnh hưởng đến các phần tử trong chính tệp đó.
 
-There are a few ways to define styles **globally** in Astro, but in this tutorial, you will create and import a `global.css` file into each of your pages. This combination of stylesheet and `<style>` tag gives you the ability to control some styles site-wide, and to apply some specific styles exactly where you want them.
+Có một vài cách để định nghĩa kiểu dáng **toàn cục** trong Astro, nhưng trong hướng dẫn này, bạn sẽ tạo và import một tệp `global.css` vào mỗi trang của mình. Sự kết hợp giữa stylesheet này và thẻ `<style>` cho phép bạn kiểm soát một số kiểu dáng trên toàn bộ website, cũng như áp dụng một số kiểu dáng cụ thể đúng nơi bạn muốn.
 
 <Steps>
-1. Create a new file at the location `src/styles/global.css` (You'll have to create a `styles` folder first.)
+1. Tạo một tệp mới tại `src/styles/global.css` (Bạn sẽ phải tạo thư mục `styles` trước.)
 
-2. Copy the following code into your new file, `global.css`
+2. Sao chép đoạn mã sau vào tệp `global.css` mới của bạn
 
     ```css title="src/styles/global.css"
     html {
@@ -53,7 +53,7 @@ There are a few ways to define styles **globally** in Astro, but in this tutoria
     }
     ```
 
-3. In `about.astro`, add the following import statement to your frontmatter: 
+3. Trong `about.astro`, thêm dòng import sau vào phần frontmatter:
 
     ```astro title="src/pages/about.astro" ins={2}
     ---
@@ -80,19 +80,19 @@ There are a few ways to define styles **globally** in Astro, but in this tutoria
     ---
     ```
 
-4. Check the browser preview of your About page, and you should now see new styles applied!
+4. Kiểm tra xem trang About của bạn trong trình duyệt, bạn sẽ thấy các kiểu dáng mới đã được áp dụng!
 </Steps>
 
 <Box icon="puzzle-piece">
 
-## Try it yourself - Import your global stylesheet
+## Thực hành - Import stylesheet toàn cục
 
-Add the necessary line of code to each `.astro` file in your project to apply your global styles to every page of your site.
+Thêm dòng mã cần thiết vào mỗi tệp `.astro` trong dự án của bạn để áp dụng global styles cho mọi trang trên website.
 
 <details>
-<summary>✅ Show me the code! ✅</summary>
+<summary>✅ Hiển thị mã ví dụ! ✅</summary>
 
-Add the following import statement to the two other page files: `src/pages/index.astro` and `src/pages/blog.astro`
+Thêm dòng import sau vào hai tệp trang còn lại: `src/pages/index.astro` và `src/pages/blog.astro`
 
 ```astro title="src/pages/index.astro" ins={2}
 ---
@@ -102,35 +102,35 @@ import '../styles/global.css';
 </details>
 </Box>
 
-Make any changes or additions you want to the content of your About page by adding HTML elements to the page template, either statically or dynamically. Write any additional JavaScript in your frontmatter script to provide you with values to use in your HTML. When you are happy with this page, commit your changes to GitHub before moving on to the next lesson.
+Hãy thay đổi hoặc bổ sung bất kỳ nội dung nào bạn muốn cho trang About của mình bằng cách thêm các phần tử HTML vào template trang, có thể là tĩnh hoặc động. Viết thêm JavaScript trong phần frontmatter script để cung cấp các giá trị sử dụng trong HTML. Khi bạn cảm thấy hài lòng với trang này, hãy commit các thay đổi lên GitHub trước khi chuyển sang bài học tiếp theo.
 
 <Box icon="question-mark">
-### Analyze the Pattern
+### Phân tích mẫu hình
 
-Your About page is now styled using *both* the imported `global.css` file *and* a `<style>` tag.
+Trang About của bạn hiện được áp dụng kiểu dáng bằng *cả* tệp `global.css` được import *và* thẻ `<style>`.
 
-- Are styles from both styling methods being applied? 
+- Các kiểu dáng từ cả hai phương pháp này có được áp dụng không?
 
     <p>
-      <Spoiler>Yes</Spoiler>
+      <Spoiler>Có</Spoiler>
     </p>
 
-- Are there any conflicting styles, and if so, which are applied?
+- Có kiểu dáng nào bị xung đột không, và nếu có thì kiểu nào sẽ được áp dụng?
 
     <p>
-      <Spoiler>Yes, `<h1>`  has a size of `2.5rem` globally, but `4rem` locally in the `<style>` tag. The local `4rem` rule is applied on the About page.</Spoiler>
+      <Spoiler>Có, thẻ `<h1>` có kích thước `2.5rem` trong global, nhưng `4rem` ở local trong thẻ `<style>`. Quy tắc local `4rem` sẽ được áp dụng cho trang About.</Spoiler>
     </p>
 
-- Describe how `global.css` and `<style>` work together.
+- Hãy mô tả cách `global.css` và thẻ `<style>` phối hợp với nhau.
 
     <p>
-      <Spoiler>When conflicting styles are defined both globally and in a page's local `<style>` tag, the local styles should overwrite any global styles. (But, there can be other factors involved, so always visually inspect your site to make sure your styles are properly applied!)</Spoiler>
+      <Spoiler>Khi có xung đột giữa các kiểu dáng được định nghĩa trong global và trong thẻ `<style>` cục bộ của một trang, thì kiểu cục bộ sẽ ghi đè kiểu global. (Tuy nhiên vẫn còn những yếu tố khác, vì vậy bạn luôn cần kiểm tra trực quan website để đảm bảo các kiểu dáng được áp dụng đúng!)</Spoiler>
     </p>
 
-- How would you choose whether to declare a style in a `global.css` file or a `<style>` tag?
+- Làm thế nào để bạn quyết định nên khai báo một kiểu trong tệp `global.css` hay trong thẻ `<style>`?
 
     <p>
-      <Spoiler>If you want a style to be applied site-wide, you would choose to use a `global.css` file. However, if you want styles to apply to only the HTML content in a single `.astro` file, and not affect other elements on your site, you would choose a `<style>` tag.</Spoiler>
+      <Spoiler>Nếu bạn muốn kiểu dáng áp dụng cho toàn bộ website, hãy dùng tệp `global.css`. Nếu bạn chỉ muốn kiểu dáng áp dụng cho một trang `.astro` duy nhất mà không ảnh hưởng đến các phần tử khác, hãy dùng thẻ `<style>`.</Spoiler>
     </p>
 
 </Box>
@@ -138,19 +138,16 @@ Your About page is now styled using *both* the imported `global.css` file *and* 
 
 
 <Box icon="check-list">
-## Checklist
+## Danh sách kiểm tra
 
 <Checklist>
-- [ ] I can add global CSS styles by importing a `.css` file.
+- [ ] Tôi có thể thêm các kiểu dáng CSS toàn cục bằng cách import tệp `.css`.
 </Checklist>
 </Box>
 
-### Resources
-- [Astro syntax vs JSX - comparison](/vi/reference/astro-syntax/#differences-between-astro-and-jsx)
+### Tài nguyên
+- [So sánh cú pháp Astro và JSX](/vi/reference/astro-syntax/#differences-between-astro-and-jsx)
 
-- [Astro `<style>` tag](/vi/guides/styling/#styling-in-astro)
+- [Thẻ `<style>` của Astro](/vi/guides/styling/#styling-in-astro)
 
-- [CSS variables in Astro](/vi/guides/styling/#css-variables)
-
-
-
+- [Biến CSS trong Astro](/vi/guides/styling/#css-variables)

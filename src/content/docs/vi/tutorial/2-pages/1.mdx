@@ -1,9 +1,9 @@
 ---
 type: tutorial
-title: Create your first Astro page
+title: Tạo trang Astro đầu tiên của bạn
 description: |-
-  Tutorial: Build your first Astro blog —
-  Add new pages to your site with navigation links between them
+  Hướng dẫn: Xây dựng blog Astro đầu tiên của bạn —
+  Thêm các trang mới vào trang web của bạn với các liên kết điều hướng giữa chúng
 i18nReady: true
 ---
 import Checklist from '~/components/Checklist.astro';
@@ -12,89 +12,89 @@ import Box from '~/components/tutorial/Box.astro';
 import PreCheck from '~/components/tutorial/PreCheck.astro';
 import { Steps } from '@astrojs/starlight/components';
 
-Now that you know that `.astro` files are responsible for pages on your website, it's time to create one!
+Bây giờ bạn đã biết rằng các tệp `.astro` chịu trách nhiệm cho các trang trên trang web của bạn, đã đến lúc tạo một trang mới!
 
 <PreCheck>
-  - Create two new pages on your website: About and Blog
-  - Add navigation links to your pages
-  - Deploy an updated version of your website to the web
+  - Tạo hai trang mới trên trang web của bạn: About và Blog
+  - Thêm các liên kết điều hướng đến các trang của bạn
+  - Triển khai phiên bản cập nhật của trang web lên internet
 </PreCheck>
 
-## Create a new `.astro` file
+## Tạo một tệp `.astro` mới
 
 <Steps>
-1. In the files pane of your code editor, navigate to the folder `src/pages/` where you will see the existing file `index.astro`
+1. Trong khung tệp của trình soạn thảo mã, điều hướng đến thư mục `src/pages/` nơi bạn sẽ thấy tệp `index.astro` hiện có
 
-2. In that same folder, create a new file named `about.astro`.
+2. Trong cùng thư mục đó, tạo một tệp mới tên là `about.astro`.
 
-3. Copy, or retype the contents of `index.astro` into your new `about.astro` file.
+3. Sao chép hoặc gõ lại nội dung của `index.astro` vào tệp `about.astro` mới của bạn.
 
     :::tip
-    Your editor might show a solid white circle on the tab label for this file. This means that the file is not yet saved. Under the File menu in VS Code, enable "Auto Save" and you should no longer need to save any files manually.
+    Trình soạn thảo của bạn có thể hiển thị một vòng tròn trắng rắn trên nhãn tab của tệp này. Điều này có nghĩa là tệp chưa được lưu. Trong menu File của VS Code, hãy bật "Auto Save" và bạn sẽ không cần phải lưu tệp thủ công nữa.
     :::
 
-4. Add `/about` to the end of your website preview's URL in the address bar and check that you can see a page load there. (e.g. `http://localhost:4321/about`)
+4. Thêm `/about` vào cuối URL xem trước trang web của bạn trên thanh địa chỉ và kiểm tra xem bạn có thể nhìn thấy trang xuất hiện ở đó không. (ví dụ: `http://localhost:4321/about`)
 </Steps>
 
-Right now, your "About" page should look exactly the same as the first page, but we're going to change that!
+Hiện tại, trang "About" của bạn sẽ trông giống hệt như trang đầu tiên, nhưng chúng ta sẽ thay đổi điều đó!
 
-## Edit your page
+## Chỉnh sửa trang của bạn
 
-Edit the HTML content to make this page about you.
+Chỉnh sửa nội dung HTML để làm cho trang này nói về bạn.
 
-To change or add more content to your About page, add more HTML element tags containing content. You can copy and paste the HTML code below between the existing `<body></body>` tags, or create your own.
+Để thay đổi hoặc thêm nội dung vào trang About của bạn, hãy thêm các thẻ phần tử HTML chứa nội dung. Bạn có thể sao chép và dán mã HTML dưới đây vào giữa các thẻ `<body></body>` hiện có, hoặc tự tạo nội dung của riêng mình.
 
 ```astro title="src/pages/about.astro" ins={3-8} del={2}
 <body>
   <h1>My Astro Site</h1>
-  <h1>About Me</h1>
-  <h2>... and my new Astro site!</h2>
+  <h1>Giới thiệu về tôi</h1>
+  <h2>... và trang Astro mới của tôi!</h2>
 
-  <p>I am working through Astro's introductory tutorial. This is the second page on my website, and it's the first one I built myself!</p>
+  <p>Tôi đang làm theo hướng dẫn nhập môn của Astro. Đây là trang thứ hai trên trang web của tôi, và là trang đầu tiên tôi tự xây dựng!</p>
 
-  <p>This site will update as I complete more of the tutorial, so keep checking back and see how my journey is going!</p>
+  <p>Trang web này sẽ được cập nhật khi tôi hoàn thành nhiều phần hơn của hướng dẫn, vì vậy hãy trở lại thường xuyên để xem hành trình của tôi nhé!</p>
 </body>
 ```
 
-Now, visit your `/about` page in your browser tab again, and you should see your updated content.
+Bây giờ, hãy truy cập lại trang `/about` của bạn trên trình duyệt và bạn sẽ thấy nội dung đã được cập nhật.
 
-## Add navigation links
+## Thêm liên kết điều hướng
 
-To make it easier to preview all your pages, add HTML page navigation links before your `<h1>` at the top of both of your pages (`index.astro` and `about.astro`):
+Để dễ dàng xem trước tất cả các trang của bạn, hãy thêm các liên kết điều hướng HTML trước thẻ `<h1>` ở đầu cả hai trang (`index.astro` và `about.astro`):
 
 ```astro title="src/pages/about.astro" ins={1-2}
-<a href="/">Home</a>
-<a href="/about/">About</a>
+<a href="/">Trang chủ</a>
+<a href="/about/">Giới thiệu</a>
 
-<h1>About Me</h1>
-<h2>... and my new Astro site!</h2>
+<h1>Giới thiệu về tôi</h1>
+<h2>... và trang Astro mới của tôi!</h2>
 ```
 
-Check that you can click these links to move back and forth between pages on your site.
+Kiểm tra xem bạn có thể nhấp vào các liên kết này để chuyển qua lại giữa các trang trên trang web của mình chưa.
 
 :::note
-Unlike many frameworks, Astro uses standard HTML `<a>` elements to navigate between pages (also called _routes_), with traditional page refreshes.
+Không giống nhiều framework khác, Astro sử dụng các thẻ HTML `<a>` tiêu chuẩn để điều hướng giữa các trang (còn gọi là _route_), với các lần tải lại trang truyền thống.
 :::
 
 <Box icon="puzzle-piece">
-## Try it yourself - Add a Blog page
+## Tự thực hành - Thêm trang Blog
 
-Add a third page `blog.astro` to your site, following the [same steps as above](#create-a-new-astro-file).
+Hãy thêm một trang thứ ba `blog.astro` vào trang web của bạn, theo [các bước tương tự ở trên](#create-a-new-astro-file).
 
-(Don't forget to add a third navigation link to every page.)
+(Đừng quên thêm liên kết điều hướng thứ ba vào mỗi trang.)
 
 <details>
-<summary>Show me the steps.</summary>
+<summary>Hiển thị các bước.</summary>
 <Steps>
-1. Create a new file at `src/pages/blog.astro`.
-2. Copy the entire contents of `index.astro` and paste them into `blog.astro`.
-3. [Add a third navigation link](#add-navigation-links) to the top of every page:
+1. Tạo một tệp mới tại `src/pages/blog.astro`.
+2. Sao chép toàn bộ nội dung của `index.astro` và dán vào `blog.astro`.
+3. [Thêm liên kết điều hướng thứ ba](#add-navigation-links) vào đầu mỗi trang:
 </Steps>
 
 ```astro title="src/pages/index.astro" ins={4}
 <body>
-  <a href="/">Home</a>
-  <a href="/about/">About</a>
+  <a href="/">Trang chủ</a>
+  <a href="/about/">Giới thiệu</a>
   <a href="/blog/">Blog</a>
 
   <h1>My Astro Site</h1>
@@ -103,62 +103,62 @@ Add a third page `blog.astro` to your site, following the [same steps as above](
 </details>
 </Box>
 
-You should now have a website with three pages that all link to each other. It's time to add some content to the Blog page.
+Bây giờ bạn sẽ có một trang web với ba trang mà tất cả đều liên kết với nhau. Đã đến lúc thêm nội dung cho trang Blog.
 
-Update the page content at `blog.astro` with:
+Cập nhật nội dung trang tại `blog.astro` như sau:
 ```astro astro title="src/pages/blog.astro" ins={7-8} del={6}
 <body>
-  <a href="/">Home</a>
-  <a href="/about/">About</a>
+  <a href="/">Trang chủ</a>
+  <a href="/about/">Giới thiệu</a>
   <a href="/blog/">Blog</a>
 
   <h1>My Astro Site</h1>
-  <h1>My Astro Learning Blog</h1>
-  <p>This is where I will post about my journey learning Astro.</p>
+  <h1>Blog Học Astro của tôi</h1>
+  <p>Đây là nơi tôi sẽ đăng về hành trình học Astro của mình.</p>
 </body>
 ```
 
-Preview your entire site by visiting all three pages in your browser preview and check that:
-- Every page correctly links to all three pages
-- Your two new pages each have their own descriptive heading 
-- Your two new pages each have their own paragraph text
+Xem trước toàn bộ trang web của bạn bằng cách truy cập cả ba trang trên trình duyệt và kiểm tra rằng:
+- Mỗi trang đều liên kết đúng tới cả ba trang
+- Hai trang mới của bạn đều có tiêu đề mô tả riêng
+- Hai trang mới của bạn đều có đoạn văn bản riêng
 
-## Publish your changes to the web
-If you've followed our setup in Unit 1, you can publish your changes to your live website through Netlify.
+## Đăng thay đổi của bạn lên web
+Nếu bạn đã làm theo thiết lập ở Phần 1, bạn có thể đăng các thay đổi của mình lên trang web trực tiếp thông qua Netlify.
 
-When you are happy with the way your preview looks, **commit** your changes to your online repository at GitHub. 
+Khi bạn hài lòng với bản xem trước, **commit** các thay đổi vào kho lưu trữ trực tuyến trên GitHub.
 
 <Steps>
-1. In VS Code, preview the files that have changed since your last commit to GitHub. 
+1. Trong VS Code, xem trước các tệp đã thay đổi kể từ lần commit cuối cùng lên GitHub. 
 
-    - Go to the **Source Control tab** in the left menu. It should have a small "3" displayed.
+    - Chuyển đến **tab Source Control** trong menu bên trái. Số "3" nhỏ sẽ được hiển thị.
 
-    - You should see `index.astro`, `about.astro`, and `blog.astro` listed as files that have changed.
+    - Bạn sẽ thấy `index.astro`, `about.astro`, và `blog.astro` nằm trong danh sách các tệp đã thay đổi.
 
-2. Enter a commit message (e.g. "Added two new pages - about and blog") in the text box, and press <kbd>Ctrl + Enter</kbd> (macOS: <kbd>Cmd ⌘ + Enter</kbd>) to commit the change to your current workspace.
+2. Nhập thông điệp commit (ví dụ: "Thêm hai trang mới - about và blog") vào ô văn bản, và nhấn <kbd>Ctrl + Enter</kbd> (macOS: <kbd>Cmd ⌘ + Enter</kbd>) để commit thay đổi vào workspace hiện tại.
 
-3. Click the button to <kbd>Sync Changes</kbd> to GitHub.
+3. Nhấn nút <kbd>Sync Changes</kbd> để đồng bộ với GitHub.
 
-4. After waiting a few minutes, visit your Netlify URL to verify that your changes are published live.
+4. Chờ vài phút, sau đó truy cập URL Netlify của bạn để xác nhận các thay đổi đã được đăng trực tiếp.
 </Steps>
 
-:::tip[Commit and deploy regularly]
-Follow these steps every time you pause working! Your changes will be updated in your GitHub repository. If you've deployed to a Netlify website, it will be rebuilt and republished.
+:::tip[Commit và triển khai thường xuyên]
+Làm theo các bước này mỗi khi bạn tạm dừng công việc! Các thay đổi sẽ được cập nhật lên kho lưu trữ GitHub của bạn. Nếu đã triển khai lên website Netlify, trang sẽ được xây dựng lại và đăng tải lại.
 :::
 
 
 
 <Box icon="check-list">
-## Checklist
+## Danh sách kiểm tra
 
 <Checklist>
-- [ ] I can create a new page for my website and link to it from an existing page.
-- [ ] I can commit my changes back to GitHub and update my live site on Netlify.
+- [ ] Tôi có thể tạo một trang mới cho trang web của mình và liên kết tới nó từ một trang có sẵn.
+- [ ] Tôi có thể commit các thay đổi của mình lên GitHub và cập nhật trang trực tiếp trên Netlify.
 </Checklist>
 </Box>
 
-### Resources
+### Tài nguyên
 
-- [File-based Routing in Astro](/vi/basics/astro-pages/#file-based-routing)
+- [Định tuyến dựa trên tệp trong Astro](/vi/basics/astro-pages/#file-based-routing)
 
-- [Astro page HTML](/vi/basics/astro-pages/#astro-pages)
+- [HTML trang Astro](/vi/basics/astro-pages/#astro-pages)

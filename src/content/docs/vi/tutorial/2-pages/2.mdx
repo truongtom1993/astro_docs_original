@@ -1,9 +1,9 @@
 ---
 type: tutorial
-title: Write your first Markdown blog post
+title: Viết bài blog Markdown đầu tiên của bạn
 description: |-
-  Tutorial: Build your first Astro blog —
-  Add Markdown pages to your site
+  Hướng dẫn: Xây dựng blog Astro đầu tiên của bạn —
+  Thêm trang Markdown vào trang web của bạn
 i18nReady: true
 ---
 import Checklist from '~/components/Checklist.astro';
@@ -15,76 +15,76 @@ import PreCheck from '~/components/tutorial/PreCheck.astro';
 import { Steps } from '@astrojs/starlight/components';
 import Badge from "~/components/Badge.astro"
 
-Now that you have built pages using `.astro` files, it's time to make some blog posts using `.md` files!
+Bây giờ bạn đã xây dựng các trang sử dụng file `.astro`, đã đến lúc tạo các bài viết blog bằng file `.md`!
 
 <PreCheck>
-  - Make a new folder and create a new post
-  - Write some Markdown content
-  - Link to your blog posts on your Blog page
+  - Tạo một thư mục mới và tạo một bài viết mới
+  - Viết một số nội dung Markdown
+  - Liên kết đến các bài blog của bạn trên trang Blog
 </PreCheck>
 
-## Create your first `.md` file
+## Tạo file `.md` đầu tiên của bạn
 
 <Steps>
-1. Create a new directory at `src/pages/posts/`. 
+1. Tạo một thư mục mới tại `src/pages/posts/`.
 
-2. Add a new (empty) file `post-1.md` inside your new `/posts/` folder.
+2. Thêm một file mới (để trống) `post-1.md` vào thư mục `/posts/` vừa tạo.
 
-3. Look for this page in your browser preview by adding `/posts/post-1` to the end of your existing preview URL. (e.g. `http://localhost:4321/posts/post-1`)
+3. Xem trang này trong trình duyệt bằng cách thêm `/posts/post-1` vào cuối URL xem trước hiện tại của bạn. (ví dụ: `http://localhost:4321/posts/post-1`)
 
-4. Change the browser preview URL to view `/posts/post-2` instead. (This is a page you have not yet created.) 
+4. Thay đổi URL xem trước của trình duyệt để xem `/posts/post-2` thay vào đó. (Đây là trang bạn chưa tạo.)
 
-    Note the different output when previewing an "empty" page, and one that doesn't exist. This will help you troubleshoot in the future.
+    Lưu ý sự khác biệt khi xem trước một trang “trống” và một trang không tồn tại. Điều này sẽ giúp bạn xử lý lỗi trong tương lai.
 </Steps>
 
-## Write Markdown content
+## Viết nội dung Markdown
 
 <Steps>
-1. Copy or type the following code into `post-1.md`
+1. Sao chép hoặc gõ đoạn mã sau vào `post-1.md`
 
     ```markdown title="src/pages/posts/post-1.md"
     ---
-    title: 'My First Blog Post'
+    title: 'Bài viết blog đầu tiên của tôi'
     pubDate: 2022-07-01
-    description: 'This is the first post of my new Astro blog.'
-    author: 'Astro Learner'
+    description: 'Đây là bài viết đầu tiên của blog Astro mới của tôi.'
+    author: 'Người học Astro'
     image:
         url: 'https://docs.astro.build/assets/rose.webp' 
-        alt: 'The Astro logo on a dark background with a pink glow.'
+        alt: 'Logo Astro trên nền tối với ánh sáng hồng.'
     tags: ["astro", "blogging", "learning in public"]
     ---
-    # My First Blog Post
+    # Bài viết blog đầu tiên của tôi
 
-    Published on: 2022-07-01
+    Đăng ngày: 2022-07-01
 
-    Welcome to my _new blog_ about learning Astro! Here, I will share my learning journey as I build a new website.
+    Chào mừng bạn đến với _blog mới_ của tôi về việc học Astro! Tại đây, tôi sẽ chia sẻ hành trình học tập của mình khi xây dựng một trang web mới.
 
-    ## What I've accomplished
+    ## Những gì tôi đã đạt được
 
-    1. **Installing Astro**: First, I created a new Astro project and set up my online accounts.
+    1. **Cài đặt Astro**: Đầu tiên, tôi đã tạo một dự án Astro mới và thiết lập các tài khoản trực tuyến.
 
-    2. **Making Pages**: I then learned how to make pages by creating new `.astro` files and placing them in the `src/pages/` folder.
+    2. **Tạo trang**: Sau đó, tôi học cách tạo trang bằng cách tạo các file `.astro` mới và đặt chúng trong thư mục `src/pages/`.
 
-    3. **Making Blog Posts**: This is my first blog post! I now have Astro pages and Markdown posts!
+    3. **Tạo bài blog**: Đây là bài blog đầu tiên của tôi! Giờ tôi đã có các trang Astro và bài viết Markdown!
 
-    ## What's next
+    ## Tiếp theo là gì
 
-    I will finish the Astro tutorial, and then keep adding more posts. Watch this space for more to come.
+    Tôi sẽ hoàn thành hướng dẫn Astro, sau đó tiếp tục thêm nhiều bài viết hơn. Hãy theo dõi để xem thêm nhé.
     ```
 
-2. Check your browser preview again at `http://localhost:4321/posts/post-1`. You should now see content on this page. It may not yet be properly formatted, but don't worry, you will update this later in the tutorial!
+2. Kiểm tra lại xem trước trình duyệt của bạn tại `http://localhost:4321/posts/post-1`. Bây giờ bạn sẽ thấy nội dung trên trang này. Có thể định dạng chưa đúng, nhưng đừng lo, bạn sẽ cập nhật nó sau trong hướng dẫn!
 
-3. Use your browser's Dev Tools to inspect this page. Notice that although you have not typed any HTML elements, your Markdown has been converted to HTML. You can see elements such as headings, paragraphs, and list items.
+3. Sử dụng Dev Tools của trình duyệt để kiểm tra trang này. Chú ý rằng mặc dù bạn không gõ bất kỳ phần tử HTML nào, nhưng Markdown của bạn đã được chuyển thành HTML. Bạn có thể thấy các phần tử như tiêu đề, đoạn văn và các mục danh sách.
 </Steps>
 
 :::note
-The information at the top of the file, inside the code fences, is called frontmatter. This data—including tags and a post image—is information *about* your post that Astro can use. It does not appear on the page automatically, but you will access it later in the tutorial to enhance your site. 
+Thông tin ở đầu file, bên trong dấu code, được gọi là frontmatter. Dữ liệu này — bao gồm các thẻ và hình ảnh của bài viết — là thông tin *về* bài viết mà Astro có thể sử dụng. Nó sẽ không tự động xuất hiện trên trang, nhưng bạn sẽ truy cập nó sau trong hướng dẫn này để nâng cao trang web của mình.
 :::
 
-## Link to your posts
+## Liên kết đến các bài viết của bạn
 
 <Steps>
-1. Link to your first post with an anchor tag in `src/pages/blog.astro`:
+1. Liên kết đến bài viết đầu tiên bằng thẻ anchor trong `src/pages/blog.astro`:
     ```astro title="src/pages/blog.astro" ins={16-18}
     ---
     ---
@@ -95,50 +95,50 @@ The information at the top of the file, inside the code fences, is called frontm
         <title>Astro</title>
       </head>
       <body>
-        <a href="/">Home</a>
-        <a href="/about/">About</a>
+        <a href="/">Trang chủ</a>
+        <a href="/about/">Giới thiệu</a>
         <a href="/blog/">Blog</a>
 
-        <h1>My Astro Learning Blog</h1>
-        <p>This is where I will post about my journey learning Astro.</p>
+        <h1>Blog Học Astro của tôi</h1>
+        <p>Đây là nơi tôi sẽ đăng về hành trình học Astro.</p>
         <ul>
-          <li><a href="/posts/post-1/">Post 1</a></li>
+          <li><a href="/posts/post-1/">Bài 1</a></li>
         </ul>
       </body>
     </html>
     ```
 
-2. Now, add two more files in `src/pages/posts/`: `post-2.md` and `post-3.md`. Here is some sample code you can copy and paste into your files, or, you can create your own!
+2. Bây giờ, thêm hai file nữa vào `src/pages/posts/`: `post-2.md` và `post-3.md`. Đây là một số mã mẫu bạn có thể sao chép và dán vào file của mình, hoặc tự tạo nội dung!
 
     ```md title="src/pages/posts/post-2.md"
     ---
-    title: My Second Blog Post
-    author: Astro Learner
-    description: "After learning some Astro, I couldn't stop!"
+    title: Bài viết blog thứ hai của tôi
+    author: Người học Astro
+    description: "Sau khi học một chút Astro, tôi không thể dừng lại!"
     image: 
         url: "https://docs.astro.build/assets/arc.webp"
-        alt: "The Astro logo on a dark background with a purple gradient arc."
+        alt: "Logo Astro trên nền tối với vòm tím."
     pubDate: 2022-07-08
     tags: ["astro", "blogging", "learning in public", "successes"]
     ---
-    After a successful first week learning Astro, I decided to try some more. I wrote and imported a small component from memory!
+    Sau một tuần đầu học Astro thành công, tôi quyết định thử thêm. Tôi đã viết và nhập một component nhỏ từ trí nhớ!
     ```
 
     ```md title="src/pages/posts/post-3.md"
     ---
-    title: My Third Blog Post
-    author: Astro Learner
-    description: "I had some challenges, but asking in the community really helped!"
+    title: Bài viết blog thứ ba của tôi
+    author: Người học Astro
+    description: "Tôi đã gặp một số thử thách, nhưng hỏi cộng đồng thực sự rất hữu ích!"
     image: 
         url: "https://docs.astro.build/assets/rays.webp"
-        alt: "The Astro logo on a dark background with rainbow rays."
+        alt: "Logo Astro trên nền tối với các tia cầu vồng."
     pubDate: 2022-07-15
     tags: ["astro", "learning in public", "setbacks", "community"]
     ---
-    It wasn't always smooth sailing, but I'm enjoying building with Astro. And, the [Discord community](https://astro.build/chat) is really friendly and helpful!
+    Không phải lúc nào cũng suôn sẻ, nhưng tôi đang rất thích xây dựng với Astro. Và, [cộng đồng Discord](https://astro.build/chat) thực sự thân thiện và hữu ích!
     ```
 
-3. Add links to these new posts:
+3. Thêm các liên kết đến những bài mới này:
 
     ```astro title="src/pages/blog.astro" ins={18-19}
     ---
@@ -150,31 +150,31 @@ The information at the top of the file, inside the code fences, is called frontm
         <title>Astro</title>
       </head>
       <body>
-        <a href="/">Home</a>
-        <a href="/about/">About</a>
+        <a href="/">Trang chủ</a>
+        <a href="/about/">Giới thiệu</a>
         <a href="/blog/">Blog</a>
 
-        <h1>My Astro Learning Blog</h1>
-        <p>This is where I will post about my journey learning Astro.</p>
+        <h1>Blog Học Astro của tôi</h1>
+        <p>Đây là nơi tôi sẽ đăng về hành trình học Astro.</p>
         <ul>
-          <li><a href="/posts/post-1/">Post 1</a></li>
-          <li><a href="/posts/post-2/">Post 2</a></li>
-          <li><a href="/posts/post-3/">Post 3</a></li>
+          <li><a href="/posts/post-1/">Bài 1</a></li>
+          <li><a href="/posts/post-2/">Bài 2</a></li>
+          <li><a href="/posts/post-3/">Bài 3</a></li>
         </ul>
       </body>
     </html>
     ```
 
-4. Check your browser preview and make sure that:
+4. Kiểm tra xem trước trình duyệt của bạn và đảm bảo rằng:
 
-    All your links for Post 1, Post 2, and Post 3 lead to a working page on your site. (If you find a mistake, check your links on `blog.astro` or your Markdown file names.)
+    Tất cả các liên kết tới Bài 1, Bài 2 và Bài 3 đều dẫn đến một trang hoạt động trên trang web của bạn. (Nếu bạn thấy lỗi, hãy kiểm tra lại liên kết trong `blog.astro` hoặc tên file Markdown của bạn.)
 </Steps>
 
 
 <Box icon="question-mark">
-### Test your knowledge
+### Kiểm tra kiến thức của bạn
 
-1. Content in a Markdown (`.md`) file is converted to:
+1. Nội dung trong file Markdown (`.md`) sẽ được chuyển thành:
     <MultipleChoice>
         <Option isCorrect>HTML</Option>
         <Option>CSS</Option>
@@ -183,19 +183,19 @@ The information at the top of the file, inside the code fences, is called frontm
 </Box>
 
 <Box icon="check-list">
-## Checklist
+## Danh sách kiểm tra
 
 <Checklist>
-- [ ] I can create a new folder within `src/pages/` for my blog posts.
-- [ ] I can create a new Markdown (`.md`) blog post file.
-- [ ] I understand that Markdown is another language that, like Astro, produces HTML in my browser.
+- [ ] Tôi có thể tạo một thư mục mới trong `src/pages/` cho các bài blog.
+- [ ] Tôi có thể tạo một file blog mới dạng Markdown (`.md`).
+- [ ] Tôi hiểu rằng Markdown là một ngôn ngữ khác, giống như Astro, sẽ sinh ra HTML trên trình duyệt của tôi.
 </Checklist>
 </Box>
 
-### Resources
+### Tài nguyên
 
-- [Markdown Cheat Sheet from The Markdown Guide](https://www.markdownguide.org/cheat-sheet/)  <Badge class="neutral-badge" text="external" />
+- [Bảng cheat Markdown từ The Markdown Guide](https://www.markdownguide.org/cheat-sheet/)  <Badge class="neutral-badge" text="external" />
 
-- [What are browser developer tools? MDN](https://developer.mozilla.org/en-US/docs/Learn/Common_questions/What_are_browser_developer_tools)  <Badge class="neutral-badge" text="external" />
+- [Công cụ phát triển trình duyệt là gì? MDN](https://developer.mozilla.org/en-US/docs/Learn/Common_questions/What_are_browser_developer_tools)  <Badge class="neutral-badge" text="external" />
 
 - [YAML frontmatter](https://assemble.io/docs/YAML-front-matter.html)  <Badge class="neutral-badge" text="external" />

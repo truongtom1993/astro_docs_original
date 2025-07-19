@@ -1,9 +1,9 @@
 ---
 type: tutorial
-title: Add dynamic content about you
+title: Thêm nội dung động về bạn
 description: |-
-  Tutorial: Build your first Astro blog —
-  Use variables and conditional rendering on your Astro pages
+  Hướng dẫn: Xây dựng blog Astro đầu tiên của bạn —
+  Sử dụng biến và điều kiện hiển thị trên các trang Astro của bạn
 i18nReady: true
 ---
 import Checklist from '~/components/Checklist.astro';
@@ -15,19 +15,19 @@ import Option from '~/components/tutorial/Option.astro';
 import PreCheck from '~/components/tutorial/PreCheck.astro';
 import { Steps } from '@astrojs/starlight/components';
 
-Now that you have a multi-page website with HTML content, it's time to add some dynamic HTML!
+Bây giờ bạn đã có một website nhiều trang với nội dung HTML, đã đến lúc thêm một chút HTML động!
 
 <PreCheck>
-  - Define your page title in frontmatter, and use it in your HTML
-  - Conditionally display HTML elements
-  - Add some content about you
+  - Định nghĩa tiêu đề trang trong frontmatter, và sử dụng nó trong HTML của bạn
+  - Hiển thị điều kiện các phần tử HTML
+  - Thêm một số nội dung về bản thân bạn
 </PreCheck>
 
-Any HTML file is valid Astro language. But, you can do more with Astro than just regular HTML!
+Bất kỳ tệp HTML nào cũng hợp lệ với ngôn ngữ Astro. Tuy nhiên, bạn có thể làm được nhiều hơn với Astro so với chỉ HTML thông thường!
 
-## Define and use a variable
+## Định nghĩa và sử dụng biến
 
-Open `about.astro`, which should look like this:
+Mở `about.astro`, tệp của bạn sẽ trông như sau:
 
 ```astro title="src/pages/about.astro"
 ---
@@ -53,7 +53,7 @@ Open `about.astro`, which should look like this:
 ```
 
 <Steps>
-1. Add the following line of JavaScript in the frontmatter script, between the **code fences**:
+1. Thêm dòng JavaScript sau vào phần frontmatter script, giữa **cặp dấu gạch**:
 
     ```astro title="src/pages/about.astro" ins={2}
     ---
@@ -61,7 +61,7 @@ Open `about.astro`, which should look like this:
     ---
     ```
 
-2. Replace both the static "Astro" title and "About Me" heading in your HTML with the dynamic variable `{pageTitle}`.
+2. Thay thế cả tiêu đề tĩnh "Astro" và tiêu đề "About Me" trong HTML của bạn bằng biến động `{pageTitle}`.
 
     ```astro title="src/pages/about.astro" del={5,12} ins={6,13}
     <html lang="en">
@@ -86,26 +86,26 @@ Open `about.astro`, which should look like this:
     </html>
     ```
 
-3. Refresh the live preview of your `/about` page.
-  
-    Your page text should look the same, and your page title displayed in your browser tab should now read "About Me" instead of "Astro." 
+3. Làm mới bản xem trước trực tiếp của trang `/about`.
 
-    Instead of typing text directly into HTML tags, you just **defined and then used a variable** in the two sections of your `.astro` file, respectively.
+    Văn bản trên trang của bạn sẽ trông giống nhau, và tiêu đề trang hiển thị trên tab trình duyệt bây giờ sẽ là "About Me" thay vì "Astro".
 
-4. Use the same pattern to create a `pageTitle` value to use in `index.astro` ("Home Page") and `blog.astro` ("My Astro Learning Blog"). Update the HTML of these pages in both places so that your page title matches the heading displayed on each page.
+    Thay vì nhập trực tiếp văn bản vào thẻ HTML, bạn vừa **định nghĩa và sử dụng một biến** ở hai phần của tệp `.astro` của mình.
+
+4. Dùng cùng một cách này để tạo giá trị `pageTitle` trong `index.astro` ("Home Page") và `blog.astro` ("My Astro Learning Blog"). Cập nhật HTML của những trang này ở cả hai chỗ để tiêu đề trang khớp với tiêu đề hiển thị trên từng trang.
 </Steps>
 
-:::note[Takeaways]
-1. **Define** variables in your Astro script using JavaScript or TypeScript expressions.
-2. **Use** these variables in your Astro template inside curly braces `{ }` to tell Astro you're using some JavaScript.
+:::note[Điểm chính]
+1. **Định nghĩa** biến trong script của Astro bằng các biểu thức JavaScript hoặc TypeScript.
+2. **Sử dụng** các biến này trong template Astro bằng dấu ngoặc nhọn `{ }` để báo cho Astro bạn đang dùng JavaScript.
 :::
 
-## Write JavaScript expressions in Astro
+## Viết biểu thức JavaScript trong Astro
 
 <Steps>
-1. Add the following JavaScript to your frontmatter, between the **code fences**:
+1. Thêm đoạn JavaScript sau vào frontmatter, giữa **cặp dấu gạch**:
 
-      (You can customize the code for yourself, but this tutorial will use the following example.)
+      (Bạn có thể tự tùy chỉnh đoạn code này, nhưng ví dụ trong hướng dẫn sẽ dùng đoạn sau.)
 
     ```astro title="src/pages/about.astro" ins={4-9, 11}
     ---
@@ -122,35 +122,35 @@ Open `about.astro`, which should look like this:
     ---
     ```
 
-2. Then, add the following code to your HTML template, below your existing content:
+2. Sau đó, thêm đoạn mã sau vào template HTML bên dưới nội dung hiện tại:
 
     ```astro title="src/pages/about.astro"
-    <p>Here are a few facts about me:</p>
+    <p>Một vài điều về tôi:</p>
     <ul>
-      <li>My name is {identity.firstName}.</li>
-      <li>I live in {identity.country} and I work as a {identity.occupation}.</li>
+      <li>Tôi tên là {identity.firstName}.</li>
+      <li>Tôi sống ở {identity.country} và làm việc với vai trò {identity.occupation}.</li>
       {identity.hobbies.length >= 2 && 
-        <li>Two of my hobbies are: {identity.hobbies[0]} and {identity.hobbies[1]}</li>
+        <li>Hai sở thích của tôi là: {identity.hobbies[0]} và {identity.hobbies[1]}</li>
       } 
     </ul>
-    <p>My skills are:</p>
+    <p>Kỹ năng của tôi gồm có:</p>
     <ul>
       {skills.map((skill) => <li>{skill}</li>)}
     </ul>
     ```
 </Steps>
 
-:::note[Takeaways]
-1. Writing an Astro template is very much like **writing HTML**, but you can include JavaScript expressions within it.
-2. The Astro frontmatter script contains only JavaScript. 
-3. You can use all modern JavaScript **logical operators**, **expressions** and **functions** in either section of your `.astro` file. But, curly braces are necessary (only) in the HTML template body.
+:::note[Điểm chính]
+1. Viết template Astro rất giống **viết HTML**, nhưng bạn có thể nhúng các biểu thức JavaScript vào trong đó.
+2. Script frontmatter của Astro chỉ chứa JavaScript.
+3. Bạn có thể dùng tất cả **toán tử logic**, **biểu thức** và **hàm** JavaScript hiện đại trong bất cứ phần nào của tệp `.astro`. Tuy nhiên, dấu ngoặc nhọn là bắt buộc (chỉ) trong phần HTML template.
 :::
 
 <Box icon="question-mark">
 
-### Test your knowledge
+### Kiểm tra kiến thức
 
-1. A `.astro` file's frontmatter is written in:
+1. Phần frontmatter của tệp `.astro` được viết bằng:
 
     <MultipleChoice>
         <Option>HTML</Option>
@@ -158,34 +158,34 @@ Open `about.astro`, which should look like this:
         <Option isCorrect>JavaScript</Option>
     </MultipleChoice>
 
-2. In addition to HTML, Astro syntax allows you to include:
+2. Ngoài HTML, cú pháp Astro còn cho phép bạn sử dụng:
 
     <MultipleChoice>
-        <Option isCorrect>JavaScript logical operators, expressions and functions</Option>
+        <Option isCorrect>Các toán tử logic, biểu thức và hàm JavaScript</Option>
         <Option>YAML</Option>
         <Option>Markdown</Option>
     </MultipleChoice>
 
-3. When do you need to write your JavaScript inside curly braces?
+3. Khi nào bạn cần viết JavaScript trong dấu ngoặc nhọn?
     <MultipleChoice>
         <Option>
-          When you're not sure whether it's correct.
+          Khi bạn không chắc là đúng hay không.
         </Option>
         <Option isCorrect>
-          When inside the HTML template section of an Astro component.
+          Khi ở trong phần HTML template của component Astro.
           </Option>
         <Option>
-          Between the code fences in an Astro component.
+          Giữa các dấu gạch trong component Astro.
         </Option>
     </MultipleChoice>
 </Box>
 
-## Conditionally render elements
+## Hiển thị điều kiện các phần tử
 
-You can also use your script variables to choose **whether or not** to render individual elements of your HTML `<body>` content.
+Bạn cũng có thể dùng biến script để quyết định **có hay không** hiển thị từng phần tử của nội dung `<body>` HTML.
 
 <Steps>
-1. Add the following lines to your frontmatter script to **define variables**:
+1. Thêm các dòng sau vào frontmatter script để **định nghĩa biến**:
 
     ```astro title="src/pages/about.astro" ins={13-15}
     ---
@@ -206,32 +206,32 @@ You can also use your script variables to choose **whether or not** to render in
     ---
     ```
 
-2. Add the following lines below your existing paragraphs.
+2. Thêm các dòng sau bên dưới các đoạn văn hiện có.
 
-    Then, check the live preview in your browser tab to see what is displayed on the page:
+    Sau đó, xem bản xem trước trực tiếp trên trình duyệt để xem nội dung được hiển thị trên trang:
 
     ```astro title="src/pages/about.astro" /:|&&/ "?"
-    {happy && <p>I am happy to be learning Astro!</p>}
+    {happy && <p>Tôi rất vui vì được học Astro!</p>}
 
-    {finished && <p>I finished this tutorial!</p>}
+    {finished && <p>Tôi đã hoàn thành hướng dẫn này!</p>}
 
-    {goal === 3 ? <p>My goal is to finish in 3 days.</p> : <p>My goal is not 3 days.</p>}
+    {goal === 3 ? <p>Mục tiêu của tôi là hoàn thành trong 3 ngày.</p> : <p>Mục tiêu của tôi không phải là 3 ngày.</p>}
     ```
 
-3. Commit your changes to GitHub before moving on. Do this any time you want to save your work and update your live website.
+3. Commit thay đổi của bạn lên GitHub trước khi tiếp tục. Hãy làm điều này bất cứ khi nào bạn muốn lưu lại công việc và cập nhật website trực tuyến của mình.
 </Steps>
 
 :::tip
-Astro's templating syntax is similar to JSX syntax. If you're ever wondering how to use your script in your HTML, then searching for how it is done in JSX is probably a good starting point!
+Cú pháp template của Astro rất giống với cú pháp JSX. Nếu bạn từng băn khoăn về cách sử dụng script trong HTML, hãy thử tìm cách thực hiện trong JSX!
 :::
 
 
 
 <Box icon="question-mark">
 
-### Analyze the Pattern
+### Phân tích mẫu
 
-Given the following `.astro` script:
+Với đoạn script `.astro` sau:
 
 ```astro title="src/pages/about.astro"
 ---
@@ -243,7 +243,7 @@ const student = false;
 ```
 
 
-For each Astro template expression, can you predict the HTML (if any!) that will be sent to the browser? Click to reveal if you're right!
+Với mỗi biểu thức template Astro sau, bạn đoán xem HTML (nếu có!) nào sẽ được gửi đến trình duyệt? Nhấp để kiểm tra đáp án!
 
 1.  `<p>{operatingSystem}</p>`
 
@@ -251,36 +251,36 @@ For each Astro template expression, can you predict the HTML (if any!) that will
       <Spoiler>`<p>Linux</p>`</Spoiler>
     </p>
 
-2.  `{student && <p>I am still in school.</p>}`
+2.  `{student && <p>Tôi vẫn còn đi học.</p>}`
 
     <p>
-      <Spoiler>Nothing will display because `student` evaluates to false.</Spoiler>
+      <Spoiler>Không có gì hiển thị vì `student` là false.</Spoiler>
     </p>
 
-3.  `<p>I have {quantity + 8} pairs of {footwear}</p>`
+3.  `<p>Tôi có {quantity + 8} đôi {footwear}</p>`
 
     <p>
-      <Spoiler>`<p>I have 11 pairs of boots</p>`</Spoiler>
+      <Spoiler>`<p>Tôi có 11 đôi boots</p>`</Spoiler>
     </p>
 
-4.  `{operatingSystem === "MacOS" ? <p>I am using a Mac.</p> : <p>I am not using a Mac.</p>}`
+4.  `{operatingSystem === "MacOS" ? <p>Tôi đang dùng Mac.</p> : <p>Tôi không dùng Mac.</p>}`
 
     <p>
-      <Spoiler>`<p>I am not using a Mac.</p>`</Spoiler>
+      <Spoiler>`<p>Tôi không dùng Mac.</p>`</Spoiler>
     </p>
 </Box>
 
 
 <Box icon="check-list">
-## Checklist
+## Danh sách kiểm tra
 
 <Checklist>
-- [ ] I can define values in and use values in `.astro` files.
-- [ ] I can conditionally render HTML elements.
+- [ ] Tôi có thể định nghĩa và sử dụng giá trị trong các tệp `.astro`.
+- [ ] Tôi có thể hiển thị điều kiện các phần tử HTML.
 </Checklist>
 </Box>
 
 
-### Resources
+### Tài nguyên
 
-- [Dynamic expressions in Astro](/vi/reference/astro-syntax/#jsx-like-expressions)
+- [Biểu thức động trong Astro](/vi/reference/astro-syntax/#jsx-like-expressions)
