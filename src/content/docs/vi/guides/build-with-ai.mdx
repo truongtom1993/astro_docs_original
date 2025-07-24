@@ -9,83 +9,137 @@ i18nReady: true
 description: Tài nguyên và mẹo để xây dựng trang Astro với sự hỗ trợ của AI
 ---
 
-import { Steps, LinkButton, Card } from '@astrojs/starlight/components';
+import { Steps, LinkButton, Card, Tabs, TabItem } from '@astrojs/starlight/components';
 
-Các trình soạn thảo được hỗ trợ bởi AI và công cụ lập trình tự động thường có kiến thức tốt về các API và khái niệm cốt lõi của Astro. Tuy nhiên, một số công cụ có thể sử dụng API cũ và có thể không biết về các tính năng mới hoặc những thay đổi gần đây của framework.
+Các trình soạn thảo có AI và công cụ lập trình đại lý thường có kiến thức tốt về các API và khái niệm cốt lõi của Astro. Tuy nhiên, một số có thể sử dụng các API cũ và có thể chưa biết các tính năng mới hoặc những thay đổi gần đây của framework.
 
-Hướng dẫn này trình bày cách nâng cao kiến thức về Astro cho các công cụ AI với dữ liệu cập nhật và cung cấp các phương pháp tốt nhất khi xây dựng trang Astro với sự hỗ trợ của AI.
+Hướng dẫn này trình bày cách bổ sung kiến thức Astro mới nhất cho công cụ AI và cung cấp các thực tiễn tốt nhất khi xây dựng trang Astro với sự hỗ trợ của AI.
 
-## Tệp ngữ cảnh
+## Tập tin ngữ cảnh
 
-Astro cung cấp các tệp [`llms.txt`](https://docs.astro.build/llms.txt) và [`llms-full.txt`](https://docs.astro.build/llms-full.txt) chứa toàn bộ nội dung tài liệu ở định dạng tối ưu cho AI sử dụng. Đây là các tệp tĩnh của tài liệu Astro Docs ở dạng Markdown đơn giản. Một số công cụ AI có thể tự động phát hiện các tệp này nếu bạn cung cấp `https://docs.astro.build` làm nguồn tài liệu.
+Astro cung cấp các tập tin [`llms.txt`](https://docs.astro.build/llms.txt) và [`llms-full.txt`](https://docs.astro.build/llms-full.txt) chứa toàn bộ nội dung tài liệu ở định dạng tối ưu cho AI. Đây là các tập tin tĩnh của tài liệu Astro Docs dưới dạng Markdown gọn nhẹ. Một số công cụ AI có thể tự động phát hiện các tập tin này nếu bạn cung cấp `https://docs.astro.build` làm nguồn tài liệu.
 
-Mặc dù các tệp này cung cấp phiên bản tài liệu Astro tối giản, dễ phân tích cú pháp, nhưng chúng là các tệp lớn sẽ sử dụng nhiều token nếu dùng trực tiếp trong ngữ cảnh và cần được cập nhật thường xuyên để đảm bảo mới nhất. Chúng phù hợp nhất là phương án dự phòng khi công cụ AI không thể truy cập tài liệu mới nhất qua các cách khác. [Máy chủ MCP](#astro-docs-mcp-server) cung cấp quyền truy cập hiệu quả hơn tới toàn bộ tài liệu với khả năng tìm kiếm thời gian thực, là lựa chọn ưu tiên khi khả dụng.
+Mặc dù các tập tin này cung cấp phiên bản tài liệu Astro tối giản, dễ phân tích cú pháp, chúng khá lớn, sẽ tiêu tốn nhiều tokens nếu dùng trực tiếp trong ngữ cảnh và cần cập nhật thường xuyên để đảm bảo mới nhất. Chúng nên được sử dụng như phương án dự phòng khi công cụ AI không thể truy cập tài liệu mới nhất bằng cách khác. [Máy chủ MCP](#astro-docs-mcp-server) cung cấp cách truy cập tài liệu đầy đủ hiệu quả hơn với khả năng tìm kiếm thời gian thực, là lựa chọn ưu tiên khi khả dụng.
 
 ## Máy chủ Astro Docs MCP
 
-Bạn có thể đảm bảo công cụ AI của mình có kiến thức Astro cập nhật qua máy chủ Astro Docs MCP (Model Context Protocol). Điều này cung cấp quyền truy cập thời gian thực vào tài liệu mới nhất, giúp công cụ AI tránh các khuyến nghị lỗi thời và đảm bảo hiểu đúng các phương pháp tốt nhất hiện tại.
+Bạn có thể đảm bảo công cụ AI của mình luôn có kiến thức Astro mới nhất thông qua máy chủ Astro Docs MCP (Model Context Protocol). Máy chủ này cung cấp quyền truy cập thời gian thực vào tài liệu mới nhất, giúp công cụ AI tránh các khuyến nghị lỗi thời và đảm bảo hiểu các thực tiễn tốt nhất hiện tại.
 
 :::tip[Model Context Protocol là gì?]
-[Model Context Protocol](https://modelcontextprotocol.io/) (MCP) là một phương thức tiêu chuẩn để các công cụ AI truy cập công cụ và nguồn dữ liệu bên ngoài.
+[Model Context Protocol](https://modelcontextprotocol.io/) (MCP) là phương thức tiêu chuẩn để công cụ AI truy cập các công cụ bên ngoài và nguồn dữ liệu.
 :::
 
-Khác với các mô hình AI được huấn luyện trên dữ liệu tĩnh, máy chủ MCP cung cấp quyền truy cập tới tài liệu Astro mới nhất. Máy chủ này miễn phí, mã nguồn mở và chạy từ xa nên không cần cài đặt cục bộ.
+Khác với các mô hình AI được huấn luyện trên dữ liệu tĩnh, máy chủ MCP cho phép truy cập tài liệu Astro mới nhất. Máy chủ này miễn phí, mã nguồn mở và chạy từ xa, không cần cài đặt trên máy.
 
-Máy chủ Astro Docs MCP sử dụng API [kapa.ai](https://www.kapa.ai/) để duy trì chỉ mục cập nhật tài liệu Astro.
+Máy chủ Astro Docs MCP sử dụng API [kapa.ai](https://www.kapa.ai/) để duy trì chỉ mục cập nhật liên tục của tài liệu Astro.
 
 ### Thông tin máy chủ
 
 - **Tên**: Astro Docs
 - **URL**: `https://mcp.docs.astro.build/mcp`
-- **Giao thức truyền tải**: Streamable HTTP
-
-Máy chủ này sử dụng giao thức streamable HTTP, có thể không tương thích với tất cả công cụ. Vui lòng kiểm tra tài liệu của công cụ để biết hỗ trợ MCP.
+- **Kết nối**: Streamable HTTP
 
 ### Cài đặt
 
-Quy trình cài đặt khác nhau tùy vào công cụ phát triển AI bạn sử dụng. Một số công cụ có thể gọi máy chủ MCP là connector, adapter, extension hoặc plugin.
+Quy trình cài đặt sẽ khác nhau tùy theo công cụ phát triển AI bạn sử dụng. Một số công cụ gọi máy chủ MCP là connector, adapter, extension hoặc plugin.
 
-#### Claude Code
+#### Cài đặt thủ công
 
-[Claude Code](https://docs.anthropic.com/en/docs/claude-code/overview) là công cụ lập trình tự động chạy trên dòng lệnh. Bật máy chủ Astro Docs MCP sẽ cho phép truy cập tài liệu mới nhất khi sinh mã Astro.
+Nhiều công cụ hỗ trợ cấu hình JSON chung cho máy chủ MCP. Nếu không có hướng dẫn riêng cho công cụ của bạn, bạn có thể thêm máy chủ Astro Docs MCP bằng cách thêm cấu hình sau vào phần cài đặt MCP của công cụ:
 
-Cài đặt bằng lệnh terminal:
+<Tabs>
+  <TabItem label="Streamable HTTP">
+    ```json title="mcp.json" {3-6}
+    {
+      "mcpServers": {
+        "Astro docs": {
+          "type": "http",
+          "url": "https://mcp.docs.astro.build/mcp"
+        }
+      }
+    }
+    ```
+  </TabItem>
+  <TabItem label="Local Proxy">
+    ```json title="mcp.json" {3-7}
+    {
+      "mcpServers": {
+        "Astro docs": {
+          "type": "stdio",
+          "command": "npx",
+          "args": ["-y", "mcp-remote", "https://mcp.docs.astro.build/mcp"]
+        }
+      }
+    }
+    ```
+  </TabItem>
+</Tabs>
+#### Claude Code CLI
+
+[Claude Code](https://docs.anthropic.com/en/docs/claude-code/overview) là công cụ lập trình đại lý chạy trên dòng lệnh. Kích hoạt máy chủ Astro Docs MCP cho phép truy cập tài liệu mới nhất khi sinh mã Astro.
+
+Cài đặt bằng lệnh sau trong terminal:
 
 ```shell
 claude mcp add --transport http "Astro docs" https://mcp.docs.astro.build/mcp
 ```
 
-[Thêm thông tin về sử dụng MCP server với Claude Code](https://docs.anthropic.com/en/docs/claude-code/mcp)
+[Thêm thông tin về sử dụng MCP với Claude Code](https://docs.anthropic.com/en/docs/claude-code/mcp)
+
+#### Claude Code GitHub Action
+
+Claude Code cũng có GitHub Action dùng để chạy lệnh khi có sự kiện GitHub. Kích hoạt máy chủ Astro Docs MCP cho phép truy cập tài liệu mới nhất khi trả lời bình luận hoặc sinh mã Astro.
+
+Bạn có thể cấu hình sử dụng máy chủ Astro Docs MCP bằng cách thêm đoạn sau vào file workflow:
+
+```yaml title=".github/workflows/claude.yml" {5-14}
+# ...phần cấu hình workflow còn lại
+- uses: anthropics/claude-code-action@beta
+  with:
+    anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+    mcp_config: |
+      {
+        "mcpServers": {
+          "astro-docs": {
+            "type": "http",
+            "url": "https://mcp.docs.astro.build/mcp"
+          }
+        }
+      }
+    allowed_tools: "mcp__astro-docs__search_astro_docs" 
+```
+
+[Thêm thông tin về sử dụng MCP với Claude Code GitHub Action](https://github.com/anthropics/claude-code-action?tab=readme-ov-file#using-custom-mcp-configuration)
 
 #### Cursor
 
-[Cursor](https://cursor.com) là trình soạn thảo mã có AI. Thêm máy chủ Astro Docs MCP cho phép Cursor truy cập tài liệu Astro mới nhất khi thực hiện các tác vụ phát triển.
+[Cursor](https://cursor.com) là trình soạn thảo mã AI. Thêm máy chủ Astro Docs MCP cho phép Cursor truy cập tài liệu Astro mới nhất khi phát triển.
 
 Cài đặt bằng cách bấm nút dưới đây:
 
 <LinkButton href="cursor://anysphere.cursor-deeplink/mcp/install?name=Astro%20docs&config=eyJ1cmwiOiJodHRwczovL21jcC5kb2NzLmFzdHJvLmJ1aWxkL21jcCJ9">Thêm vào Cursor</LinkButton>
 
-[Thêm thông tin về sử dụng MCP server với Cursor](https://docs.cursor.com/context/mcp)
+[Thêm thông tin về sử dụng MCP với Cursor](https://docs.cursor.com/context/mcp)
 
 #### Visual Studio Code
 
-[Visual Studio Code](https://code.visualstudio.com) hỗ trợ máy chủ MCP khi dùng Copilot Chat. Thêm máy chủ Astro Docs MCP cho phép VS Code truy cập tài liệu Astro mới nhất khi trả lời câu hỏi hoặc thực hiện các tác vụ lập trình.
+[Visual Studio Code](https://code.visualstudio.com) hỗ trợ máy chủ MCP khi dùng Copilot Chat. Thêm máy chủ Astro Docs MCP cho phép VS Code truy cập tài liệu Astro mới nhất khi trả lời câu hỏi hoặc thực hiện tác vụ lập trình.
 
 Cài đặt bằng cách bấm nút dưới đây:
 
 <LinkButton href="vscode:mcp/install?%7B%22name%22%3A%22Astro%20docs%22%2C%22url%22%3A%22https%3A%2F%2Fmcp.docs.astro.build%2Fmcp%22%7D">Thêm vào VS Code</LinkButton>
 
-[Thêm thông tin về sử dụng MCP server với VS Code](https://code.visualstudio.com/docs/copilot/chat/mcp-servers#_add-an-mcp-server)
+[Thêm thông tin về sử dụng MCP với VS Code](https://code.visualstudio.com/docs/copilot/chat/mcp-servers#_add-an-mcp-server)
 
 #### Warp
 
-[Warp](https://warp.dev) (trước đây là Warp Terminal) là môi trường phát triển agent dành cho lập trình với nhiều AI agent. Thêm máy chủ Astro Docs MCP cho phép Warp truy cập tài liệu Astro mới nhất khi trả lời câu hỏi hoặc thực hiện các tác vụ lập trình.
+[Warp](https://warp.dev) (trước đây là Warp Terminal) là môi trường phát triển đại lý AI dành cho nhiều tác vụ lập trình. Thêm máy chủ Astro Docs MCP cho phép Warp truy cập tài liệu Astro mới nhất khi trả lời câu hỏi hoặc thực hiện lập trình.
 
 <Steps>
 
-1. Mở cài đặt Warp và đi tới AI > MCP Servers > Manage MCP Servers.
-2. Bấm "Add".
-3. Nhập cấu hình sau. Bạn có thể cấu hình máy chủ Astro MCP tự động kích hoạt khi khởi động bằng cờ `start_on_launch`:
+1. Mở cài đặt Warp, đi tới AI > MCP Servers > Manage MCP Servers.
+2. Nhấn "Add".
+3. Nhập cấu hình sau. Bạn có thể tùy chọn bật tự động kích hoạt máy chủ Astro MCP khi khởi động bằng cờ `start_on_launch`:
    ```json title="MCP Configuration" {3-9}
    {
      "mcpServers": {
@@ -103,33 +157,33 @@ Cài đặt bằng cách bấm nút dưới đây:
 
 </Steps>
 
-[Thêm thông tin về sử dụng MCP server với Warp](https://docs.warp.dev/knowledge-and-collaboration/mcp)
+[Thêm thông tin về sử dụng MCP với Warp](https://docs.warp.dev/knowledge-and-collaboration/mcp)
 
 #### Claude.ai / Claude Desktop
 
-[Claude.ai](https://claude.ai) là trợ lý AI đa năng. Thêm máy chủ Astro Docs MCP cho phép truy cập tài liệu mới nhất khi trả lời câu hỏi hoặc sinh mã Astro.
+[Claude.ai](https://claude.ai) là trợ lý AI đa năng. Thêm máy chủ Astro Docs MCP cho phép truy cập tài liệu mới nhất khi trả lời câu hỏi về Astro hoặc sinh mã Astro.
 
 <Steps>
 
-1. Truy cập [cài đặt connector của Claude.ai](https://claude.ai/settings/connectors).
-2. Bấm "Add custom connector". Có thể bạn cần cuộn xuống để tìm tùy chọn này.
-3. Nhập địa chỉ máy chủ: `https://mcp.docs.astro.build/mcp`.
+1. Truy cập [cài đặt connector Claude.ai](https://claude.ai/settings/connectors).
+2. Nhấn "Add custom connector". Có thể bạn cần cuộn xuống để tìm mục này.
+3. Nhập URL máy chủ: `https://mcp.docs.astro.build/mcp`.
 4. Đặt tên là "Astro docs".
 
 </Steps>
 
-[Thêm thông tin về sử dụng MCP server với Claude.ai](https://support.anthropic.com/en/articles/10168395-setting-up-integrations-on-claude-ai#h_cda40ecb32)
+[Thêm thông tin về sử dụng MCP với Claude.ai](https://support.anthropic.com/en/articles/10168395-setting-up-integrations-on-claude-ai#h_cda40ecb32)
 
 #### Windsurf
 
-[Windsurf](https://windsurf.com/) là công cụ lập trình tự động có AI, hoạt động dưới dạng plugin trình soạn thảo hoặc trình soạn thảo độc lập. Nó có thể sử dụng máy chủ Astro Docs MCP để truy cập tài liệu khi thực hiện các tác vụ lập trình.
+[Windsurf](https://windsurf.com/) là công cụ lập trình AI dạng đại lý, có thể dùng như plugin trình soạn thảo hoặc ứng dụng độc lập. Nó có thể dùng máy chủ Astro Docs MCP để truy cập tài liệu khi lập trình.
 
-Windsurf không hỗ trợ HTTP streaming, nên cần cấu hình proxy cục bộ:
+Windsurf không hỗ trợ stream HTTP, nên cần cấu hình proxy cục bộ:
 
 <Steps>
 
-1. Mở `~/.codeium/windsurf/mcp_config.json` trong trình soạn thảo.
-2. Thêm cấu hình sau vào cài đặt MCP của Windsurf:
+1. Mở `~/.codeium/windsurf/mcp_config.json` bằng trình soạn thảo.
+2. Thêm cấu hình sau vào phần cài đặt MCP của Windsurf:
 
    ```json title="MCP Configuration" {3-6}
    {
@@ -145,19 +199,36 @@ Windsurf không hỗ trợ HTTP streaming, nên cần cấu hình proxy cục b�
 
 </Steps>
 
-[Thêm thông tin về sử dụng MCP server với Windsurf](https://docs.windsurf.com/windsurf/cascade/mcp#mcp-config-json)
+[Thêm thông tin về sử dụng MCP với Windsurf](https://docs.windsurf.com/windsurf/cascade/mcp#mcp-config-json)
 
+#### Gemini CLI
+
+Gemini CLI là công cụ AI dòng lệnh có thể dùng máy chủ Astro Docs MCP để truy cập tài liệu khi sinh mã Astro.
+
+Bạn có thể cấu hình máy chủ MCP ở mức toàn hệ thống trong tập tin `~/.gemini/settings.json`, hoặc trong tập tin `.gemini/settings.json` tại thư mục gốc dự án.
+
+```json title=".gemini/settings.json" {3-5}
+{
+  "mcpServers": {
+    "Astro docs": {
+      "httpUrl": "https://mcp.docs.astro.build/mcp",
+    }
+  }
+}
+``` 
+
+[Thêm thông tin về sử dụng MCP với Gemini CLI](https://github.com/google-gemini/gemini-cli/blob/main/docs/tools/mcp-server.md)
 
 #### Zed
 
-[Zed](https://zed.dev) hỗ trợ máy chủ MCP khi dùng AI. Nó có thể sử dụng máy chủ Astro Docs MCP để truy cập tài liệu khi thực hiện các tác vụ lập trình.
+[Zed](https://zed.dev) hỗ trợ máy chủ MCP khi dùng các tính năng AI. Zed có thể dùng máy chủ Astro Docs MCP để truy cập tài liệu khi lập trình.
 
-Zed không hỗ trợ HTTP streaming nên cần cấu hình proxy cục bộ:
+Zed không hỗ trợ stream HTTP, nên cần cấu hình proxy cục bộ:
 
 <Steps>
 
-1. Mở `~/.config/zed/settings.json` trong trình soạn thảo.
-2. Thêm cấu hình sau vào cài đặt MCP của Zed:
+1. Mở `~/.config/zed/settings.json` bằng trình soạn thảo.
+2. Thêm cấu hình sau vào phần MCP của Zed:
 
    ```json title="MCP Configuration" {3-6}
    {
@@ -173,15 +244,15 @@ Zed không hỗ trợ HTTP streaming nên cần cấu hình proxy cục bộ:
 
 </Steps>
 
-[Thêm thông tin về sử dụng MCP server với Zed](https://zed.dev/docs/ai/mcp)
+[Thêm thông tin về sử dụng MCP với Zed](https://zed.dev/docs/ai/mcp)
 
 #### ChatGPT
 
-:::caution[Giới hạn khả dụng]
-Tích hợp máy chủ MCP chỉ có sẵn cho người dùng ChatGPT Pro, Team, và Enterprise. Quy trình thiết lập phức tạp hơn các công cụ khác.
+:::caution[Chỉ khả dụng giới hạn]
+Tích hợp máy chủ MCP chỉ có cho người dùng ChatGPT Pro, Team và Enterprise. Quy trình thiết lập phức tạp hơn các công cụ khác.
 :::
 
-Tham khảo [tài liệu MCP của OpenAI](https://platform.openai.com/docs/mcp#test-and-connect-your-mcp-server) để biết hướng dẫn thiết lập chi tiết.
+Tham khảo [tài liệu MCP của OpenAI](https://platform.openai.com/docs/mcp#test-and-connect-your-mcp-server) để có hướng dẫn chi tiết.
 
 #### Raycast
 
@@ -191,36 +262,37 @@ Cài đặt bằng cách bấm nút dưới đây:
 
 <LinkButton href="raycast://mcp/install?%7B%22name%22%3A%22Astro%20docs%22%2C%22type%22%3A%22stdio%22%2C%22command%22%3A%22npx%22%2C%22args%22%3A%5B%22-y%22%2C%20%22mcp-remote%22%2C%20%22https%3A%2F%2Fmcp.docs.astro.build%2Fmcp%22%5D%7D">Thêm vào Raycast</LinkButton>
 
-[Thêm thông tin về sử dụng MCP server với Raycast](https://manual.raycast.com/model-context-protocol)
+[Thêm thông tin về sử dụng MCP với Raycast](https://manual.raycast.com/model-context-protocol)
 
 ### Sử dụng
 
-Sau khi cấu hình, bạn có thể hỏi công cụ AI các câu hỏi về Astro và nó sẽ truy xuất thông tin trực tiếp từ tài liệu mới nhất. Các agent lập trình có thể tra cứu tài liệu cập nhật khi thực hiện tác vụ lập trình, và chatbot có thể trả lời chính xác về các tính năng, API và phương pháp tốt nhất của Astro.
+Sau khi cấu hình, bạn có thể hỏi công cụ AI về Astro và nó sẽ lấy thông tin trực tiếp từ tài liệu mới nhất. Các đại lý lập trình có thể tham khảo tài liệu khi lập trình, chatbot có thể trả lời chính xác về tính năng, API và thực tiễn tốt nhất của Astro.
 
-:::note[Lưu ý]
-Máy chủ Astro Docs MCP cung cấp quyền truy cập tới tài liệu mới nhất, nhưng các công cụ AI vẫn chịu trách nhiệm diễn giải và sinh mã. AI có thể mắc lỗi, vì vậy hãy luôn kiểm tra mã được sinh ra và thử nghiệm kỹ lưỡng.
+:::note[Ghi nhớ]
+Máy chủ Astro Docs MCP cung cấp quyền truy cập tài liệu mới nhất, nhưng công cụ AI của bạn vẫn chịu trách nhiệm diễn giải và sinh mã. AI có thể mắc lỗi, hãy luôn kiểm tra kỹ mã sinh ra và thử nghiệm cẩn thận.
 :::
 
-### Khắc phục sự cố
+### Xử lý sự cố
 
 Nếu gặp sự cố:
 
-- Kiểm tra xem công cụ của bạn có hỗ trợ giao thức streamable HTTP không.
-- Đảm bảo địa chỉ máy chủ đúng: `https://mcp.docs.astro.build/mcp`.
-- Kiểm tra kết nối internet của công cụ.
-- Tham khảo tài liệu tích hợp MCP của công cụ bạn dùng.
+- Kiểm tra công cụ của bạn có hỗ trợ streamable HTTP không.
+- Đảm bảo URL máy chủ đúng: `https://mcp.docs.astro.build/mcp`.
+- Đảm bảo công cụ có quyền truy cập Internet.
+- Tham khảo tài liệu tích hợp MCP của công cụ bạn sử dụng.
 
-Nếu vẫn gặp vấn đề, hãy tạo issue tại [Astro Docs MCP Server repository](https://github.com/withastro/docs-mcp/issues).
+Nếu vẫn gặp vấn đề, hãy mở issue trong [repo Astro Docs MCP Server](https://github.com/withastro/docs-mcp/issues).
+
 
 ## Hỗ trợ AI trên Discord
 
-Công nghệ tương tự máy chủ MCP của Astro cũng có mặt dưới dạng chatbot trên [Astro Discord](https://astro.build/chat) để tự hỗ trợ. Hãy ghé kênh `#support-ai` để đặt câu hỏi về Astro hoặc mã dự án bằng ngôn ngữ tự nhiên. Cuộc trò chuyện của bạn sẽ tự động được tạo thread, và bạn có thể hỏi không giới hạn số câu hỏi tiếp theo.
+Công nghệ đứng sau máy chủ MCP của Astro cũng có mặt dưới dạng chatbot trong [Astro Discord](https://astro.build/chat) để tự hỗ trợ. Truy cập kênh `#support-ai` để hỏi về Astro hoặc mã dự án của bạn bằng ngôn ngữ tự nhiên. Cuộc trò chuyện sẽ tự động được đưa vào luồng riêng, bạn có thể hỏi tiếp không giới hạn.
 
-**Các cuộc trò chuyện với chatbot là công khai và tuân thủ quy định về ngôn ngữ, hành vi của server như các kênh khác**, nhưng không có sự hỗ trợ trực tiếp của các tình nguyện viên. Nếu bạn cần sự giúp đỡ từ cộng đồng, hãy tạo thread trong kênh `#support` thông thường.
+**Các cuộc trò chuyện với chatbot là công khai và tuân theo quy tắc máy chủ như các kênh khác**, nhưng không có thành viên tình nguyện thường xuyên ghé kênh này. Nếu cần cộng đồng hỗ trợ, hãy tạo luồng trong kênh `#support` bình thường.
 
 ## Mẹo phát triển Astro với AI
 
-- **Bắt đầu với template**: Thay vì xây dựng từ đầu, hãy nhờ công cụ AI bắt đầu với [template Astro có sẵn](https://astro.build/themes/) hoặc sử dụng `npm create astro@latest` với tuỳ chọn template.
-- **Dùng `astro add` cho tích hợp**: Hãy nhờ AI sử dụng `astro add` cho các tích hợp chính thức (ví dụ: `astro add tailwind`, `astro add react`). Với các gói khác, hãy cài qua công cụ quản lý gói ưa thích thay vì chỉnh sửa trực tiếp `package.json`.
-- **Kiểm tra API mới nhất**: AI có thể sử dụng các mẫu cũ. Hãy yêu cầu kiểm tra tài liệu mới nhất, nhất là với các tính năng như session và actions. Điều này cũng quan trọng với các tính năng từng thay đổi lớn hoặc không còn là experimental.
-- **Dùng quy tắc dự án**: Nếu công cụ AI hỗ trợ, hãy thiết lập quy tắc dự án để đảm bảo tuân thủ phương pháp và tiêu chuẩn mã hóa tốt nhất như đã liệt kê trên.
+- **Bắt đầu từ template**: Thay vì xây dựng từ đầu, hãy yêu cầu công cụ AI bắt đầu với [mẫu Astro](https://astro.build/themes/) có sẵn hoặc dùng `npm create astro@latest` với tuỳ chọn template.
+- **Dùng `astro add` cho tích hợp**: Hỏi công cụ AI dùng `astro add` cho các tích hợp chính thức (ví dụ: `astro add tailwind`, `astro add react`). Với gói khác, hãy cài bằng lệnh của trình quản lý gói thay vì chỉnh trực tiếp `package.json`.
+- **Kiểm tra API mới nhất**: Công cụ AI có thể dùng mẫu cũ. Đề nghị kiểm tra tài liệu mới nhất, đặc biệt với các tính năng như sessions, actions, content collections, hoặc tính năng từng thử nghiệm.
+- **Áp dụng quy tắc dự án**: Nếu công cụ AI hỗ trợ, hãy thiết lập quy tắc dự án để đảm bảo thực tiễn và chuẩn mã tốt, như các quy tắc nêu trên.

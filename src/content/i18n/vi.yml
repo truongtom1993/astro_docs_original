@@ -51,7 +51,8 @@ progress.todo: Việc cần làm
 progress.done: Hoàn thành
 # Tutorial Navigation
 tutorial.trackerLabel: Hướng dẫn theo dõi
-tutorial.unit: Unit
+tutorial.unit: Đơn vị
+tutorial.title.prefix: 'Hướng dẫn xây dựng blog: {{title}}'
 # Tutorial
 tutorial.getReady: Sẵn sàng để…
 # Code snippet vocabulary

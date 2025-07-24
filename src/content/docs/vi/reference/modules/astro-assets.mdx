@@ -7,66 +7,68 @@ tableOfContents:
   minHeadingLevel: 2
   maxHeadingLevel: 6
 ---
-
 import Since from '~/components/Since.astro';
 import ReadMore from '~/components/ReadMore.astro';
- 
+
 <p><Since v="3.0.0" /></p>
- 
-Astro cung cấp các component tích hợp sẵn và các hàm hỗ trợ để tối ưu hóa và hiển thị hình ảnh của bạn. Để biết các tính năng và ví dụ sử dụng, [xem hướng dẫn về hình ảnh của chúng tôi](/vi/guides/images/).
- 
+
+Astro cung cấp các component dựng sẵn và hàm hỗ trợ để tối ưu hóa và hiển thị hình ảnh của bạn. Để biết các tính năng và ví dụ sử dụng, [xem hướng dẫn về hình ảnh của chúng tôi](/en/guides/images/).
+
 ## Import từ `astro:assets`
- 
+
 ```js
-import {
+import { 
   Image,
   Picture,
   getImage,
   inferRemoteSize,
  } from 'astro:assets';
 ```
- 
+
 ### `<Image />`
- 
+
+Component `<Image />` tối ưu hóa và chuyển đổi hình ảnh.
+
+Component này cũng có thể được dùng để tạo [hình ảnh đáp ứng](#responsive-image-properties) có thể điều chỉnh dựa trên kích thước của container hoặc kích thước và độ phân giải màn hình thiết bị.
+
 ```astro title="src/components/MyComponent.astro"
----
-// import component Image và ảnh
+// import component Image và hình ảnh
 import { Image } from 'astro:assets';
-import myImage from "../assets/my_image.png"; // Ảnh kích thước 1600x900
+import myImage from "../assets/my_image.png"; // Hình ảnh có kích thước 1600x900
 ---
- 
-<!-- `alt` là bắt buộc trên component Image -->
-<Image src={myImage} alt="Mô tả cho hình ảnh của tôi." />
+
+<!-- `alt` là bắt buộc trong component Image -->
+<Image src={myImage} alt="Mô tả hình ảnh của tôi." />
 ```
- 
+
 ```html
-<!-- Kết quả xuất ra -->
-<!-- Ảnh được tối ưu hóa, các thuộc tính thích hợp được áp dụng -->
+<!-- Kết quả -->
+<!-- Hình ảnh được tối ưu hóa, thuộc tính được đảm bảo đúng -->
 <img
   src="/_astro/my_image.hash.webp"
   width="1600"
   height="900"
   decoding="async"
   loading="lazy"
-  alt="Mô tả cho hình ảnh của tôi."
+  alt="Mô tả hình ảnh của tôi."
 />
 ```
- 
+
 #### Thuộc tính của Image
- 
-Component `<Image />` nhận tất cả các thuộc tính được chấp nhận bởi thẻ HTML `<img>`, cùng với các thuộc tính được mô tả bên dưới.
- 
+
+Component `<Image />` nhận các thuộc tính liệt kê dưới đây và [thuộc tính hình ảnh đáp ứng](#responsive-image-properties) ngoài tất cả các thuộc tính mà thẻ HTML `<img>` chấp nhận.
+
 ##### src (bắt buộc)
- 
+
 <p>
- 
+
 **Kiểu:** `ImageMetadata | string | Promise<{ default: ImageMetadata }>`
 </p>
- 
-Định dạng giá trị `src` của tệp ảnh phụ thuộc vào vị trí tệp ảnh của bạn:
- 
-- **Ảnh cục bộ trong `src/`** - bạn phải **import ảnh** bằng đường dẫn tệp tương đối hoặc cấu hình và sử dụng [bí danh import](/vi/guides/imports/#aliases). Sau đó sử dụng tên import làm giá trị `src`:
- 
+
+Định dạng giá trị `src` của file hình ảnh phụ thuộc vào vị trí của file hình ảnh:
+
+- **Hình ảnh cục bộ trong `src/`** - bạn **cũng phải import hình ảnh** bằng đường dẫn tương đối hoặc cấu hình và sử dụng [import alias](/en/guides/imports/#aliases). Sau đó sử dụng tên import làm giá trị cho `src`:
+
   ```astro title="src/pages/index.astro" "myImportedImage" "{myImportedImage}"
   ---
   import { Image } from 'astro:assets';
@@ -74,9 +76,9 @@ Component `<Image />` nhận tất cả các thuộc tính được chấp nhậ
   ---
   <Image src={myImportedImage} alt="văn bản mô tả" />
   ```
- 
-- **Ảnh trong thư mục `public/`** -  sử dụng **đường dẫn tệp tương đối so với thư mục public**:
- 
+
+- **Hình ảnh trong thư mục `public/`** - sử dụng **đường dẫn file hình ảnh tương đối với thư mục public**:
+
   ```astro title="src/pages/index.astro" '"/images/my-public-image.png"'
   ---
   import { Image } from 'astro:assets';
@@ -88,9 +90,9 @@ Component `<Image />` nhận tất cả các thuộc tính được chấp nhậ
     height="150"
   />
   ```
- 
-- **Ảnh từ xa** - sử dụng **URL đầy đủ** của ảnh làm giá trị thuộc tính:
- 
+
+- **Hình ảnh từ xa** - sử dụng **URL đầy đủ của hình ảnh** làm giá trị thuộc tính:
+
   ```astro title="src/pages/index.astro" '"https://example.com/remote-image.jpg"'
   ---
   import { Image } from 'astro:assets';
@@ -102,45 +104,49 @@ Component `<Image />` nhận tất cả các thuộc tính được chấp nhậ
     height="150"
   />
   ```
- 
+
 ##### alt (bắt buộc)
- 
+
 <p>
- 
+
 **Kiểu:** `string`
 </p>
- 
-Sử dụng thuộc tính `alt` bắt buộc để cung cấp một chuỗi [văn bản thay thế mô tả](https://www.w3.org/WAI/tutorials/images/) cho hình ảnh.
- 
-Nếu một hình ảnh chỉ mang tính trang trí (tức là không đóng góp vào việc hiểu nội dung trang), hãy đặt `alt=""` để trình đọc màn hình và các công nghệ hỗ trợ khác biết bỏ qua hình ảnh.
- 
-##### width và height (bắt buộc với ảnh trong `public/`)
- 
+
+Hãy sử dụng thuộc tính `alt` bắt buộc để cung cấp chuỗi [văn bản thay thế mô tả](https://www.w3.org/WAI/tutorials/images/) cho hình ảnh.
+
+Nếu hình ảnh chỉ mang tính trang trí (tức là không đóng góp vào việc hiểu nội dung trang), hãy đặt `alt=""` để trình đọc màn hình và công nghệ hỗ trợ biết bỏ qua hình ảnh này.
+
+##### width và height (bắt buộc đối với hình ảnh trong `public/`)
+
 <p>
- 
+
 **Kiểu:** `number | undefined`
 </p>
- 
-Các thuộc tính này xác định kích thước sử dụng cho hình ảnh.
- 
-Khi sử dụng ảnh với tỉ lệ gốc, `width` và `height` là tùy chọn. Các kích thước này có thể được tự động lấy từ các tệp ảnh nằm trong `src/`. Đối với ảnh từ xa, hãy thêm [thuộc tính `inferSize` đặt là `true`](#infersize) trên component `<Image />` hoặc `<Picture />` hoặc sử dụng [hàm `inferRemoteSize()`](#inferremotesize).
- 
-Tuy nhiên, cả hai thuộc tính này là bắt buộc đối với ảnh lưu trong thư mục `public/` vì Astro không thể phân tích các tệp này.
- 
+
+Hai thuộc tính này xác định kích thước sử dụng cho hình ảnh.
+
+Khi một kiểu `layout` được đặt, các giá trị này sẽ được tạo tự động dựa trên kích thước hình ảnh và trong đa số trường hợp không nên đặt thủ công.
+
+Khi sử dụng hình ảnh với tỉ lệ gốc, `width` và `height` là tùy chọn. Các kích thước này có thể được tự động suy ra từ file hình ảnh nằm trong `src/`. Đối với hình ảnh từ xa, thêm [thuộc tính `inferSize` với giá trị `true`](#infersize) trên component `<Image />` hoặc `<Picture />` hoặc dùng hàm [`inferRemoteSize()`](#inferremotesize).
+
+Tuy nhiên, cả hai thuộc tính này là bắt buộc đối với hình ảnh lưu trong thư mục `public/` vì Astro không thể phân tích các file này.
+
 ##### densities
- 
+
 <p>
- 
+
 **Kiểu:** ``(number | `${number}x`)[] | undefined``<br />
 <Since v="3.3.0" />
 </p>
- 
-Một danh sách mật độ điểm ảnh sẽ được tạo ra cho hình ảnh.
- 
-Nếu cung cấp giá trị này, nó sẽ được sử dụng để tạo thuộc tính `srcset` trên thẻ `<img>`. Không nên cung cấp giá trị cho `widths` khi đã sử dụng giá trị này.
- 
-Các mật độ lớn hơn chiều rộng gốc của hình ảnh sẽ bị bỏ qua để tránh phóng to hình.
- 
+
+Danh sách mật độ điểm ảnh để tạo cho hình ảnh.
+
+Thuộc tính `densities` không tương thích với [hình ảnh đáp ứng](#responsive-image-properties) khi có thuộc tính `layout` hoặc cấu hình `image.layout`, và sẽ bị bỏ qua nếu được đặt.
+
+Nếu cung cấp, giá trị này sẽ được sử dụng để tạo thuộc tính `srcset` trên thẻ `<img>`. Không nên cung cấp giá trị cho `widths` khi sử dụng giá trị này.
+
+Các mật độ có kích thước lớn hơn hình ảnh gốc sẽ bị bỏ qua để tránh phóng to hình ảnh.
+
 ```astro title="src/components/MyComponent.astro"
 ---
 import { Image } from 'astro:assets';
@@ -150,64 +156,66 @@ import myImage from '../assets/my_image.png';
   src={myImage}
   width={myImage.width / 2}
   densities={[1.5, 2]}
-  alt="Mô tả cho hình ảnh của tôi."
+  alt="Mô tả hình ảnh của tôi."
 />
 ```
- 
+
 ```html
-<!-- Kết quả xuất ra -->
+<!-- Kết quả -->
 <img
   src="/_astro/my_image.hash.webp"
   srcset="
     /_astro/my_image.hash.webp 1.5x
     /_astro/my_image.hash.webp 2x
   "
-  alt="Mô tả cho hình ảnh của tôi."
+  alt="Mô tả hình ảnh của tôi."
   width="800"
   height="450"
   loading="lazy"
   decoding="async"
 />
 ```
- 
+
 ##### widths
- 
+
 <p>
- 
+
 **Kiểu:** `number[] | undefined`<br />
 <Since v="3.3.0" />
 </p>
- 
-Một danh sách các chiều rộng sẽ được tạo ra cho hình ảnh.
- 
-Nếu cung cấp giá trị này, nó sẽ được sử dụng để tạo thuộc tính `srcset` trên thẻ `<img>`. Một thuộc tính [`sizes`](https://developer.mozilla.org/en-US/docs/Web/API/HTMLImageElement/sizes) cũng phải được cung cấp.
- 
-Không nên cung cấp giá trị cho `densities` khi đã sử dụng giá trị này. Chỉ một trong hai giá trị này có thể được sử dụng để tạo `srcset`.
- 
-Các chiều rộng lớn hơn kích thước gốc của hình ảnh sẽ bị bỏ qua để tránh phóng to hình.
- 
+
+Danh sách các chiều rộng cần tạo cho hình ảnh.
+
+Nếu cung cấp, giá trị này sẽ được sử dụng để tạo thuộc tính `srcset` trên thẻ `<img>`. Phải cung cấp thêm thuộc tính [`sizes`](https://developer.mozilla.org/en-US/docs/Web/API/HTMLImageElement/sizes).
+
+Các thuộc tính `widths` và `sizes` sẽ được tự động tạo cho hình ảnh đáp ứng sử dụng thuộc tính `layout`. Việc cung cấp các giá trị này thường không cần thiết, nhưng có thể sử dụng để ghi đè bất kỳ giá trị tự động nào.
+
+Không nên cung cấp giá trị cho `densities` khi sử dụng giá trị này. Chỉ nên sử dụng một trong hai giá trị này để tạo `srcset`.
+
+Các chiều rộng lớn hơn hình ảnh gốc sẽ bị bỏ qua để tránh phóng to hình ảnh.
+
 ```astro
 ---
 import { Image } from 'astro:assets';
-import myImage from '../assets/my_image.png'; // Ảnh kích thước 1600x900
+import myImage from '../assets/my_image.png'; // Hình ảnh có kích thước 1600x900
 ---
 <Image
   src={myImage}
   widths={[240, 540, 720, myImage.width]}
   sizes={`(max-width: 360px) 240px, (max-width: 720px) 540px, (max-width: 1600px) 720px, ${myImage.width}px`}
-  alt="Mô tả cho hình ảnh của tôi."
+  alt="Mô tả hình ảnh của tôi."
 />
 ```
- 
+
 ```html
-<!-- Kết quả xuất ra -->
+<!-- Kết quả -->
 <img
   src="/_astro/my_image.hash.webp"
   srcset="
     /_astro/my_image.hash.webp 240w,
     /_astro/my_image.hash.webp 540w,
     /_astro/my_image.hash.webp 720w,
-    /_astro/my_image.hash.webp 1600w
+		/_astro/my_image.hash.webp 1600w
   "
   sizes="
     (max-width: 360px) 240px,
@@ -215,77 +223,123 @@ import myImage from '../assets/my_image.png'; // Ảnh kích thước 1600x900
     (max-width: 1600px) 720px,
     1600px
   "
-  alt="Mô tả cho hình ảnh của tôi."
+  alt="Mô tả hình ảnh của tôi."
   width="1600"
   height="900"
   loading="lazy"
   decoding="async"
 />
 ```
- 
-##### format
- 
+
+##### sizes
+
 <p>
- 
+
+**Kiểu:** `string | undefined`<br />
+<Since v="3.3.0" />
+</p>
+
+Chỉ định chiều rộng bố cục của hình ảnh cho mỗi điều kiện media. Phải cung cấp khi chỉ định `widths`.
+
+Các thuộc tính `widths` và `sizes` sẽ được tự động tạo cho hình ảnh đáp ứng sử dụng thuộc tính `layout`. Việc cung cấp các giá trị này thường không cần thiết, nhưng có thể sử dụng để ghi đè bất kỳ giá trị tự động nào.
+
+Thuộc tính `sizes` được tạo ra cho hình ảnh kiểu `constrained` và `full-width` dựa trên giả định rằng hình ảnh được hiển thị gần như toàn bộ chiều rộng màn hình khi viewport nhỏ hơn chiều rộng của hình ảnh. Nếu thực tế khác biệt (ví dụ: bố cục nhiều cột trên màn hình nhỏ), bạn có thể cần điều chỉnh thuộc tính `sizes` thủ công để đạt kết quả tốt nhất.
+
+##### format
+
+<p>
+
 **Kiểu:** `ImageOutputFormat | undefined`
 </p>
- 
-Bạn có thể tùy chọn chỉ định [kiểu định dạng tệp ảnh](https://developer.mozilla.org/en-US/docs/Web/Media/Formats/Image_types#common_image_file_types) đầu ra sẽ sử dụng.
- 
-Mặc định, component `<Image />` sẽ tạo ra tệp `.webp`.
- 
+
+Bạn có thể tùy chọn chỉ định [định dạng file hình ảnh](https://developer.mozilla.org/en-US/docs/Web/Media/Formats/Image_types#common_image_file_types) đầu ra sẽ sử dụng.
+
+Mặc định, component `<Image />` sẽ sinh file `.webp`.
+
 ##### quality
- 
+
 <p>
- 
+
 **Kiểu:** `ImageQuality | undefined`
 </p>
- 
-`quality` là một thuộc tính tùy chọn, có thể là:
-- một preset (`low`, `mid`, `high`, `max`) được tự động chuẩn hóa giữa các định dạng.
-- một số từ `0` đến `100` (cách hiểu khác nhau giữa các định dạng).
- 
+
+`quality` là thuộc tính tùy chọn có thể là:
+- một giá trị thiết lập sẵn (`low`, `mid`, `high`, `max`) sẽ được chuẩn hóa tự động giữa các định dạng.
+- một số từ `0` đến `100` (diễn giải khác nhau tùy định dạng).
+
 ##### inferSize
- 
+
 <p>
- 
+
 **Kiểu:** `boolean`<br />
+**Mặc định:** `false`<br />
 <Since v="4.4.0" />
 </p>
- 
-Cho phép bạn tự động lấy `width` và `height` gốc của một hình ảnh từ xa.
- 
-Mặc định, giá trị này là `false` và bạn phải tự chỉ định cả hai kích thước cho ảnh từ xa.
- 
-Thêm `inferSize` vào component `<Image />` (hoặc `inferSize: true` cho `getImage()`) để lấy các giá trị này từ nội dung ảnh khi tải về. Điều này hữu ích nếu bạn không biết kích thước của ảnh từ xa, hoặc nếu chúng có thể thay đổi:
- 
-```astro mark="inferSize"
+
+Cho phép bạn tự động xác định `width` và `height` gốc của hình ảnh từ xa.
+
+Mặc định, giá trị này là `false` và bạn phải chỉ định thủ công cả hai kích thước cho hình ảnh từ xa.
+
+Thêm `inferSize` vào component `<Image />` (hoặc `inferSize: true` cho `getImage()`) để tự động lấy các giá trị này từ nội dung hình ảnh khi được tải về. Điều này hữu ích nếu bạn không biết trước kích thước hình ảnh từ xa, hoặc chúng có thể thay đổi:
+
+```astro title="src/components/MyComponent.astro" "inferSize"
 ---
 import { Image } from 'astro:assets';
 ---
 <Image src="https://example.com/cat.png" inferSize alt="Một con mèo đang ngủ dưới nắng." />
 ```
- 
-`inferSize` có thể lấy kích thước của [ảnh từ xa từ tên miền chưa được cấp quyền](/vi/guides/images/#authorizing-remote-images), tuy nhiên bản thân ảnh sẽ không được xử lý.
- 
+
+`inferSize` có thể lấy kích thước của [hình ảnh từ một miền chưa được cấp phép](/en/guides/images/#authorizing-remote-images), tuy nhiên chính hình ảnh đó sẽ không được xử lý.
+
+##### priority
+
+<p>
+
+**Kiểu:** `boolean`<br />
+**Mặc định:** `false`<br />
+<Since v="5.10.0" />
+</p>
+
+Cho phép bạn tự động thiết lập các thuộc tính `loading`, `decoding` và `fetchpriority` với giá trị tối ưu cho hình ảnh nằm trên vùng nhìn thấy đầu tiên.
+
+```astro title="src/components/MyComponent.astro" "priority"
+---
+import { Image } from 'astro:assets';
+import myImage from '../assets/my_image.png';
+---
+<Image src={myImage} priority alt="Mô tả hình ảnh của tôi" />
+```
+
+Khi `priority="true"` (hoặc rút gọn là `priority`) được thêm vào component `<Image />` hoặc `<Picture />`, nó sẽ thêm các thuộc tính sau để hướng dẫn trình duyệt tải hình ảnh ngay lập tức:
+
+```html
+loading="eager"
+decoding="sync"
+fetchpriority="high"
+```
+
+Bạn vẫn có thể đặt các thuộc tính này thủ công nếu cần tùy chỉnh thêm.
+
 ### `<Picture />`
- 
+
 <p><Since v="3.3.0" /></p>
- 
-Sử dụng component `<Picture />` của Astro để hiển thị hình ảnh đáp ứng với nhiều định dạng và/hoặc kích thước.
- 
+
+Component `<Picture />` tạo ra hình ảnh tối ưu hóa với nhiều định dạng và/hoặc kích thước.
+
+Component này cũng có thể được dùng để tạo [hình ảnh đáp ứng](#responsive-image-properties) có thể điều chỉnh dựa trên kích thước của container hoặc kích thước và độ phân giải màn hình thiết bị.
+
 ```astro title="src/pages/index.astro"
 ---
 import { Picture } from 'astro:assets';
-import myImage from "../assets/my_image.png"; // Ảnh kích thước 1600x900
+import myImage from "../assets/my_image.png"; // Hình ảnh 1600x900
 ---
- 
-<!-- `alt` là bắt buộc trên component Picture -->
-<Picture src={myImage} formats={['avif', 'webp']} alt="Mô tả cho hình ảnh của tôi." />
+
+<!-- `alt` là bắt buộc trong component Picture -->
+<Picture src={myImage} formats={['avif', 'webp']} alt="Mô tả hình ảnh của tôi." />
 ```
- 
+
 ```html
-<!-- Kết quả xuất ra -->
+<!-- Kết quả -->
 <picture>
   <source srcset="/_astro/my_image.hash.avif" type="image/avif" />
   <source srcset="/_astro/my_image.hash.webp" type="image/webp" />
@@ -295,64 +349,64 @@ import myImage from "../assets/my_image.png"; // Ảnh kích thước 1600x900
     height="900"
     decoding="async"
     loading="lazy"
-    alt="Mô tả cho hình ảnh của tôi."
+    alt="Mô tả hình ảnh của tôi."
   />
 </picture>
 ```
- 
+
 #### Thuộc tính của Picture
- 
-`<Picture />` nhận tất cả các thuộc tính của [component `<Image />`](#image-properties), cùng các thuộc tính sau:
- 
+
+`<Picture />` nhận tất cả thuộc tính của [component `<Image />`](#image-properties), bao gồm [thuộc tính hình ảnh đáp ứng](#responsive-image-properties), cộng với các thuộc tính sau:
+
 ##### `formats`
- 
+
 <p>
- 
+
 **Kiểu:** `ImageOutputFormat[]`
 </p>
- 
-Một mảng định dạng ảnh sẽ sử dụng cho các thẻ `<source>`. Các mục sẽ được thêm vào dưới dạng phần tử `<source>` theo thứ tự liệt kê, và thứ tự này quyết định định dạng nào sẽ được hiển thị. Để đạt hiệu suất tốt nhất, hãy liệt kê định dạng hiện đại nhất trước (ví dụ `webp` hoặc `avif`). Theo mặc định, giá trị này là `['webp']`.
- 
+
+Một mảng các định dạng hình ảnh sẽ sử dụng cho các thẻ `<source>`. Các mục sẽ được thêm vào dưới dạng phần tử `<source>` theo thứ tự liệt kê, và thứ tự này quyết định định dạng nào sẽ được hiển thị. Để đạt hiệu suất tối ưu, hãy liệt kê định dạng hiện đại nhất trước (ví dụ `webp` hoặc `avif`). Mặc định là `['webp']`.
+
 ##### `fallbackFormat`
- 
+
 <p>
- 
+
 **Kiểu:** `ImageOutputFormat`
 </p>
- 
-Định dạng sẽ dùng làm giá trị dự phòng cho thẻ `<img>`. Mặc định là `.png` cho ảnh tĩnh (hoặc `.jpg` nếu ảnh là JPG), `.gif` cho ảnh động, và `.svg` cho file SVG.
- 
+
+Định dạng sử dụng làm giá trị dự phòng cho thẻ `<img>`. Mặc định là `.png` cho hình ảnh tĩnh (hoặc `.jpg` nếu hình là JPG), `.gif` cho hình động, và `.svg` cho file SVG.
+
 ##### `pictureAttributes`
- 
+
 <p>
- 
+
 **Kiểu:** `HTMLAttributes<'picture'>`
 </p>
- 
-Một object thuộc tính sẽ được thêm vào thẻ `<picture>`.
- 
-Sử dụng thuộc tính này để áp dụng các thuộc tính cho phần tử `<picture>` bên ngoài. Các thuộc tính áp dụng trực tiếp lên component `<Picture />` sẽ áp dụng cho phần tử `<img>` bên trong, ngoại trừ các thuộc tính dùng để biến đổi ảnh.
- 
+
+Một đối tượng các thuộc tính sẽ được thêm vào thẻ `<picture>`.
+
+Sử dụng thuộc tính này để áp dụng thuộc tính cho phần tử `<picture>` bên ngoài. Các thuộc tính đặt trực tiếp trên component `<Picture />` sẽ áp dụng cho phần tử `<img>` bên trong, trừ những thuộc tính dùng để chuyển đổi hình ảnh.
+
 ```astro title="src/components/MyComponent.astro"
 ---
 import { Picture } from "astro:assets";
-import myImage from "../my_image.png"; // Ảnh kích thước 1600x900
+import myImage from "../my_image.png"; // Hình ảnh 1600x900
 ---
- 
+
 <Picture
   src={myImage}
-  alt="Mô tả cho hình ảnh của tôi."
+  alt="Mô tả hình ảnh của tôi."
   pictureAttributes={{ style: "background-color: red;" }}
 />
 ```
- 
+
 ```html
-<!-- Kết quả xuất ra -->
+<!-- Kết quả -->
 <picture style="background-color: red;">
   <source srcset="/_astro/my_image.hash.webp" type="image/webp" />
   <img
     src="/_astro/my_image.hash.png"
-    alt="Mô tả cho hình ảnh của tôi."
+    alt="Mô tả hình ảnh của tôi."
     width="1600"
     height="900"
     loading="lazy"
@@ -360,64 +414,182 @@ import myImage from "../my_image.png"; // Ảnh kích thước 1600x900
   />
 </picture>
 ```
- 
-### `getImage()`
- 
+
+### Thuộc tính hình ảnh đáp ứng
+
+Thiết lập thuộc tính [`layout`](#layout) trên component [`<Image />`](#image-) hoặc [`<Picture />`](#picture-) sẽ tạo hình ảnh đáp ứng và cho phép thiết lập thêm các thuộc tính.
+
+```astro title=MyComponent.astro
+---
+import { Image } from 'astro:assets';
+import myImage from '../assets/my_image.png';
+---
+<Image src={myImage} alt="Mô tả hình ảnh của tôi." layout='constrained' width={800} height={600} />
+```
+
+ Khi một layout được đặt, các thuộc tính `srcset` và `sizes` sẽ được tự động tạo dựa trên kích thước hình ảnh và kiểu layout. Component `<Image />` ở trên sẽ sinh ra HTML như sau:
+
+```html
+<img
+  src="/_astro/my_image.hash3.webp"
+  srcset="/_astro/my_image.hash1.webp 640w,
+      /_astro/my_image.hash2.webp 750w,
+      /_astro/my_image.hash3.webp 800w,
+      /_astro/my_image.hash4.webp 828w,
+      /_astro/my_image.hash5.webp 1080w,
+      /_astro/my_image.hash6.webp 1280w,
+      /_astro/my_image.hash7.webp 1600w"
+  alt="Mô tả hình ảnh của tôi"
+  sizes="(min-width: 800px) 800px, 100vw"
+  loading="lazy"
+  decoding="async"
+  fetchpriority="auto"
+  width="800"
+  height="600"
+  style="--fit: cover; --pos: center;"
+  data-astro-image="constrained"
+>
+```
+Giá trị của `layout` cũng xác định các style mặc định áp dụng cho thẻ `<img>` để quyết định hình ảnh sẽ thay đổi kích thước như thế nào theo container:
+
+```css title="Responsive Image Styles"
+:where([data-astro-image]) {
+	object-fit: var(--fit);
+	object-position: var(--pos);
+}
+:where([data-astro-image='full-width']) {
+	width: 100%;
+}
+:where([data-astro-image='constrained']) {
+	max-width: 100%;
+}
+```
+
+Bạn có thể ghi đè các style mặc định của `object-fit` và `object-position` bằng cách sử dụng thuộc tính [`fit`](#fit) và [`position`](#position) trên component `<Image />` hoặc `<Picture />`.
+
+
+##### layout
+
 <p>
- 
+
+**Kiểu:** `'constrained' | 'full-width' | 'fixed' | 'none'` <br />
+**Mặc định:** `image.layout | 'none'` <br />
+<Since v="5.10.0" />
+</p>
+
+Xác định [hình ảnh đáp ứng](#responsive-image-properties) và quyết định cách hình ảnh thay đổi kích thước khi container thay đổi kích thước. Có thể dùng để ghi đè giá trị mặc định cấu hình cho [`image.layout`](/en/reference/configuration-reference/#imagelayout).
+
+- `constrained` - Hình ảnh sẽ co lại để vừa container, giữ nguyên tỉ lệ, nhưng không phóng to quá kích thước chỉ định hoặc kích thước gốc.
+
+  Dùng khi bạn muốn hình ảnh hiển thị ở kích thước yêu cầu nếu có thể, nhưng thu nhỏ lại trên màn hình nhỏ. Đây là hành vi mặc định khi dùng Tailwind. Nếu bạn không chắc, có thể chọn kiểu này.
+
+- `full-width` - Hình ảnh sẽ kéo giãn theo chiều rộng container, giữ nguyên tỉ lệ.
+
+  Dùng cho hình ảnh hero hoặc các hình muốn chiếm toàn bộ chiều rộng trang.
+
+- `fixed` - Hình ảnh giữ nguyên kích thước yêu cầu và không thay đổi kích thước. Sẽ tạo `srcset` hỗ trợ màn hình độ phân giải cao, nhưng không cho các kích thước màn hình khác nhau.
+
+  Dùng nếu hình ảnh sẽ không thay đổi kích thước, ví dụ icon hoặc logo nhỏ hơn bất kỳ màn hình nào, hoặc các hình trong container cố định. 
+
+- `none` - Hình ảnh sẽ không đáp ứng. Không tự động sinh `srcset` hay `sizes`, cũng không áp dụng style nào.
+
+  Dùng nếu bạn đã bật layout mặc định, nhưng muốn tắt cho hình ảnh cụ thể. 
+
+Ví dụ, với `constrained` là layout mặc định, bạn có thể ghi đè thuộc tính `layout` cho từng hình ảnh:
+
+```astro title="src/components/MyComponent.astro"
+---
+import { Image } from 'astro:assets';
+import myImage from '../assets/my_image.png';
+---
+<Image src={myImage} alt="Sử dụng layout constrained" width={800} height={600} />
+<Image src={myImage} alt="Sử dụng layout full-width" layout="full-width" />
+<Image src={myImage} alt="Tắt hình ảnh đáp ứng" layout="none" />
+```
+
+##### fit
+
+<p>
+
+**Kiểu:** `'contain' | 'cover' | 'fill' | 'none' | 'scale-down'` <br />
+**Mặc định:** `image.objectFit | 'cover'` <br />
+<Since v="5.10.0" />
+</p>
+
+Được kích hoạt khi thuộc tính [`layout`](#layout) được đặt hoặc cấu hình. Xác định cách hình ảnh đáp ứng được cắt nếu tỉ lệ thay đổi.
+
+Giá trị khớp với CSS `object-fit`. Mặc định là `cover`, hoặc giá trị của [`image.objectFit`](/en/reference/configuration-reference/#imageobjectfit) nếu có. Có thể dùng để ghi đè style mặc định `object-fit`. 
+
+##### position
+
+<p>
+
+**Kiểu:** `string` <br />
+**Mặc định:** `image.objectPosition | 'center'` <br />
+<Since v="5.10.0" />
+</p>
+
+Được kích hoạt khi thuộc tính [`layout`](#layout) được đặt hoặc cấu hình. Xác định vị trí cắt hình ảnh cho hình đáp ứng nếu tỉ lệ thay đổi. 
+
+Giá trị khớp với CSS `object-position`. Mặc định là `center`, hoặc giá trị của [`image.objectPosition`](/en/reference/configuration-reference/#imageobjectposition) nếu có. Có thể dùng để ghi đè style mặc định `object-position`. 
+
+### `getImage()`
+
+<p>
+
 **Kiểu:** `(options: UnresolvedImageTransform) => Promise<GetImageResult>`
 </p>
- 
+
 :::caution
-`getImage()` dựa vào các API chỉ dùng cho server và sẽ gây lỗi build nếu dùng trên client.
+`getImage()` dựa vào các API chỉ có trên server và sẽ gây lỗi build nếu sử dụng trên client.
 :::
- 
-Hàm `getImage()` dùng để tạo ảnh sẽ được sử dụng ở nơi khác ngoài HTML trực tiếp, ví dụ trong một [API Route](/vi/guides/endpoints/#server-endpoints-api-routes). Nó cũng cho phép bạn tạo component `<Image />` tùy chỉnh của riêng mình.
- 
-`getImage()` nhận vào một object options với [các thuộc tính giống như component Image](#image-properties) (trừ `alt`).
- 
+
+Hàm `getImage()` dùng để tạo hình ảnh sẽ sử dụng ở nơi khác ngoài HTML trực tiếp, ví dụ trong [API Route](/en/guides/endpoints/#server-endpoints-api-routes). Nó cũng cho phép bạn tạo component `<Image />` tùy chỉnh.
+
+`getImage()` nhận một object options với [các thuộc tính giống như component Image](#image-properties) (trừ `alt`).
+
 ```astro
 ---
 import { getImage } from "astro:assets";
 import myBackground from "../background.png"
- 
+
 const optimizedBackground = await getImage({src: myBackground, format: 'avif'})
 ---
- 
+
 <div style={`background-image: url(${optimizedBackground.src});`}></div>
 ```
- 
-Nó trả về một object với kiểu sau:
- 
+
+Nó trả về một object với kiểu:
+
 ```ts
 type GetImageResult = {
-  /* Các thuộc tính HTML bổ sung cần thiết để hiển thị ảnh (width, height, style, v.v..) */
+  /* Các thuộc tính HTML bổ sung để render hình ảnh (width, height, style, ...) */
   attributes: Record<string, any>;
-  /* Tham số đã xác thực được truyền vào */
+  /* Tham số đã được xác thực truyền vào */
   options: ImageTransform;
-  /* Tham số gốc được truyền vào */
+  /* Tham số gốc truyền vào */
   rawOptions: ImageTransform;
-  /* Đường dẫn tới ảnh đã tạo */
+  /* Đường dẫn tới hình ảnh đã sinh */
   src: string;
   srcSet: {
-    /* Giá trị đã tạo cho srcset, mỗi mục có url và size descriptor */
+    /* Giá trị sinh ra cho srcset, mỗi mục có url và mô tả kích thước */
     values: SrcSetValue[];
-    /* Một giá trị sẵn sàng dùng cho thuộc tính `srcset` */
+    /* Một giá trị sẵn sàng dùng trong thuộc tính `srcset` */
     attribute: string;
   };
 }
 ```
- 
+
 ### inferRemoteSize()
- 
+
 <p>
- 
+
 **Kiểu:** `(url: string) => Promise<Omit<ImageMetadata, 'src' | 'fsPath'>>`<br />
 <Since v="4.12.0" />
 </p>
- 
-Một hàm dùng để lấy kích thước của ảnh từ xa. Hàm này có thể được sử dụng thay thế cho thuộc tính `inferSize`.
- 
+
+Một hàm để suy ra kích thước của hình ảnh từ xa. Có thể sử dụng thay cho thuộc tính `inferSize`.
+
 ```ts
 import { inferRemoteSize } from 'astro:assets';
 const {width, height} = await inferRemoteSize("https://example.com/cat.png");
