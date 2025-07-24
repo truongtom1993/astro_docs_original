@@ -18,6 +18,9 @@ const site = NETLIFY_PREVIEW_SITE || 'https://docs.astro.build/';
 
 // https://astro.build/config
 export default defineConfig({
+	devToolbar: {
+		enabled: false,
+	},
 	site,
 	integrations: [
 		devServerFileWatcher([

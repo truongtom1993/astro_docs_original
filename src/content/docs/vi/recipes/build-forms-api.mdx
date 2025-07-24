@@ -1,6 +1,6 @@
 ---
-title: Build forms with API routes
-description: Learn how to use JavaScript to send form submissions to an API Route.
+title: Xây dựng biểu mẫu với các tuyến API
+description: Tìm hiểu cách sử dụng JavaScript để gửi dữ liệu biểu mẫu đến một API Route.
 i18nReady: true
 type: recipe
 ---
@@ -8,23 +8,23 @@ import { Steps } from '@astrojs/starlight/components';
 import UIFrameworkTabs from "~/components/tabs/UIFrameworkTabs.astro";
 import PackageManagerTabs from "~/components/tabs/PackageManagerTabs.astro";
 
-An HTML form causes the browser to refresh the page or navigate to a new one. To send form data to an API endpoint instead, you must intercept the form submission using JavaScript. 
+Một biểu mẫu HTML sẽ làm trình duyệt tải lại trang hoặc chuyển hướng sang trang mới. Để gửi dữ liệu biểu mẫu đến một API endpoint, bạn cần chặn quá trình gửi biểu mẫu bằng JavaScript.
 
-This recipe shows you how to send form data to an API endpoint and handle that data.
+Công thức này sẽ hướng dẫn bạn cách gửi dữ liệu biểu mẫu đến một API endpoint và xử lý dữ liệu đó.
 
-## Prerequisites
-- A project with [an adapter for on-demand rendering](/vi/guides/on-demand-rendering/)
-- A [UI Framework integration](/vi/guides/framework-components/) installed
+## Yêu cầu trước
+- Một dự án có [adapter cho rendering theo nhu cầu](/vi/guides/on-demand-rendering/)
+- Đã cài đặt [tích hợp UI Framework](/vi/guides/framework-components/)
 
-## Recipe
+## Công thức
 
 <Steps>
-1. Create a `POST` API endpoint at `/api/feedback` that will receive the form data. Use `request.formData()` to process it. Be sure to validate the form values before you use them. 
+1. Tạo một API endpoint `POST` tại `/api/feedback` để nhận dữ liệu biểu mẫu. Sử dụng `request.formData()` để xử lý dữ liệu. Hãy chắc chắn rằng bạn xác thực giá trị của biểu mẫu trước khi sử dụng chúng.
 
-    This example sends a JSON object with a message back to the client.
+    Ví dụ này trả về một đối tượng JSON với một thông báo cho phía client.
 
     ```ts title="src/pages/api/feedback.ts" "request.formData()" "post"
-    export const prerender = false; // Not needed in 'server' mode
+    export const prerender = false; // Không cần thiết ở chế độ 'server'
     import type { APIRoute } from "astro";
 
     export const POST: APIRoute = async ({ request }) => {
@@ -32,28 +32,28 @@ This recipe shows you how to send form data to an API endpoint and handle that d
       const name = data.get("name");
       const email = data.get("email");
       const message = data.get("message");
-      // Validate the data - you'll probably want to do more than this
+      // Xác thực dữ liệu - bạn có thể muốn làm nhiều hơn thế này
       if (!name || !email || !message) {
         return new Response(
           JSON.stringify({
-            message: "Missing required fields",
+            message: "Thiếu trường bắt buộc",
           }),
           { status: 400 }
         );
       }
-      // Do something with the data, then return a success response
+      // Xử lý dữ liệu, sau đó trả về phản hồi thành công
       return new Response(
         JSON.stringify({
-          message: "Success!"
+          message: "Thành công!"
         }),
         { status: 200 }
       );
     };
     ```
 
-2. Create a form component using your UI framework. Each input should have a `name` attribute that describes the value of that input. 
+2. Tạo một component biểu mẫu sử dụng UI framework của bạn. Mỗi input nên có thuộc tính `name` mô tả giá trị của trường đó.
 
-    Be sure to include a `<button>` or `<input type="submit">` element to submit the form.
+    Đảm bảo thêm một phần tử `<button>` hoặc `<input type="submit">` để gửi biểu mẫu.
 
     <UIFrameworkTabs>
       <Fragment slot="preact">
@@ -62,7 +62,7 @@ This recipe shows you how to send form data to an API endpoint and handle that d
           return (
             <form>
               <label>
-                Name
+                Tên
                 <input type="text" id="name" name="name" required />
               </label>
               <label>
@@ -70,10 +70,10 @@ This recipe shows you how to send form data to an API endpoint and handle that d
                 <input type="email" id="email" name="email" required />
               </label>
               <label>
-                Message
+                Tin nhắn
                 <textarea id="message" name="message" required />
               </label>
-              <button>Send</button>
+              <button>Gửi</button>
             </form>
           );
         }
@@ -85,7 +85,7 @@ This recipe shows you how to send form data to an API endpoint and handle that d
           return (
             <form>
               <label>
-                Name
+                Tên
                 <input type="text" id="name" name="name" required />
               </label>
               <label>
@@ -93,10 +93,10 @@ This recipe shows you how to send form data to an API endpoint and handle that d
                 <input type="email" id="email" name="email" required />
               </label>
               <label>
-                Message
+                Tin nhắn
                 <textarea id="message" name="message" required />
               </label>
-              <button>Send</button>
+              <button>Gửi</button>
             </form>
           );
         }
@@ -108,7 +108,7 @@ This recipe shows you how to send form data to an API endpoint and handle that d
           return (
             <form>
               <label>
-                Name
+                Tên
                 <input type="text" id="name" name="name" required />
               </label>
               <label>
@@ -116,10 +116,10 @@ This recipe shows you how to send form data to an API endpoint and handle that d
                 <input type="email" id="email" name="email" required />
               </label>
               <label>
-                Message
+                Tin nhắn
                 <textarea id="message" name="message" required />
               </label>
-              <button>Send</button>
+              <button>Gửi</button>
             </form>
           );
         }
@@ -129,7 +129,7 @@ This recipe shows you how to send form data to an API endpoint and handle that d
         ```svelte title="src/components/FeedbackForm.svelte"
         <form>
           <label>
-            Name
+            Tên
             <input type="text" id="name" name="name" required />
           </label>
           <label>
@@ -137,10 +137,10 @@ This recipe shows you how to send form data to an API endpoint and handle that d
             <input type="email" id="email" name="email" required />
           </label>
           <label>
-            Message
+            Tin nhắn
             <textarea id="message" name="message" required />
           </label>
-          <button>Send</button>
+          <button>Gửi</button>
         </form>
         ```
       </Fragment>
@@ -149,7 +149,7 @@ This recipe shows you how to send form data to an API endpoint and handle that d
         <template>
           <form>
             <label>
-              Name
+              Tên
               <input type="text" id="name" name="name" required />
             </label>
             <label>
@@ -157,10 +157,10 @@ This recipe shows you how to send form data to an API endpoint and handle that d
               <input type="email" id="email" name="email" required />
             </label>
             <label>
-              Message
+              Tin nhắn
               <textarea id="message" name="message" required />
             </label>
-            <button>Send</button>
+            <button>Gửi</button>
           </form>
         </template>
         ```
@@ -168,11 +168,11 @@ This recipe shows you how to send form data to an API endpoint and handle that d
 
     </UIFrameworkTabs>
 
-3. Create a function that accepts a submit event, then pass it as a `submit` handler to your form. 
+3. Tạo một hàm nhận sự kiện submit, sau đó truyền hàm này như một handler `submit` cho biểu mẫu của bạn.
 
-    In the function:
-    - Call `preventDefault()` on the event to override the browser's default submission process.
-    - Create a `FormData` object and send it in a `POST` request to your endpoint using `fetch()`.
+    Trong hàm này:
+    - Gọi `preventDefault()` trên sự kiện để ghi đè quy trình gửi mặc định của trình duyệt.
+    - Tạo một đối tượng `FormData` và gửi nó qua request `POST` đến endpoint của bạn bằng `fetch()`.
   
 
     <UIFrameworkTabs>
@@ -199,7 +199,7 @@ This recipe shows you how to send form data to an API endpoint and handle that d
           return (
             <form onSubmit={submit}>
               <label>
-                Name
+                Tên
                 <input type="text" id="name" name="name" required />
               </label>
               <label>
@@ -207,10 +207,10 @@ This recipe shows you how to send form data to an API endpoint and handle that d
                 <input type="email" id="email" name="email" required />
               </label>
               <label>
-                Message
+                Tin nhắn
                 <textarea id="message" name="message" required />
               </label>
-              <button>Send</button>
+              <button>Gửi</button>
               {responseMessage && <p>{responseMessage}</p>}
             </form>
           );
@@ -242,7 +242,7 @@ This recipe shows you how to send form data to an API endpoint and handle that d
           return (
             <form onSubmit={submit}>
               <label htmlFor="name">
-                Name
+                Tên
                 <input type="text" id="name" name="name" autoComplete="name" required />
               </label>
               <label htmlFor="email">
@@ -250,10 +250,10 @@ This recipe shows you how to send form data to an API endpoint and handle that d
                 <input type="email" id="email" name="email" autoComplete="email" required />
               </label>
               <label htmlFor="message">
-                Message
+                Tin nhắn
                 <textarea id="message" name="message" autoComplete="off" required />
               </label>
-              <button>Send</button>
+              <button>Gửi</button>
               {responseMessage && <p>{responseMessage}</p>}
             </form>
           );
@@ -285,7 +285,7 @@ This recipe shows you how to send form data to an API endpoint and handle that d
           return (
             <form onSubmit={submit}>
               <label>
-                Name
+                Tên
                 <input type="text" id="name" name="name" required />
               </label>
               <label>
@@ -293,10 +293,10 @@ This recipe shows you how to send form data to an API endpoint and handle that d
                 <input type="email" id="email" name="email" required />
               </label>
               <label>
-                Message
+                Tin nhắn
                 <textarea id="message" name="message" required />
               </label>
-              <button>Send</button>
+              <button>Gửi</button>
               <Suspense>{response() && <p>{response().message}</p>}</Suspense>
             </form>
           );
@@ -323,7 +323,7 @@ This recipe shows you how to send form data to an API endpoint and handle that d
 
         <form on:submit={submit}>
           <label>
-            Name
+            Tên
             <input type="text" id="name" name="name" required />
           </label>
           <label>
@@ -331,10 +331,10 @@ This recipe shows you how to send form data to an API endpoint and handle that d
             <input type="email" id="email" name="email" required />
           </label>
           <label>
-            Message
+            Tin nhắn
             <textarea id="message" name="message" required />
           </label>
-          <button>Send</button>
+          <button>Gửi</button>
           {#if responseMessage}
             <p>{responseMessage}</p>
           {/if}
@@ -363,7 +363,7 @@ This recipe shows you how to send form data to an API endpoint and handle that d
         <template>
           <form @submit="submit">
             <label>
-              Name
+              Tên
               <input type="text" id="name" name="name" required />
             </label>
             <label>
@@ -371,10 +371,10 @@ This recipe shows you how to send form data to an API endpoint and handle that d
               <input type="email" id="email" name="email" required />
             </label>
             <label>
-              Message
+              Tin nhắn
               <textarea id="message" name="message" required />
             </label>
-            <button>Send</button>
+            <button>Gửi</button>
             <p v-if="responseMessage">{{ responseMessage }}</p>
           </form>
         </template>
@@ -383,8 +383,8 @@ This recipe shows you how to send form data to an API endpoint and handle that d
 
     </UIFrameworkTabs>
 
-4. Import and include your `<FeedbackForm />` component on a page. Be sure to use a `client:*` directive to ensure that the form logic is hydrated when you want it to be.
-    
+4. Import và thêm component `<FeedbackForm />` của bạn vào một trang. Đảm bảo sử dụng chỉ thị `client:*` để logic của biểu mẫu được "hydrate" khi bạn muốn.
+
     <UIFrameworkTabs>
         <Fragment slot="preact">
         ```astro title="src/pages/index.astro" "client:load"
@@ -429,11 +429,11 @@ This recipe shows you how to send form data to an API endpoint and handle that d
     </UIFrameworkTabs>
 </Steps>
 
-{/* ## Extension: Use Zod to validate your form
+{/* ## Mở rộng: Sử dụng Zod để xác thực biểu mẫu của bạn
 
-[Zod form data](https://www.npmjs.com/package/zod-form-data) builds on top of [Zod](https://github.com/colinhacks/zod) to validate your form using a schema. This simplifies your code, as it allows you to declare the fields and their requirements, and let Zod handle the validation.
+[Zod form data](https://www.npmjs.com/package/zod-form-data) xây dựng dựa trên [Zod](https://github.com/colinhacks/zod) để xác thực biểu mẫu của bạn bằng schema. Điều này giúp mã của bạn đơn giản hơn, vì bạn chỉ cần khai báo các trường và yêu cầu, Zod sẽ xử lý xác thực.
 
-1. Install `zod` and `zod-form-data`.
+1. Cài đặt `zod` và `zod-form-data`.
 
     <PackageManagerTabs>
       <Fragment slot="npm">
@@ -453,4 +453,4 @@ This recipe shows you how to send form data to an API endpoint and handle that d
       </Fragment>
     </PackageManagerTabs>
 
-2. In your API Route file, declare your schema using `zfd.formData` and export it. */}
+2. Trong file API Route, khai báo schema của bạn bằng `zfd.formData` và export nó. */}

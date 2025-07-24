@@ -1,21 +1,22 @@
 ---
-title: Build a custom image component 
-description: Learn how to build a custom image component that supports media queries using the getImage function.
+title: Xây dựng một component hình ảnh tùy chỉnh
+description: Tìm hiểu cách xây dựng một component hình ảnh tùy chỉnh hỗ trợ media queries bằng cách sử dụng hàm getImage.
 i18nReady: true
 type: recipe
 ---
+
 import { Steps } from '@astrojs/starlight/components';
 
-Astro provides two built-in components that you can use to display and optimize your images.  The `<Picture>` component allows you to display responsive images and work with different formats and sizes. The `<Image>` component will optimize your images and allow you to pass in different formats and quality properties.
+Astro cung cấp hai component tích hợp sẵn mà bạn có thể sử dụng để hiển thị và tối ưu hóa hình ảnh của mình. Component `<Picture>` cho phép bạn hiển thị hình ảnh đáp ứng và làm việc với các định dạng, kích thước khác nhau. Component `<Image>` sẽ tối ưu hóa hình ảnh của bạn và cho phép bạn truyền vào các thuộc tính định dạng và chất lượng khác nhau.
 
-When you need options that the `<Picture>` and `<Image>` components do not currently support, you can use the `getImage()` function to create a custom component. 
+Khi bạn cần các tùy chọn mà `<Picture>` và `<Image>` hiện chưa hỗ trợ, bạn có thể sử dụng hàm `getImage()` để tạo một component tùy chỉnh.
 
-In this recipe, you will use the [`getImage()` function](/vi/guides/images/#generating-images-with-getimage) to create your own custom image component that displays different source images based on media queries.
+Trong ví dụ này, bạn sẽ sử dụng [hàm `getImage()`](/vi/guides/images/#generating-images-with-getimage) để tạo component hình ảnh tùy chỉnh của riêng bạn, hiển thị các nguồn hình ảnh khác nhau dựa trên media queries.
 
-## Recipe
+## Công thức
 
 <Steps>
-1. Create a new Astro component and import the `getImage()` function
+1. Tạo một component Astro mới và import hàm `getImage()`
 
     ```astro title="src/components/MyCustomImageComponent.astro" 
     ---
@@ -24,7 +25,7 @@ In this recipe, you will use the [`getImage()` function](/vi/guides/images/#gene
 
     ```
 
-2. Create a new component for your custom image. `MyCustomComponent.astro` will receive three `props` from `Astro.props`. The `mobileImgUrl` and `desktopImgUrl` props are used for creating your image at different viewport sizes. The `alt` prop is used for the image's alt text. These props will be passed wherever you render your custom image components. Add the following imports and define the props that you will use in your component. You can also use TypeScript to type the props. 
+2. Tạo một component mới cho hình ảnh tùy chỉnh của bạn. `MyCustomComponent.astro` sẽ nhận ba `props` từ `Astro.props`. Prop `mobileImgUrl` và `desktopImgUrl` được dùng để tạo hình ảnh ở các kích thước viewport khác nhau. Prop `alt` được sử dụng cho văn bản thay thế của hình ảnh. Các props này sẽ được truyền vào bất cứ nơi nào bạn render component hình ảnh tùy chỉnh của mình. Thêm các import sau và định nghĩa các props mà bạn sẽ sử dụng trong component. Bạn cũng có thể dùng TypeScript để định kiểu cho các props.
 
     ```astro title="src/components/MyCustomImageComponent.astro" ins={3, 11}
     ---
@@ -42,7 +43,7 @@ In this recipe, you will use the [`getImage()` function](/vi/guides/images/#gene
 
     ```
 
-3. Define each of your responsive images by calling the `getImage()` function with your desired properties.
+3. Định nghĩa từng hình ảnh đáp ứng của bạn bằng cách gọi hàm `getImage()` với các thuộc tính mong muốn.
 
     ```astro title="src/components/MyCustomImageComponent.astro" ins={13-18, 20-25}
     ---
@@ -74,7 +75,7 @@ In this recipe, you will use the [`getImage()` function](/vi/guides/images/#gene
 
     ```
 
-4. Create a `<picture>` element that generates a `srcset` with your different images based on your desired media queries. 
+4. Tạo một phần tử `<picture>` tạo ra một `srcset` với các hình ảnh khác nhau dựa trên media queries bạn mong muốn.
 
     ```astro title="src/components/MyCustomImageComponent.astro" ins={28-32}
     ---
@@ -112,7 +113,7 @@ In this recipe, you will use the [`getImage()` function](/vi/guides/images/#gene
 
     ```
 
-5. Import and use `<MyCustomImageComponent />` in any `.astro` file. Be sure to pass the necessary props for generating two different images at the different viewport sizes:
+5. Import và sử dụng `<MyCustomImageComponent />` trong bất kỳ file `.astro` nào. Hãy chắc chắn truyền các props cần thiết để tạo hai hình ảnh khác nhau ở các kích thước viewport khác nhau:
 
     ```astro title="src/pages/index.astro" 
     ---
@@ -124,7 +125,7 @@ In this recipe, you will use the [`getImage()` function](/vi/guides/images/#gene
     <MyCustomImageComponent
         mobileImgUrl={mobileImage}
         desktopImgUrl={desktopImage}
-        alt="user profile picture"
+        alt="ảnh đại diện người dùng"
     />
 
     ```

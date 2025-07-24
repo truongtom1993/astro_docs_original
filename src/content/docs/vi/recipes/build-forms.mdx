@@ -1,38 +1,38 @@
 ---
-title: Build HTML forms in Astro pages
-description: Learn how to build HTML forms and handle submissions in your frontmatter.
+title: Xây dựng biểu mẫu HTML trong các trang Astro
+description: Tìm hiểu cách xây dựng biểu mẫu HTML và xử lý gửi biểu mẫu trong frontmatter của bạn.
 i18nReady: true
 type: recipe
 ---
 import { Steps } from '@astrojs/starlight/components';
 
-Astro pages that are rendered on demand can both display and handle forms. In this recipe, you'll use a standard HTML form to submit data to the server. Your frontmatter script will handle the data on the server, sending no JavaScript to the client.
+Các trang Astro được render theo yêu cầu có thể vừa hiển thị vừa xử lý biểu mẫu. Trong hướng dẫn này, bạn sẽ sử dụng một biểu mẫu HTML tiêu chuẩn để gửi dữ liệu lên máy chủ. Script trong frontmatter của bạn sẽ xử lý dữ liệu trên máy chủ mà không gửi bất kỳ JavaScript nào tới phía khách.
 
-## Prerequisites
-- An Astro project with a [server adapter](/vi/guides/on-demand-rendering/#server-adapters) installed.
+## Yêu cầu trước
+- Một dự án Astro đã cài đặt [server adapter](/vi/guides/on-demand-rendering/#server-adapters).
 
-## Recipe
+## Công thức
 
 <Steps>
-1. Create or identify a `.astro` page which will contain your form and your handling code. For example, you could add a registration page:
+1. Tạo mới hoặc xác định một trang `.astro` sẽ chứa biểu mẫu và mã xử lý của bạn. Ví dụ, bạn có thể thêm một trang đăng ký:
 
     ```astro title="src/pages/register.astro"
     ---
     ---
-    <h1>Register</h1>
+    <h1>Đăng ký</h1>
     ```
 
-2. Add a `<form>` tag with some inputs to the page. Each input should have a `name` attribute that describes the value of that input. 
+2. Thêm thẻ `<form>` với một số trường nhập liệu vào trang. Mỗi trường nhập liệu nên có thuộc tính `name` để mô tả giá trị của trường đó.
 
-    Be sure to include a `<button>` or `<input type="submit">` element to submit the form.
+    Đảm bảo thêm một phần tử `<button>` hoặc `<input type="submit">` để gửi biểu mẫu.
 
     ```astro title="src/pages/register.astro"
     ---
     ---
-    <h1>Register</h1>
+    <h1>Đăng ký</h1>
     <form>
       <label>
-        Username:
+        Tên đăng nhập:
         <input type="text" name="username" />
       </label>
       <label>
@@ -40,27 +40,27 @@ Astro pages that are rendered on demand can both display and handle forms. In th
         <input type="email" name="email" />
       </label>
       <label>
-        Password:
+        Mật khẩu:
         <input type="password" name="password" />
       </label>
-      <button>Submit</button>
+      <button>Gửi</button>
     </form>
     ```
 
-3. Use [validation attributes](https://developer.mozilla.org/en-US/docs/Learn/Forms/Form_validation#using_built-in_form_validation) to provide basic client-side validation that works even if JavaScript is disabled. 
+3. Sử dụng [các thuộc tính kiểm tra hợp lệ](https://developer.mozilla.org/en-US/docs/Learn/Forms/Form_validation#using_built-in_form_validation) để cung cấp xác thực cơ bản phía khách kể cả khi JavaScript bị tắt.
 
-    In this example,
-    - `required` prevents form submission until the field is filled. 
-    - `minlength` sets a minimum required length for the input text.
-    - `type="email"` also introduces validation that will only accept a valid email format.
+    Trong ví dụ này,
+    - `required` ngăn không cho gửi biểu mẫu nếu trường chưa được điền.
+    - `minlength` đặt độ dài tối thiểu cho chuỗi nhập vào.
+    - `type="email"` cũng bổ sung kiểm tra chỉ chấp nhận định dạng email hợp lệ.
 
     ```astro title="src/pages/register.astro"
     ---
     ---
-    <h1>Register</h1>
+    <h1>Đăng ký</h1>
     <form>
       <label>
-        Username:
+        Tên đăng nhập:
         <input type="text" name="username" required />
       </label>
       <label>
@@ -68,28 +68,28 @@ Astro pages that are rendered on demand can both display and handle forms. In th
         <input type="email" name="email" required />
       </label>
       <label>
-        Password:
+        Mật khẩu:
         <input type="password" name="password" required minlength="6" />
       </label>
-      <button>Submit</button>
+      <button>Gửi</button>
     </form>
     ```
     
     :::tip
-    You can add custom validation logic that refers to multiple fields using a `<script>` tag and the [Constraint Validation API](https://developer.mozilla.org/en-US/docs/Web/HTML/Constraint_validation#complex_constraints_using_the_constraint_validation_api).
+    Bạn có thể thêm logic kiểm tra hợp lệ tuỳ chỉnh liên quan tới nhiều trường bằng cách dùng thẻ `<script>` và [Constraint Validation API](https://developer.mozilla.org/en-US/docs/Web/HTML/Constraint_validation#complex_constraints_using_the_constraint_validation_api).
 
-    To write complex validation logic more easily, you can build your form using a [frontend framework](/vi/guides/framework-components/) and choose a form library like [React Hook Form](https://react-hook-form.com/) or [Felte](https://felte.dev/).
+    Để viết logic kiểm tra phức tạp dễ dàng hơn, bạn có thể xây dựng biểu mẫu với [framework phía frontend](/vi/guides/framework-components/) và lựa chọn thư viện biểu mẫu như [React Hook Form](https://react-hook-form.com/) hoặc [Felte](https://felte.dev/).
     :::
 
-4. The form submission will cause the browser to request the page again. Change the form's data transfer `method` to `POST` to send the form data as part of the `Request` body, rather than as URL parameters.
+4. Việc gửi biểu mẫu sẽ khiến trình duyệt tải lại trang. Hãy thay đổi thuộc tính `method` của biểu mẫu thành `POST` để gửi dữ liệu biểu mẫu như một phần của thân `Request`, thay vì là các tham số trên URL.
 
     ```astro title="src/pages/register.astro" 'method="POST"'
     ---
     ---
-    <h1>Register</h1>
+    <h1>Đăng ký</h1>
     <form method="POST">
       <label>
-        Username:
+        Tên đăng nhập:
         <input type="text" name="username" required />
       </label>
       <label>
@@ -97,14 +97,14 @@ Astro pages that are rendered on demand can both display and handle forms. In th
         <input type="email" name="email" required />
       </label>
       <label>
-        Password:
+        Mật khẩu:
         <input type="password" name="password" required minlength="6" />
       </label>
-      <button>Submit</button>
+      <button>Gửi</button>
     </form>
     ```
 
-5.  Check for the `POST` method in the frontmatter and access the form data using `Astro.request.formData()`. Wrap this in a `try ... catch` block to handle cases when the `POST` request wasn't sent by a form and the `formData` is invalid.
+5.  Kiểm tra phương thức `POST` trong frontmatter và truy cập dữ liệu biểu mẫu bằng `Astro.request.formData()`. Bọc đoạn này trong khối `try ... catch` để xử lý trường hợp yêu cầu `POST` không được gửi từ biểu mẫu và `formData` không hợp lệ.
 
     ```astro title="src/pages/register.astro" ins={2-14} "Astro.request.formData()"
     ---
@@ -114,7 +114,7 @@ Astro pages that are rendered on demand can both display and handle forms. In th
         const name = data.get("username");
         const email = data.get("email");
         const password = data.get("password");
-        // Do something with the data
+        // Xử lý dữ liệu ở đây
       } catch (error) {
         if (error instanceof Error) {
           console.error(error.message);
@@ -122,10 +122,10 @@ Astro pages that are rendered on demand can both display and handle forms. In th
       }
     }
     ---
-    <h1>Register</h1>
+    <h1>Đăng ký</h1>
     <form method="POST">
       <label>
-        Username:
+        Tên đăng nhập:
         <input type="text" name="username" required />
       </label>
       <label>
@@ -133,18 +133,18 @@ Astro pages that are rendered on demand can both display and handle forms. In th
         <input type="email" name="email" required />
       </label>
       <label>
-        Password:
+        Mật khẩu:
         <input type="password" name="password" required minlength="6" />
       </label>
-      <button>Submit</button>
+      <button>Gửi</button>
     </form>
     ```
 
-6. Validate the form data on the server. This should include the same validation done on the client to prevent malicious submissions to your endpoint and to support the rare legacy browser that doesn't have form validation. 
+6. Kiểm tra hợp lệ dữ liệu biểu mẫu trên máy chủ. Điều này nên bao gồm các kiểm tra giống phía client để ngăn các gửi dữ liệu độc hại tới endpoint của bạn và hỗ trợ cho các trình duyệt cũ không có kiểm tra hợp lệ biểu mẫu.
 
-    It can also include validation that can't be done on the client. For example, this example checks if the email is already in the database. 
+    Bạn cũng có thể thực hiện kiểm tra mà phía client không thể làm được. Ví dụ, đoạn mã này kiểm tra email đã tồn tại trong cơ sở dữ liệu chưa.
 
-    Error messages can be sent back to the client by storing them in an `errors` object and accessing it in the template. 
+    Thông báo lỗi có thể trả về phía client bằng cách lưu chúng vào một đối tượng `errors` và truy cập trong template.
 
     ```astro title="src/pages/register.astro" ins={5, 12-22, 41, 46, 51}
     ---
@@ -159,15 +159,15 @@ Astro pages that are rendered on demand can both display and handle forms. In th
         const email = data.get("email");
         const password = data.get("password");
         if (typeof name !== "string" || name.length < 1) {
-          errors.username += "Please enter a username. ";
+          errors.username += "Vui lòng nhập tên đăng nhập. ";
         }
         if (typeof email !== "string" || !isValidEmail(email)) {
-          errors.email += "Email is not valid. ";
+          errors.email += "Email không hợp lệ. ";
         } else if (await isRegistered(email)) {
-          errors.email += "Email is already registered. ";
+          errors.email += "Email đã được đăng ký. ";
         }
         if (typeof password !== "string" || password.length < 6) {
-          errors.password += "Password must be at least 6 characters. ";
+          errors.password += "Mật khẩu phải có ít nhất 6 ký tự. ";
         }
         const hasErrors = Object.values(errors).some(msg => msg)
         if (!hasErrors) {
@@ -181,10 +181,10 @@ Astro pages that are rendered on demand can both display and handle forms. In th
       }
     }
     ---
-    <h1>Register</h1>
+    <h1>Đăng ký</h1>
     <form method="POST">
       <label>
-        Username:
+        Tên đăng nhập:
         <input type="text" name="username" />
       </label>
       {errors.username && <p>{errors.username}</p>}
@@ -194,11 +194,11 @@ Astro pages that are rendered on demand can both display and handle forms. In th
       </label>
       {errors.email && <p>{errors.email}</p>}
       <label>
-        Password:
+        Mật khẩu:
         <input type="password" name="password" required minlength="6" />
       </label>
       {errors.password && <p>{errors.password}</p>}
-      <button>Register</button>
+      <button>Đăng ký</button>
     </form>
 
     ```
