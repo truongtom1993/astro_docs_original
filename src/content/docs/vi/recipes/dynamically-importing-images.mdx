@@ -1,20 +1,20 @@
 ---
-title: Dynamically import images
-description: Learn how to dynamically import images using Vite's import.meta.glob function.
+title: "Nhập ảnh động"
+description: "Tìm hiểu cách nhập ảnh động bằng hàm import.meta.glob của Vite."
 i18nReady: true
 type: recipe
 ---
 import { Steps } from '@astrojs/starlight/components';
 import { FileTree } from '@astrojs/starlight/components';
 
-Local [images](/vi/guides/images/) must be imported into `.astro` files in order to display them. There will be times where you will want or need to dynamically import the image paths of your images instead of explicitly importing each individual image.
+[Ảnh](/vi/guides/images/) cục bộ cần được nhập vào các tệp `.astro` để có thể hiển thị. Sẽ có những lúc bạn muốn hoặc cần nhập động đường dẫn của các ảnh thay vì phải nhập từng ảnh một cách thủ công.
 
-In this recipe, you will learn how to dynamically import your images using Vite's `import.meta.glob` function. You will build a card component that displays the name, age, and photo of a person.
+Trong công thức này, bạn sẽ học cách nhập động các ảnh của mình bằng hàm `import.meta.glob` của Vite. Bạn sẽ xây dựng một thành phần thẻ (card) hiển thị tên, tuổi và ảnh của một người.
 
-## Recipe
+## Công thức
 
 <Steps>
-1. Create a new `assets` folder under the `src` directory and add your images inside that new folder. 
+1. Tạo một thư mục `assets` mới trong thư mục `src` và thêm các ảnh của bạn vào thư mục mới này.
 
     <FileTree>
     - src/
@@ -25,10 +25,10 @@ In this recipe, you will learn how to dynamically import your images using Vite'
     </FileTree>
 
     :::note
-    `assets` is a popular folder name convention for placing images but you are free to name the folder whatever you like.
+    `assets` là một quy ước đặt tên thư mục phổ biến để chứa ảnh, nhưng bạn có thể đặt tên thư mục tùy ý.
     ::: 
 
-2. Create a new Astro component for your card and import the `<Image />` component.
+2. Tạo một component Astro mới cho thẻ của bạn và nhập component `<Image />`.
 
     ```astro title="src/components/MyCustomCardComponent.astro" 
     ---
@@ -36,7 +36,7 @@ In this recipe, you will learn how to dynamically import your images using Vite'
     ---
     ```
 
-3. Specify the `props` that your component will receive in order to display the necessary information on each card. You can optionally define their types, if you are using TypeScript in your project.
+3. Xác định các `props` mà component sẽ nhận để hiển thị thông tin cần thiết trên mỗi thẻ. Bạn cũng có thể định nghĩa kiểu của chúng nếu đang sử dụng TypeScript trong dự án.
 
     ```astro title="src/components/MyCustomCardComponent.astro" ins={4-9, 11}
     ---
@@ -53,7 +53,7 @@ In this recipe, you will learn how to dynamically import your images using Vite'
     ---
     ``` 
 
-4. Create a new `images` variable and use the `import.meta.glob` function which returns an object of all of the image paths inside the `assets` folder. You will also need to import `ImageMetadata` type to help define the type of the `images` variable. 
+4. Tạo biến `images` mới và sử dụng hàm `import.meta.glob` để trả về một đối tượng chứa tất cả đường dẫn của các ảnh trong thư mục `assets`. Bạn cũng cần nhập kiểu `ImageMetadata` để định nghĩa kiểu cho biến `images`.
 
     ```astro title="src/components/MyCustomCardComponent.astro" ins={2, 13} "ImageMetadata"
     ---
@@ -73,7 +73,7 @@ In this recipe, you will learn how to dynamically import your images using Vite'
     ```
     
 
-5. Use the props to create the markup for your card component. 
+5. Sử dụng các props để tạo markup cho component thẻ của bạn.
 
     ```astro title="src/components/MyCustomCardComponent.astro" ins={15-19} "<Image src={} alt={altText} />"
     ---
@@ -92,14 +92,14 @@ In this recipe, you will learn how to dynamically import your images using Vite'
     ---
     <div class="card">
         <h2>{name}</h2>
-        <p>Age: {age}</p>
+        <p>Tuổi: {age}</p>
         <Image src={} alt={altText} />
     </div>
     ```
 
-6. Inside the `src` attribute, pass in the `images` object and use bracket notation for the image path. Then make sure to invoke the glob function. 
+6. Trong thuộc tính `src`, truyền vào đối tượng `images` và sử dụng cú pháp ngoặc vuông với đường dẫn ảnh. Sau đó đảm bảo gọi hàm glob.
 
-    Since you are accessing the `images` object which has an unknown type, you should also `throw` an error in case an invalid file path is passed as a prop.
+    Vì bạn đang truy cập đối tượng `images` với kiểu chưa xác định, bạn cũng nên dùng `throw` để báo lỗi nếu prop truyền vào là một đường dẫn không hợp lệ.
    
     ```astro title="src/components/MyCustomCardComponent.astro" ins="images[imagePath]()" ins={14}
 
@@ -116,17 +116,17 @@ In this recipe, you will learn how to dynamically import your images using Vite'
     
     const { imagePath, altText, name, age } = Astro.props;
     const images = import.meta.glob<{ default: ImageMetadata }>('/src/assets/*.{jpeg,jpg,png,gif}');
-    if (!images[imagePath]) throw new Error(`"${imagePath}" does not exist in glob: "src/assets/*.{jpeg,jpg,png,gif}"`);
+    if (!images[imagePath]) throw new Error(`"${imagePath}" không tồn tại trong glob: "src/assets/*.{jpeg,jpg,png,gif}"`);
     ---
     <div class="card">
         <h2>{name}</h2>
-        <p>Age: {age}</p>
+        <p>Tuổi: {age}</p>
         <Image src={images[imagePath]()} alt={altText} />
     </div>
     ```
 
     :::note
-    `images` is an object that contains all of the image paths inside the `assets` folder. 
+    `images` là một đối tượng chứa tất cả các đường dẫn ảnh trong thư mục `assets`. 
 
     ```js
     const images = {
@@ -136,10 +136,10 @@ In this recipe, you will learn how to dynamically import your images using Vite'
     }
     ```
 
-    The `imagePath` prop is a string that contains the path to the image that you want to display. The `import.meta.glob()` is doing the work of finding the image path that matches the `imagePath` prop and handling the import for you.
+    Prop `imagePath` là một chuỗi chứa đường dẫn tới ảnh mà bạn muốn hiển thị. `import.meta.glob()` sẽ tìm đường dẫn khớp với prop `imagePath` và xử lý việc nhập ảnh cho bạn.
     ::: 
 
-7. Import and use the card component inside an Astro page, passing in the values for the `props`. 
+7. Nhập và sử dụng component thẻ trong một trang Astro, truyền vào các giá trị cho các `props`.
 
     ```astro title="src/pages/index.astro" 
     ---
@@ -147,7 +147,7 @@ In this recipe, you will learn how to dynamically import your images using Vite'
     ---
     <MyCustomCardComponent 
         imagePath="/src/assets/avatar-1.jpg"
-        altText="A headshot of Priya against a brick wall background."
+        altText="Ảnh chân dung của Priya với nền là bức tường gạch."
         name="Priya"
         age={25}
     />

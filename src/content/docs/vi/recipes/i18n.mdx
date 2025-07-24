@@ -1,6 +1,6 @@
 ---
-title: Add i18n features 
-description: Use dynamic routing and content collections to add internationalization support to your Astro site.
+title: Thêm tính năng i18n 
+description: Sử dụng định tuyến động và bộ sưu tập nội dung để thêm hỗ trợ quốc tế hóa vào trang web Astro của bạn.
 type: recipe
 i18nReady: true
 ---
@@ -9,28 +9,28 @@ import ReadMore from '~/components/ReadMore.astro';
 import { Steps } from '@astrojs/starlight/components';
 import StaticSsrTabs from '~/components/tabs/StaticSsrTabs.astro';
 
-In this recipe, you will learn how to use content collections and dynamic routing to build your own internationalization (i18n) solution and serve your content in different languages.
+Trong công thức này, bạn sẽ học cách sử dụng bộ sưu tập nội dung và định tuyến động để xây dựng giải pháp quốc tế hóa (i18n) của riêng bạn và phục vụ nội dung bằng các ngôn ngữ khác nhau.
 
 :::tip
-In v4.0, Astro added built-in support for i18n routing that allows you to configure default and supported languages and includes valuable helper functions to assist you in serving an international audience. If you want to use this instead, see our [internationalization guide](/vi/guides/internationalization/) to learn about these features.
+Trong phiên bản v4.0, Astro đã thêm hỗ trợ tích hợp cho định tuyến i18n cho phép bạn cấu hình ngôn ngữ mặc định và được hỗ trợ, đồng thời bao gồm các hàm trợ giúp có giá trị để hỗ trợ bạn phục vụ đối tượng quốc tế. Nếu bạn muốn sử dụng tính năng này thay thế, hãy xem [hướng dẫn quốc tế hóa](/vi/guides/internationalization/) của chúng tôi để tìm hiểu về các tính năng này.
 :::
-This example serves each language at its own subpath, e.g. `example.com/vi/blog` for English and `example.com/fr/blog` for French.
+Ví dụ này phục vụ mỗi ngôn ngữ tại đường dẫn con riêng của nó, ví dụ: `example.com/vi/blog` cho tiếng Việt và `example.com/fr/blog` cho tiếng Pháp.
 
-If you prefer the default language to not be visible in the URL unlike other languages, there are [instructions to hide the default language](/vi/recipes/i18n/#hide-default-language-in-the-url) below.
+Nếu bạn muốn ngôn ngữ mặc định không hiển thị trong URL không giống như các ngôn ngữ khác, có [hướng dẫn để ẩn ngôn ngữ mặc định](/vi/recipes/i18n/#hide-default-language-in-the-url) bên dưới.
 
-<ReadMore>See the [resources section](#resources) for external links to related topics such as right-to-left (RTL) styling and choosing language tags.</ReadMore>
+<ReadMore>Xem [phần tài nguyên](#resources) để biết các liên kết bên ngoài đến các chủ đề liên quan như kiểu dáng từ phải sang trái (RTL) và chọn thẻ ngôn ngữ.</ReadMore>
 
-## Recipe
+## Công thức
 
-### Set up pages for each language
+### Thiết lập trang cho từng ngôn ngữ
 
 <Steps>
-1. Create a directory for each language you want to support. For example, `en/` and `fr/` if you are supporting English and French:
+1. Tạo một thư mục cho mỗi ngôn ngữ bạn muốn hỗ trợ. Ví dụ: `vi/` và `fr/` nếu bạn hỗ trợ tiếng Việt và tiếng Pháp:
 
     <FileTree>
     - src/
       - pages/
-        - **en/**
+        - **vi/**
           - about.astro
           - index.astro
         - **fr/**
@@ -39,7 +39,7 @@ If you prefer the default language to not be visible in the URL unlike other lan
         - index.astro
     </FileTree>
 
-2. Set up `src/pages/index.astro` to redirect to your default language.
+2. Thiết lập `src/pages/index.astro` để chuyển hướng đến ngôn ngữ mặc định của bạn.
 
     <StaticSsrTabs>
       <Fragment slot="static">
@@ -50,11 +50,11 @@ If you prefer the default language to not be visible in the URL unlike other lan
         <meta http-equiv="refresh" content="0;url=/vi/" />
         ```
 
-        This approach uses a [meta refresh](https://en.wikipedia.org/wiki/Meta_refresh) and will work however you deploy your site. Some static hosts also let you configure server redirects with a custom configuration file. See your deploy platform’s documentation for more details.
+        Phương pháp này sử dụng [meta refresh](https://en.wikipedia.org/wiki/Meta_refresh) và sẽ hoạt động bất kể bạn triển khai trang web của mình như thế nào. Một số máy chủ tĩnh cũng cho phép bạn cấu hình chuyển hướng máy chủ với tệp cấu hình tùy chỉnh. Xem tài liệu của nền tảng triển khai của bạn để biết thêm chi tiết.
       </Fragment>
       
       <Fragment slot="ssr">
-        If you are using an SSR adapter, you can use [`Astro.redirect`](/vi/guides/routing/#dynamic-redirects) to redirect to the default language on the server.
+        Nếu bạn đang sử dụng bộ chuyển đổi SSR, bạn có thể sử dụng [`Astro.redirect`](/vi/guides/routing/#dynamic-redirects) để chuyển hướng đến ngôn ngữ mặc định trên máy chủ.
 
         ```astro
         ---
@@ -66,24 +66,24 @@ If you prefer the default language to not be visible in the URL unlike other lan
     </StaticSsrTabs>
 </Steps>
 
-### Use collections for translated content
+### Sử dụng bộ sưu tập cho nội dung đã dịch
 
 <Steps>
-1. Create a folder in `src/content/` for each type of content you want to include and add subdirectories for each supported language. For example, to support English and French blog posts:
+1. Tạo một thư mục trong `src/content/` cho mỗi loại nội dung bạn muốn bao gồm và thêm các thư mục con cho mỗi ngôn ngữ được hỗ trợ. Ví dụ: để hỗ trợ bài đăng blog tiếng Việt và tiếng Pháp:
 
     <FileTree>
     - src/
       - content/
           - blog/
-            - **en/** Blog posts in English
+            - **vi/** Bài đăng blog bằng tiếng Việt
                 - post-1.md
                 - post-2.md
-            - **fr/** Blog posts in French
+            - **fr/** Bài đăng blog bằng tiếng Pháp
               - post-1.md
               - post-2.md
     </FileTree>
 
-2. Create a `src/content.config.ts` file and export a collection for each type of content.
+2. Tạo tệp `src/content.config.ts` và xuất một bộ sưu tập cho mỗi loại nội dung.
 
     ```ts
     //src/content.config.ts
@@ -103,13 +103,13 @@ If you prefer the default language to not be visible in the URL unlike other lan
 
     ```
     
-    <ReadMore>Read more about [Content Collections](/vi/guides/content-collections/).</ReadMore>
+    <ReadMore>Đọc thêm về [Bộ sưu tập nội dung](/vi/guides/content-collections/).</ReadMore>
 
-3. Use [dynamic routes](/vi/guides/routing/#dynamic-routes) to fetch and render content based on a `lang` and a `slug` parameter.
+3. Sử dụng [định tuyến động](/vi/guides/routing/#dynamic-routes) để lấy và hiển thị nội dung dựa trên tham số `lang` và `slug`.
 
     <StaticSsrTabs>
       <Fragment slot="static">
-        In static rendering mode, use `getStaticPaths` to map each content entry to a page:
+        Trong chế độ hiển thị tĩnh, sử dụng `getStaticPaths` để ánh xạ mỗi mục nội dung tới một trang:
 
         ```astro
         //src/pages/[lang]/blog/[...slug].astro
@@ -133,13 +133,13 @@ If you prefer the default language to not be visible in the URL unlike other lan
         const { Content } = await render(page);
         ---
         <h1>{page.data.title}</h1>
-        <p>by {page.data.author} • {formattedDate}</p>
+        <p>bởi {page.data.author} • {formattedDate}</p>
         <Content/>
         ```
       </Fragment>
 
       <Fragment slot="ssr">
-        In [SSR mode](/vi/guides/on-demand-rendering/), fetch the requested entry directly:
+        Trong [chế độ SSR](/vi/guides/on-demand-rendering/), lấy mục được yêu cầu trực tiếp:
 
         ```astro
         //src/pages/[lang]/blog/[...slug].astro
@@ -157,40 +157,40 @@ If you prefer the default language to not be visible in the URL unlike other lan
         const { Content, headings } = await render(page);
         ---
         <h1>{page.data.title}</h1>
-        <p>by {page.data.author} • {formattedDate}</p>
+        <p>bởi {page.data.author} • {formattedDate}</p>
         <Content/>
         ```
       </Fragment>
     </StaticSsrTabs>
 
-    <ReadMore>Read more about [dynamic routing](/vi/guides/routing/#dynamic-routes).</ReadMore>
+    <ReadMore>Đọc thêm về [định tuyến động](/vi/guides/routing/#dynamic-routes).</ReadMore>
 
-    :::tip[Date formatting]
-    The example above uses the built-in [`toLocaleString()` date-formatting method](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/toLocaleString) to create a human-readable string from the frontmatter date.
-    This ensures the date and time are formatted to match the user’s language.
+    :::tip[Định dạng ngày tháng]
+    Ví dụ trên sử dụng [phương pháp định dạng ngày tích hợp `toLocaleString()`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/toLocaleString) để tạo chuỗi có thể đọc được từ ngày trong frontmatter.
+    Điều này đảm bảo ngày và giờ được định dạng để phù hợp với ngôn ngữ của người dùng.
     :::
 </Steps>
 
-### Translate UI strings
+### Dịch chuỗi giao diện người dùng
 
-Create dictionaries of terms to translate the labels for UI elements around your site. This allows your visitors to experience your site fully in their language.
+Tạo từ điển các thuật ngữ để dịch nhãn cho các phần tử giao diện người dùng trên trang web của bạn. Điều này cho phép khách truy cập trải nghiệm trang web của bạn đầy đủ bằng ngôn ngữ của họ.
 
 <Steps>
-1. Create a `src/i18n/ui.ts` file to store your translation strings:
+1. Tạo tệp `src/i18n/ui.ts` để lưu trữ các chuỗi dịch của bạn:
 
     ```ts
     // src/i18n/ui.ts
     export const languages = {
-      en: 'English',
+      vi: 'Tiếng Việt',
       fr: 'Français',
     };
 
-    export const defaultLang = 'en';
+    export const defaultLang = 'vi';
     
     export const ui = {
-      en: {
-        'nav.home': 'Home',
-        'nav.about': 'About',
+      vi: {
+        'nav.home': 'Trang chủ',
+        'nav.about': 'Giới thiệu',
         'nav.twitter': 'Twitter',
       },
       fr: {
@@ -200,7 +200,7 @@ Create dictionaries of terms to translate the labels for UI elements around your
     } as const;
     ```
     
-2. Create two helper functions: one to detect the page language based on the current URL, and one to get translations strings for different parts of the UI in `src/i18n/utils.ts`:
+2. Tạo hai hàm trợ giúp: một để phát hiện ngôn ngữ trang dựa trên URL hiện tại, và một để lấy chuỗi dịch cho các phần khác nhau của giao diện người dùng trong `src/i18n/utils.ts`:
 
     ```js
     // src/i18n/utils.ts
@@ -219,11 +219,11 @@ Create dictionaries of terms to translate the labels for UI elements around your
     }
     ```
 
-    :::note[Did you notice?]
-    In step 1, the `nav.twitter` string was not translated to French. You may not want every term translated, such as proper names or common industry terms. The `useTranslations` helper will return the default language’s value if a key is not translated. In this example, French users will also see “Twitter” in the nav bar.
+    :::note[Bạn có nhận ra không?]
+    Trong bước 1, chuỗi `nav.twitter` không được dịch sang tiếng Pháp. Bạn có thể không muốn dịch mọi thuật ngữ, chẳng hạn như tên riêng hoặc thuật ngữ ngành phổ biến. Hàm trợ giúp `useTranslations` sẽ trả về giá trị của ngôn ngữ mặc định nếu một khóa không được dịch. Trong ví dụ này, người dùng Pháp cũng sẽ thấy "Twitter" trong thanh điều hướng.
     :::
     
-3. Import the helpers where needed and use them to choose the UI string that corresponds to the current language. For example, a nav component might look like:
+3. Nhập các hàm trợ giúp khi cần và sử dụng chúng để chọn chuỗi giao diện người dùng tương ứng với ngôn ngữ hiện tại. Ví dụ: một thành phần điều hướng có thể trông như:
 
     ```astro 
     ---
@@ -252,7 +252,7 @@ Create dictionaries of terms to translate the labels for UI elements around your
     </ul>
     ```
 
-4. Each page must have a `lang` attribute on the `<html>` element that matches the language on the page. In this example, a [reusable layout](/vi/basics/layouts/) extracts the language from the current route:
+4. Mỗi trang phải có thuộc tính `lang` trên phần tử `<html>` khớp với ngôn ngữ trên trang. Trong ví dụ này, một [bố cục có thể tái sử dụng](/vi/basics/layouts/) trích xuất ngôn ngữ từ tuyến đường hiện tại:
 
     ```astro
     ---
@@ -275,7 +275,7 @@ Create dictionaries of terms to translate the labels for UI elements around your
     </html>
     ```
 
-    You can then use this base layout to ensure that pages use the correct `lang` attribute automatically.
+    Sau đó bạn có thể sử dụng bố cục cơ sở này để đảm bảo rằng các trang sử dụng thuộc tính `lang` chính xác một cách tự động.
     
     ```astro
     ---
@@ -283,18 +283,18 @@ Create dictionaries of terms to translate the labels for UI elements around your
     import Base from '../../layouts/Base.astro';
     ---
     <Base>
-        <h1>About me</h1>
+        <h1>Giới thiệu về tôi</h1>
         ...
     </Base>
     ```
 </Steps>
 
-### Let users switch between languages
+### Để người dùng chuyển đổi giữa các ngôn ngữ
 
-Create links to the different languages you support so users can choose the language they want to read your site in.
+Tạo liên kết đến các ngôn ngữ khác nhau mà bạn hỗ trợ để người dùng có thể chọn ngôn ngữ họ muốn đọc trang web của bạn.
 
 <Steps>
-1. Create a component to show a link for each language:
+1. Tạo một thành phần để hiển thị liên kết cho mỗi ngôn ngữ:
 
     ```astro
     ---
@@ -310,7 +310,7 @@ Create links to the different languages you support so users can choose the lang
     </ul>
     ```
 
-2. Add `<LanguagePicker />` to your site so it is shown on every page. The example below adds it to the site footer in a base layout:
+2. Thêm `<LanguagePicker />` vào trang web của bạn để nó được hiển thị trên mọi trang. Ví dụ dưới đây thêm nó vào chân trang trang web trong bố cục cơ sở:
 
     ```astro ins={3,17-19}
     ---
@@ -337,10 +337,10 @@ Create links to the different languages you support so users can choose the lang
     ```
 </Steps>
 
-### Hide default language in the URL
+### Ẩn ngôn ngữ mặc định trong URL
 
 <Steps>
-1. Create a directory for each language except the default language. For example, store your default language pages directly in `pages/`, and your translated pages in `fr/`:
+1. Tạo một thư mục cho mỗi ngôn ngữ ngoại trừ ngôn ngữ mặc định. Ví dụ: lưu trữ các trang ngôn ngữ mặc định của bạn trực tiếp trong `pages/`, và các trang đã dịch của bạn trong `fr/`:
 
     <FileTree>
     - src/
@@ -352,14 +352,14 @@ Create links to the different languages you support so users can choose the lang
           - index.astro
     </FileTree>
 
-2. Add another line to the `src/i18n/ui.ts` file to toggle the feature:
+2. Thêm một dòng khác vào tệp `src/i18n/ui.ts` để bật/tắt tính năng:
 
     ```ts
     // src/i18n/ui.ts
     export const showDefaultLang = false;
     ```
 
-3. Add a helper function to `src/i18n/utils.ts`, to translate paths based on the current language:
+3. Thêm hàm trợ giúp vào `src/i18n/utils.ts`, để dịch đường dẫn dựa trên ngôn ngữ hiện tại:
 
    ```js
    // src/i18n/utils.ts
@@ -372,7 +372,7 @@ Create links to the different languages you support so users can choose the lang
    }
    ```
 
-4. Import the helper where needed. For example, a `nav` component might look like:
+4. Nhập hàm trợ giúp khi cần. Ví dụ: một thành phần `nav` có thể trông như:
 
     ```astro 
     ---
@@ -402,7 +402,7 @@ Create links to the different languages you support so users can choose the lang
     </ul>
     ```
 
-5. The helper function can also be used to translate paths for a specific language. For example, when users switch between languages:
+5. Hàm trợ giúp cũng có thể được sử dụng để dịch đường dẫn cho một ngôn ngữ cụ thể. Ví dụ: khi người dùng chuyển đổi giữa các ngôn ngữ:
 
     ```astro
     ---
@@ -423,12 +423,12 @@ Create links to the different languages you support so users can choose the lang
     ```
 </Steps>
 
-### Translate Routes
+### Dịch tuyến đường
 
-Translate the routes of your pages for each language.
+Dịch các tuyến đường của trang của bạn cho mỗi ngôn ngữ.
 
 <Steps>
-1. Add route mappings to `src/i18n/ui.ts`:
+1. Thêm ánh xạ tuyến đường vào `src/i18n/ui.ts`:
 
     ```ts
     // src/i18n/ui.ts
@@ -442,7 +442,7 @@ Translate the routes of your pages for each language.
     }
     ```
 
-2. Update the `useTranslatedPath` helper function in `src/i18n/utils.ts` to add router translation logic.
+2. Cập nhật hàm trợ giúp `useTranslatedPath` trong `src/i18n/utils.ts` để thêm logic dịch router.
 
     ```js
     // src/i18n/utils.ts
@@ -459,7 +459,7 @@ Translate the routes of your pages for each language.
     }
     ```
 
-3. Create a helper function to get the route, if it exists based on the current URL, in `src/i18n/utils.ts`:
+3. Tạo hàm trợ giúp để lấy tuyến đường, nếu nó tồn tại dựa trên URL hiện tại, trong `src/i18n/utils.ts`:
 
     ```js
     // src/i18n/utils.ts
@@ -495,7 +495,7 @@ Translate the routes of your pages for each language.
     }
     ```
 
-4. The helper function can be used to get a translated route. For example, when no translated route is defined, the user will be redirected to the home page:
+4. Hàm trợ giúp có thể được sử dụng để lấy tuyến đường đã dịch. Ví dụ: khi không có tuyến đường dịch nào được định nghĩa, người dùng sẽ được chuyển hướng đến trang chủ:
 
     ```astro
     ---
@@ -518,14 +518,14 @@ Translate the routes of your pages for each language.
     ```
 </Steps>
 
-## Resources
-- [Choosing a Language Tag](https://www.w3.org/International/questions/qa-choosing-language-tags)
-- [Right-to-left (RTL) Styling 101](https://rtlstyling.com/)
+## Tài nguyên
+- [Chọn thẻ ngôn ngữ](https://www.w3.org/International/questions/qa-choosing-language-tags)
+- [Kiểu dáng từ phải sang trái (RTL) 101](https://rtlstyling.com/)
 
-## Community libraries
-- [astro-i18next](https://github.com/yassinedoghri/astro-i18next) — An Astro integration for i18next including some utility components.
-- [astro-i18n](https://github.com/alexandre-fernandez/astro-i18n) — A TypeScript-first internationalization library for Astro.
-- [astro-i18n-aut](https://github.com/jlarmstrongiv/astro-i18n-aut) — An Astro integration for i18n that supports the `defaultLocale` without page generation. The integration is adapter agnostic and UI framework agnostic.
-- [astro-react-i18next](https://github.com/jeremyxgo/astro-react-i18next) — An Astro integration that seamlessly enables the use of i18next and react-i18next in React components on Astro websites.
-- [paraglide](https://inlang.com/c/astro) — A fully type-safe i18n library specifically designed for partial hydration patterns like Astro islands.
-- [astro-loader-i18n](https://github.com/openscript/astro-loader-i18n) — An Astro glob content loader for i18n files and folder structures supporting the translation of routes.
+## Thư viện cộng đồng
+- [astro-i18next](https://github.com/yassinedoghri/astro-i18next) — Một tích hợp Astro cho i18next bao gồm một số thành phần tiện ích.
+- [astro-i18n](https://github.com/alexandre-fernandez/astro-i18n) — Một thư viện quốc tế hóa TypeScript-first cho Astro.
+- [astro-i18n-aut](https://github.com/jlarmstrongiv/astro-i18n-aut) — Một tích hợp Astro cho i18n hỗ trợ `defaultLocale` mà không tạo trang. Tích hợp này không phụ thuộc vào adapter và framework UI.
+- [astro-react-i18next](https://github.com/jeremyxgo/astro-react-i18next) — Một tích hợp Astro cho phép sử dụng liền mạch i18next và react-i18next trong các thành phần React trên trang web Astro.
+- [paraglide](https://inlang.com/c/astro) — Một thư viện i18n hoàn toàn type-safe được thiết kế đặc biệt cho các mẫu hydration một phần như Astro islands.
+- [astro-loader-i18n](https://github.com/openscript/astro-loader-i18n) — Một bộ tải nội dung glob Astro cho các tệp và cấu trúc thư mục i18n hỗ trợ dịch tuyến đường.

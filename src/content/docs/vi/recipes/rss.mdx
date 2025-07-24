@@ -1,6 +1,6 @@
 ---
-title: Add an RSS feed
-description: Add an RSS feed to your Astro site to let users subscribe to your content.
+title: Thêm nguồn cấp RSS
+description: Thêm nguồn cấp RSS vào trang Astro của bạn để cho phép người dùng đăng ký nội dung của bạn.
 i18nReady: true
 type: recipe
 ---
@@ -9,14 +9,14 @@ import { Steps } from '@astrojs/starlight/components';
 import ReadMore from '~/components/ReadMore.astro';
 import PackageManagerTabs from '~/components/tabs/PackageManagerTabs.astro';
 
-Astro supports fast, automatic RSS feed generation for blogs and other content websites. RSS feeds provide an easy way for users to subscribe to your content.
+Astro hỗ trợ tạo nguồn cấp RSS nhanh và tự động cho blog và các trang web nội dung khác. Nguồn cấp RSS cung cấp một cách dễ dàng để người dùng đăng ký nội dung của bạn.
 
-## Setting up `@astrojs/rss`
+## Thiết lập `@astrojs/rss`
 
-The package [`@astrojs/rss`](https://github.com/withastro/astro/tree/main/packages/astro-rss) provides helpers for generating RSS feeds using [API endpoints](/vi/guides/endpoints/#static-file-endpoints). This unlocks both static builds _and_ on-demand generation when using an [SSR adapter](/vi/guides/on-demand-rendering/).
+Gói [`@astrojs/rss`](https://github.com/withastro/astro/tree/main/packages/astro-rss) cung cấp các tiện ích để tạo nguồn cấp RSS bằng cách sử dụng [API endpoints](/vi/guides/endpoints/#static-file-endpoints). Điều này cho phép vừa build tĩnh _vừa_ tạo theo yêu cầu khi sử dụng [SSR adapter](/vi/guides/on-demand-rendering/).
 
 <Steps>
-1. Install `@astrojs/rss` using your preferred package manager:
+1. Cài đặt `@astrojs/rss` bằng trình quản lý gói bạn thích:
 
     <PackageManagerTabs>
       <Fragment slot="npm">
@@ -37,56 +37,56 @@ The package [`@astrojs/rss`](https://github.com/withastro/astro/tree/main/packag
     </PackageManagerTabs>
 
     :::tip
-    Ensure you've [configured a `site`](/vi/reference/configuration-reference/#site) in your project's `astro.config`. This will be used to generate links to your RSS articles.
+    Đảm bảo bạn đã [cấu hình `site`](/vi/reference/configuration-reference/#site) trong `astro.config` của dự án. Thông tin này sẽ được sử dụng để tạo liên kết đến các bài viết RSS của bạn.
     :::
 
-2. Create a file in `src/pages/` with a name of your choice and the extension `.xml.js` to be used as the output URL for your feed. Some common RSS feed URL names are `feed.xml` or `rss.xml`.
+2. Tạo một file trong `src/pages/` với tên tùy chọn và phần mở rộng là `.xml.js` để sử dụng làm URL đầu ra cho nguồn cấp của bạn. Một số tên URL nguồn cấp RSS phổ biến là `feed.xml` hoặc `rss.xml`.
 
-    The example file below `src/pages/rss.xml.js` will create an RSS feed at `site/rss.xml`.
+    File ví dụ dưới đây `src/pages/rss.xml.js` sẽ tạo một nguồn cấp RSS tại `site/rss.xml`.
 
-3. Import the `rss()` helper from the `@astrojs/rss` package into your `.xml.js` file and export a function that returns it using the following parameters:
+3. Import helper `rss()` từ gói `@astrojs/rss` vào file `.xml.js` của bạn và export một hàm trả về nó với các tham số sau:
 
     ```js title="src/pages/rss.xml.js"
     import rss from '@astrojs/rss';
 
     export function GET(context) {
       return rss({
-        // `<title>` field in output xml
-        title: 'Buzz’s Blog',
-        // `<description>` field in output xml
-        description: 'A humble Astronaut’s guide to the stars',
-        // Pull in your project "site" from the endpoint context
+        // Trường `<title>` trong xml đầu ra
+        title: 'Blog của Buzz',
+        // Trường `<description>` trong xml đầu ra
+        description: 'Hướng dẫn khiêm tốn của phi hành gia đến các vì sao',
+        // Lấy "site" của dự án từ context endpoint
         // https://docs.astro.build/vi/reference/api-reference/#site
         site: context.site,
-        // Array of `<item>`s in output xml
-        // See "Generating items" section for examples using content collections and glob imports
+        // Mảng các `<item>` trong xml đầu ra
+        // Xem phần "Tạo items" để biết ví dụ sử dụng content collections và glob imports
         items: [],
-        // (optional) inject custom xml
+        // (tùy chọn) chèn xml tuỳ chỉnh
         customData: `<language>en-us</language>`,
       });
     }
     ```
 </Steps>
 
-<ReadMore>See the [`@astrojs/rss` README](https://github.com/withastro/astro/tree/main/packages/astro-rss) for the full configuration reference.</ReadMore>
+<ReadMore>Xem [README của `@astrojs/rss`](https://github.com/withastro/astro/tree/main/packages/astro-rss) để tham khảo cấu hình đầy đủ.</ReadMore>
 
-## Generating `items`
+## Tạo `items`
 
-The `items` field accepts a list of RSS feed objects, which can be generated from content collections entries using `getCollection()` or from your page files using `pagesGlobToRssItems()`.
+Trường `items` nhận một danh sách các đối tượng RSS, có thể được tạo từ các entry trong content collections bằng `getCollection()` hoặc từ các file trang của bạn bằng `pagesGlobToRssItems()`.
 
-The RSS feed standard format includes metadata for each published item, including values such as:
+Định dạng chuẩn nguồn cấp RSS bao gồm thông tin metadata cho từng mục đã xuất bản, bao gồm các giá trị như:
 
-- `title`: The title of the entry. Optional only if a `description` is set. Otherwise, required.
-- `description`: A short excerpt from or describing the entry. Optional only if a `title` is set. Otherwise, required.
-- `link`: A URL to the original source of the entry. (optional)
-- `pubDate`: The date of publication of the entry. (optional)
-- `content`: The full content of your post. (optional)
+- `title`: Tiêu đề của mục. Tùy chọn nếu đã có `description`. Ngược lại thì bắt buộc.
+- `description`: Đoạn trích ngắn hoặc mô tả cho mục. Tùy chọn nếu đã có `title`. Ngược lại thì bắt buộc.
+- `link`: URL đến nguồn gốc của mục. (tùy chọn)
+- `pubDate`: Ngày xuất bản của mục. (tùy chọn)
+- `content`: Nội dung đầy đủ của bài viết. (tùy chọn)
 
-<ReadMore>See the [`items` configuration reference](https://github.com/withastro/astro/tree/main/packages/astro-rss#items) for a complete list of options.</ReadMore>
+<ReadMore>Xem [tham khảo cấu hình `items`](https://github.com/withastro/astro/tree/main/packages/astro-rss#items) để biết danh sách đầy đủ các tùy chọn.</ReadMore>
 
-### Using content collections
+### Sử dụng content collections
 
-To create an RSS feed of pages managed in [content collections](/vi/guides/content-collections/), use the `getCollection()` function to retrieve the data required for your `items` array. You will need to specify the values for each desired property (e.g. `title`, `description`) from the returned data.
+Để tạo nguồn cấp RSS từ các trang được quản lý bằng [content collections](/vi/guides/content-collections/), hãy sử dụng hàm `getCollection()` để lấy dữ liệu cho mảng `items` của bạn. Bạn sẽ cần chỉ định giá trị cho từng thuộc tính mong muốn (ví dụ: `title`, `description`) từ dữ liệu trả về.
 
 ```js title="src/pages/rss.xml.js" "items:" "const blog = await getCollection('blog');"
 import rss from '@astrojs/rss';
@@ -95,24 +95,24 @@ import { getCollection } from 'astro:content';
 export async function GET(context) {
   const blog = await getCollection('blog');
   return rss({
-    title: 'Buzz’s Blog',
-    description: 'A humble Astronaut’s guide to the stars',
+    title: 'Blog của Buzz',
+    description: 'Hướng dẫn khiêm tốn của phi hành gia đến các vì sao',
     site: context.site,
     items: blog.map((post) => ({
       title: post.data.title,
       pubDate: post.data.pubDate,
       description: post.data.description,
-      // Compute RSS link from post `id`
-      // This example assumes all posts are rendered as `/blog/[id]` routes
+      // Tạo link RSS từ `id` của bài viết
+      // Ví dụ này giả định tất cả bài viết được render tại đường dẫn `/blog/[id]`
       link: `/blog/${post.id}/`,
     })),
   });
 }
 ```
 
-Optional: replace your existing blog collection schema to enforce the expected RSS properties.
+Tuỳ chọn: thay thế schema collection blog hiện tại của bạn để ép buộc các thuộc tính RSS mong đợi.
 
-To ensure that every blog entry produces a valid RSS feed item, you can optionally import and apply `rssSchema` instead of defining each individual property of your schema.
+Để đảm bảo rằng mỗi entry blog đều sinh ra một mục hợp lệ cho RSS, bạn có thể import và áp dụng `rssSchema` thay vì định nghĩa từng thuộc tính trong schema.
 
 ```js title="src/content.config.ts" "rssSchema"
 import { defineCollection } from 'astro:content';
@@ -125,14 +125,14 @@ const blog = defineCollection({
 export const collections = { blog };
 ```
 
-### Using glob imports
+### Sử dụng glob imports
 
 <p><Since v="2.1.0" pkg="@astrojs/rss" /></p>
 
-To create an RSS feed from documents in `src/pages/`, use the `pagesGlobToRssItems()` helper. This accepts an [`import.meta.glob`](https://vite.dev/guide/features.html#glob-import) result and outputs an array of valid RSS feed items (see [more about writing glob patterns](/vi/guides/imports/#glob-patterns) for specifying which pages to include).
+Để tạo nguồn cấp RSS từ các tài liệu trong `src/pages/`, hãy dùng helper `pagesGlobToRssItems()`. Hàm này nhận kết quả của [`import.meta.glob`](https://vite.dev/guide/features.html#glob-import) và xuất ra một mảng các mục RSS hợp lệ (xem [thêm về cách viết glob patterns](/vi/guides/imports/#glob-patterns) để xác định trang nào cần đưa vào).
 
 :::caution
-This function assumes, but does not verify, that all necessary feed properties are present in each document's frontmatter. If you encounter errors, verify each page frontmatter manually.
+Hàm này giả định, nhưng không kiểm tra, rằng tất cả các thuộc tính cần thiết cho nguồn cấp đã có trong frontmatter của từng tài liệu. Nếu gặp lỗi, hãy kiểm tra từng frontmatter của trang một cách thủ công.
 :::
 
 ```js title="src/pages/rss.xml.js" "pagesGlobToRssItems" "await pagesGlobToRssItems("
@@ -140,8 +140,8 @@ import rss, { pagesGlobToRssItems } from '@astrojs/rss';
 
 export async function GET(context) {
   return rss({
-    title: 'Buzz’s Blog',
-    description: 'A humble Astronaut’s guide to the stars',
+    title: 'Blog của Buzz',
+    description: 'Hướng dẫn khiêm tốn của phi hành gia đến các vì sao',
     site: context.site,
     items: await pagesGlobToRssItems(
       import.meta.glob('./blog/*.{md,mdx}'),
@@ -150,26 +150,26 @@ export async function GET(context) {
 }
 ```
 
-:::note[Using an older version?]
-In versions of `@astrojs/rss` before v2.1.0, pass your glob result straight to `items` without the `pagesGlobToRssItems()` wrapper:
+:::note[Đang dùng phiên bản cũ?]
+Với các phiên bản `@astrojs/rss` trước v2.1.0, truyền trực tiếp kết quả glob vào `items` mà không cần wrapper `pagesGlobToRssItems()`:
 ```js
 items: import.meta.glob('./blog/*.{md,mdx}'),
 ```
 
-This method is deprecated for all versions of Astro since v2.1.0, and cannot be used on modern projects.
+Phương pháp này đã bị ngưng hỗ trợ cho tất cả các phiên bản Astro kể từ v2.1.0, và không thể dùng trên các dự án mới.
 :::
 
-### Including full post content
+### Bao gồm đầy đủ nội dung bài viết
 
 <p><Since v="1.6.14" /></p>
 
-The `content` key contains the full content of the post as HTML. This allows you to make your entire post content available to RSS feed readers.
+Trường `content` chứa nội dung đầy đủ của bài viết dưới dạng HTML. Điều này cho phép bạn cung cấp toàn bộ nội dung bài viết cho các trình đọc nguồn cấp RSS.
 
 :::tip
-A package like [`sanitize-html`](https://www.npmjs.com/package/sanitize-html) will make sure that your content is properly sanitized, escaped, and encoded. In the process, such a package might also remove some harmless elements and attributes, so make sure to verify the output and configure the package according to your needs.
+Một gói như [`sanitize-html`](https://www.npmjs.com/package/sanitize-html) sẽ đảm bảo nội dung của bạn được làm sạch, chuyển đổi ký tự đặc biệt và mã hóa đúng cách. Trong quá trình này, gói có thể loại bỏ một số thành phần và thuộc tính vô hại, vì vậy hãy kiểm tra kỹ đầu ra và cấu hình gói phù hợp với nhu cầu của bạn.
 :::
 
-When using content collections, render the post `body` using a standard Markdown parser like [`markdown-it`](https://github.com/markdown-it/markdown-it) and sanitize the result, including any extra tags (e.g. `<img>`) needed to render your content:
+Khi dùng content collections, hãy render phần `body` của bài viết bằng một trình phân tích Markdown tiêu chuẩn như [`markdown-it`](https://github.com/markdown-it/markdown-it) và làm sạch kết quả, bao gồm cả các thẻ bổ sung (ví dụ: `<img>`) nếu cần hiển thị nội dung:
 
 ```js title="src/pages/rss.xml.js" ins={3, 4, 5, 16}
 import rss from '@astrojs/rss';
@@ -181,12 +181,12 @@ const parser = new MarkdownIt();
 export async function GET(context) {
   const blog = await getCollection('blog');
   return rss({
-    title: 'Buzz’s Blog',
-    description: 'A humble Astronaut’s guide to the stars',
+    title: 'Blog của Buzz',
+    description: 'Hướng dẫn khiêm tốn của phi hành gia đến các vì sao',
     site: context.site,
     items: blog.map((post) => ({
       link: `/blog/${post.id}/`,
-      // Note: this will not process components or JSX expressions in MDX files.
+      // Lưu ý: cách này không xử lý component hoặc biểu thức JSX trong file MDX.
       content: sanitizeHtml(parser.render(post.body), {
         allowedTags: sanitizeHtml.defaults.allowedTags.concat(['img'])
       }),
@@ -196,7 +196,7 @@ export async function GET(context) {
 }
 ```
 
-When using glob imports with Markdown, you may use the `compiledContent()` helper to retrieve the rendered HTML for sanitization. Note: this feature is **not** supported for MDX files.
+Khi dùng glob imports với Markdown, bạn có thể dùng helper `compiledContent()` để lấy HTML đã render để làm sạch. Lưu ý: tính năng này **không** hỗ trợ cho file MDX.
 
 ```js title="src/pages/rss.xml.js" ins={2, 13}
 import rss from '@astrojs/rss';
@@ -206,8 +206,8 @@ export async function GET(context) {
   const postImportResult = import.meta.glob('../posts/**/*.md', { eager: true });
   const posts = Object.values(postImportResult);
   return rss({
-    title: 'Buzz’s Blog',
-    description: 'A humble Astronaut’s guide to the stars',
+    title: 'Blog của Buzz',
+    description: 'Hướng dẫn khiêm tốn của phi hành gia đến các vì sao',
     site: context.site,
     items: await Promise.all(posts.map(async (post) => ({
       link: post.url,
@@ -218,11 +218,11 @@ export async function GET(context) {
 }
 ```
 
-## Removing trailing slashes
+## Loại bỏ dấu gạch chéo cuối đường dẫn
 
-Astro's RSS feed produces links with a trailing slash by default, no matter what value you have configured for `trailingSlash`. This means that your RSS links may not match your post URLs exactly.
+Nguồn cấp RSS của Astro mặc định sẽ tạo các liên kết có dấu gạch chéo ở cuối, bất kể bạn đã cấu hình `trailingSlash` như thế nào. Điều này nghĩa là các liên kết RSS có thể không khớp hoàn toàn với URL các bài viết của bạn.
 
-If you have set `trailingSlash: "never"` on your `astro.config.mjs`, set `trailingSlash: false` in the `rss()` helper so that your feed matches your project configuration.
+Nếu bạn đã đặt `trailingSlash: "never"` trong `astro.config.mjs`, hãy đặt `trailingSlash: false` trong helper `rss()` để nguồn cấp phù hợp với cấu hình dự án.
 
 ```ts title="src/pages/rss.xml.js" ins={9}
 import rss from '@astrojs/rss';
@@ -230,8 +230,8 @@ import rss from '@astrojs/rss';
 export function GET(context) {
   const posts = Object.values(postImportResult);
   return rss({
-    title: 'Buzz’s Blog',
-    description: 'A humble Astronaut’s guide to the stars',
+    title: 'Blog của Buzz',
+    description: 'Hướng dẫn khiêm tốn của phi hành gia đến các vì sao',
     site: context.site,
     trailingSlash: false,
     items: posts.map((post) => ({
@@ -242,45 +242,45 @@ export function GET(context) {
 }
 ```
 
-## Adding a stylesheet
+## Thêm stylesheet
 
-Style your RSS feed for a more pleasant user experience when viewing the file in your browser.
+Tạo kiểu cho nguồn cấp RSS của bạn để nâng cao trải nghiệm khi xem file trên trình duyệt.
 
-Use the `rss` function's `stylesheet` option to specify an absolute path to your stylesheet.
+Sử dụng tuỳ chọn `stylesheet` của hàm `rss` để chỉ định đường dẫn tuyệt đối đến stylesheet của bạn.
 
 ```js
 rss({
-  // ex. use your stylesheet from "public/rss/styles.xsl"
+  // ví dụ: sử dụng stylesheet từ "public/rss/styles.xsl"
   stylesheet: '/rss/styles.xsl',
   // ...
 });
 ```
 
 :::tip
-If you'd prefer not to create your own stylesheet, you may use a premade stylesheet such as the [Pretty Feed v3 default stylesheet](https://github.com/genmon/aboutfeeds/blob/main/tools/pretty-feed-v3.xsl). Download the stylesheet from GitHub and save into your project's `public/` directory.
+Nếu bạn không muốn tự tạo stylesheet, bạn có thể dùng stylesheet có sẵn như [Pretty Feed v3 default stylesheet](https://github.com/genmon/aboutfeeds/blob/main/tools/pretty-feed-v3.xsl). Tải stylesheet từ GitHub và lưu vào thư mục `public/` của dự án.
 :::
 
-## Enabling RSS feed auto-discovery
+## Bật tự động phát hiện nguồn cấp RSS
 
-[RSS autodiscovery](https://www.rssboard.org/rss-autodiscovery) allows browsers and other software to automatically find a site's RSS feed from the main URL.
+[Tự động phát hiện RSS](https://www.rssboard.org/rss-autodiscovery) cho phép trình duyệt và phần mềm khác tự động tìm nguồn cấp RSS của trang từ URL chính.
 
-To enable, add a `<link>` tag with the following attributes to your site's `head` element:
+Để bật, hãy thêm thẻ `<link>` với các thuộc tính sau vào phần `head` của trang web:
 
 ```jsx
 <link
     rel="alternate"
     type="application/rss+xml"
-    title="Your Site's Title"
+    title="Tiêu đề trang của bạn"
     href={new URL("rss.xml", Astro.site)}
 />
 ```
 
-With this tag, readers of your blog can enter your site's base URL into their RSS reader to subscribe to your posts without needing the specific URL of your RSS feed.
+Với thẻ này, người đọc blog của bạn có thể nhập URL gốc của trang web vào trình đọc RSS để đăng ký bài viết, mà không cần biết chính xác URL nguồn cấp RSS.
 
-## Next Steps
+## Bước tiếp theo
 
-After visiting your feed in the browser at `your-domain.com/rss.xml` and confirming that you can see data for each of your posts, you can now [promote your feed on your website](https://medium.com/samsung-internet-dev/add-rss-feeds-to-your-website-to-keep-your-core-readers-engaged-3179dca9c91e#:~:text=com/~deno%2Drss-,Advertising%20your%20RSS%20feed,-Now%20you%20have). Adding the standard RSS icon to your site lets your readers know that they can subscribe to your posts in their own feed reader.
+Sau khi truy cập nguồn cấp của bạn trên trình duyệt tại `your-domain.com/rss.xml` và xác nhận bạn có thể thấy dữ liệu của từng bài viết, bạn có thể [quảng bá nguồn cấp trên trang web của mình](https://medium.com/samsung-internet-dev/add-rss-feeds-to-your-website-to-keep-your-core-readers-engaged-3179dca9c91e#:~:text=com/~deno%2Drss-,Advertising%20your%20RSS%20feed,-Now%20you%20have). Thêm biểu tượng RSS chuẩn vào trang giúp người đọc biết rằng họ có thể đăng ký bài viết của bạn bằng trình đọc feed riêng.
 
-## Resources
+## Tài nguyên
 
 - [RSS Feeds](https://aboutfeeds.com/)

@@ -1,22 +1,22 @@
 ---
-title: Add reading time
-description: Build a remark plugin to add reading time to your Markdown or MDX files.
+title: Thêm thời gian đọc
+description: Xây dựng một plugin remark để thêm thời gian đọc vào frontmatter của các tệp Markdown hoặc MDX của bạn.
 i18nReady: true
 type: recipe
 ---
 import { Steps } from '@astrojs/starlight/components';
 import PackageManagerTabs from '~/components/tabs/PackageManagerTabs.astro';
 
-Create a [remark plugin](https://github.com/remarkjs/remark) which adds a reading time property to the frontmatter of your Markdown or MDX files. Use this property to display the reading time for each page.
+Tạo một [plugin remark](https://github.com/remarkjs/remark) để thêm thuộc tính thời gian đọc vào frontmatter của các tệp Markdown hoặc MDX của bạn. Sử dụng thuộc tính này để hiển thị thời gian đọc cho mỗi trang.
 
-## Recipe
+## Công thức
 
 <Steps>
-1. Install Helper Packages
+1. Cài đặt các gói hỗ trợ
 
-    Install these two helper packages:
-    - [`reading-time`](https://www.npmjs.com/package/reading-time) to calculate minutes read
-    - [`mdast-util-to-string`](https://www.npmjs.com/package/mdast-util-to-string) to extract all text from your markdown
+    Cài đặt hai gói hỗ trợ sau:
+    - [`reading-time`](https://www.npmjs.com/package/reading-time) để tính số phút đọc
+    - [`mdast-util-to-string`](https://www.npmjs.com/package/mdast-util-to-string) để trích xuất toàn bộ văn bản từ markdown của bạn
 
     <PackageManagerTabs>
       <Fragment slot="npm">
@@ -36,9 +36,9 @@ Create a [remark plugin](https://github.com/remarkjs/remark) which adds a readin
       </Fragment>
     </PackageManagerTabs>
 
-2. Create a remark plugin.
+2. Tạo một plugin remark.
 
-    This plugin uses the `mdast-util-to-string` package to get the Markdown file's text. This text is then passed to the `reading-time` package to calculate the reading time in minutes. 
+    Plugin này sử dụng gói `mdast-util-to-string` để lấy văn bản của tệp Markdown. Văn bản này sau đó được truyền vào gói `reading-time` để tính toán thời gian đọc tính bằng phút. 
 
     ```js title="remark-reading-time.mjs"
     import getReadingTime from 'reading-time';
@@ -48,14 +48,14 @@ Create a [remark plugin](https://github.com/remarkjs/remark) which adds a readin
       return function (tree, { data }) {
         const textOnPage = toString(tree);
         const readingTime = getReadingTime(textOnPage);
-        // readingTime.text will give us minutes read as a friendly string,
-        // i.e. "3 min read"
+        // readingTime.text sẽ cho chúng ta chuỗi số phút đọc thân thiện,
+        // ví dụ: "3 min read"
         data.astro.frontmatter.minutesRead = readingTime.text;
       };
     }
     ```
 
-3. Add the plugin to your config:
+3. Thêm plugin vào cấu hình của bạn:
 
     ```js title="astro.config.mjs" "import { remarkReadingTime } from './remark-reading-time.mjs';" "remarkPlugins: [remarkReadingTime],"
     import { defineConfig } from 'astro/config';
@@ -68,11 +68,11 @@ Create a [remark plugin](https://github.com/remarkjs/remark) which adds a readin
     });
     ```
 
-    Now all Markdown documents will have a calculated `minutesRead` property in their frontmatter. 
+    Bây giờ tất cả các tài liệu Markdown sẽ có thuộc tính `minutesRead` đã được tính toán trong frontmatter. 
 
-4. Display Reading Time
+4. Hiển thị thời gian đọc
 
-    If your blog posts are stored in a [content collection](/vi/guides/content-collections/), access the `remarkPluginFrontmatter` from the `render(entry)` function. Then, render `minutesRead` in your template wherever you would like it to appear.
+    Nếu các bài viết blog của bạn được lưu trữ trong một [bộ sưu tập nội dung](/vi/guides/content-collections/), hãy truy cập `remarkPluginFrontmatter` từ hàm `render(entry)`. Sau đó, hiển thị `minutesRead` trong template tại vị trí bạn muốn nó xuất hiện.
 
     ```astro title="src/pages/posts/[slug].astro" "const { Content, remarkPluginFrontmatter } = await render(entry);" "<p>{remarkPluginFrontmatter.minutesRead}</p>"
     ---
@@ -100,7 +100,7 @@ Create a [remark plugin](https://github.com/remarkjs/remark) which adds a readin
     </html>
     ```
 
-    If you're using a [Markdown layout](/vi/basics/layouts/#markdown-layouts), use the `minutesRead` frontmatter property from `Astro.props` in your layout template.
+    Nếu bạn đang sử dụng một [layout Markdown](/vi/basics/layouts/#markdown-layouts), hãy sử dụng thuộc tính frontmatter `minutesRead` từ `Astro.props` trong template layout của bạn.
 
     ```astro title="src/layouts/BlogLayout.astro" "const { minutesRead } = Astro.props.frontmatter;" "<p>{minutesRead}</p>"
     ---

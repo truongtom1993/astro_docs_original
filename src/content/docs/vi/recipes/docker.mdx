@@ -1,29 +1,29 @@
 ---
-title: Build your Astro site with Docker
-description: Learn how to build your Astro site using Docker.
+title: Xây dựng trang Astro của bạn với Docker
+description: Tìm hiểu cách xây dựng trang Astro của bạn bằng Docker.
 type: recipe
 i18nReady: true
 ---
 import { Steps } from '@astrojs/starlight/components';
 
-[Docker](https://docker.com) is a tool to build, deploy, and run applications using containers.
+[Docker](https://docker.com) là một công cụ để xây dựng, triển khai và chạy các ứng dụng bằng container.
 
-Docker images and containers can be deployed to many different platforms, like AWS, Azure, and [Google Cloud](/vi/guides/deploy/google-cloud/#cloud-run-ssr-and-static). This recipe won't cover how to deploy your site to a specific platform but will show you how to set up Docker for your project.
+Các image và container Docker có thể được triển khai trên nhiều nền tảng khác nhau, như AWS, Azure và [Google Cloud](/vi/guides/deploy/google-cloud/#cloud-run-ssr-and-static). Công thức này sẽ không hướng dẫn cách triển khai trang của bạn lên một nền tảng cụ thể mà sẽ chỉ cho bạn cách cấu hình Docker cho dự án của mình.
 
-## Prerequisites
+## Yêu cầu cần thiết
 
-- Docker installed on your local machine. You can find [installation instructions for your operating system here](https://docs.docker.com/get-docker/).
-- A Dockerfile in your project. You can [learn more about Dockerfiles here](https://docs.docker.com/engine/reference/builder/) and use the Dockerfiles in the following section as a starting point.
+- Docker đã được cài đặt trên máy tính của bạn. Bạn có thể tìm [hướng dẫn cài đặt cho hệ điều hành của mình tại đây](https://docs.docker.com/get-docker/).
+- Một tệp Dockerfile trong dự án của bạn. Bạn có thể [tìm hiểu thêm về Dockerfile tại đây](https://docs.docker.com/engine/reference/builder/) và sử dụng các Dockerfile ở phần sau làm điểm bắt đầu.
 
-## Creating a Dockerfile
+## Tạo Dockerfile
 
-Create a file called `Dockerfile` in your project's root directory. This file contains the instructions to build your site, which will differ depending on your needs. This guide can't show all possible options but will give you starting points for SSR and static mode.
+Tạo một tệp có tên là `Dockerfile` trong thư mục gốc của dự án. Tệp này chứa các hướng dẫn để xây dựng trang web của bạn, các hướng dẫn này sẽ khác nhau tùy theo nhu cầu của bạn. Hướng dẫn này không thể trình bày tất cả các tuỳ chọn có thể, nhưng sẽ cung cấp điểm khởi đầu cho chế độ SSR và chế độ tĩnh.
 
-If you're using another package manager than npm, you'll need to adjust the commands accordingly.
+Nếu bạn sử dụng trình quản lý gói khác ngoài npm, bạn sẽ cần điều chỉnh các lệnh cho phù hợp.
 
 ### SSR
 
-This Dockerfile will build your site and serve it using Node.js on port `4321` and therefore requires the [Node adapter](/vi/guides/integrations-guide/node/) installed in your Astro project.
+Dockerfile này sẽ xây dựng trang của bạn và phục vụ nó bằng Node.js trên cổng `4321` và do đó yêu cầu cài đặt [Node adapter](/vi/guides/integrations-guide/node/) trong dự án Astro của bạn.
 
 ```docker title="Dockerfile"
 FROM node:lts AS runtime
@@ -40,8 +40,8 @@ EXPOSE 4321
 CMD node ./dist/server/entry.mjs
 ```
 
-:::tip[Keep this in mind]
-These are just examples of Dockerfiles. You can customize them to your needs. For example, you could use another image, like `node:lts-alpine`:
+:::tip[Hãy ghi nhớ]
+Đây chỉ là các ví dụ về Dockerfile. Bạn có thể tuỳ chỉnh chúng theo nhu cầu. Ví dụ, bạn có thể sử dụng image khác, như `node:lts-alpine`:
 
 ```docker title="Dockerfile" del={1} add={2}
 FROM node:lts as runtime
@@ -49,9 +49,9 @@ FROM node:lts-alpine as runtime
 ```
 :::
 
-### Adding a .dockerignore
+### Thêm .dockerignore
 
-Adding a `.dockerignore` file to your project is best practice. This file describes which files or folders should be ignored in the Docker `COPY` or `ADD` commands, very similar to how `.gitignore` works. This speeds up the build process and reduces the size of the final image.
+Thêm tệp `.dockerignore` vào dự án của bạn là một thực hành tốt. Tệp này mô tả những tệp hoặc thư mục nào nên bị bỏ qua trong lệnh Docker `COPY` hoặc `ADD`, rất giống với cách `.gitignore` hoạt động. Điều này giúp tăng tốc quá trình build và giảm kích thước image cuối cùng.
 
 ```docker title=".dockerignore"
 .DS_Store
@@ -59,13 +59,13 @@ node_modules
 dist
 ```
 
-This file should go in the same directory as the `Dockerfile` itself. [Read the `.dockerignore` documentation for extra info](https://docs.docker.com/engine/reference/builder/#dockerignore-file)
+Tệp này nên được đặt cùng thư mục với `Dockerfile`. [Đọc tài liệu `.dockerignore` để biết thêm thông tin](https://docs.docker.com/engine/reference/builder/#dockerignore-file)
 
-### Static
+### Tĩnh
 
 #### Apache (httpd)
 
-The following Dockerfile will build your site and serve it using Apache httpd on port `80` with the default configuration.
+Dockerfile sau sẽ xây dựng trang web của bạn và phục vụ nó bằng Apache httpd trên cổng `80` với cấu hình mặc định.
 
 ```docker title="Dockerfile"
 FROM node:lts AS build
@@ -79,8 +79,8 @@ COPY --from=build /app/dist /usr/local/apache2/htdocs/
 EXPOSE 80
 ```
 
-:::caution[Recommendation]
-Use this approach for simple websites that don't need any special configuration. For more complex websites, it is recommended to use a custom configuration, either in Apache or NGINX.
+:::caution[Khuyến nghị]
+Hãy sử dụng cách tiếp cận này cho các trang web đơn giản không cần cấu hình đặc biệt. Đối với các trang web phức tạp hơn, nên sử dụng cấu hình tùy chỉnh, dù là với Apache hoặc NGINX.
 :::
 
 #### NGINX
@@ -99,7 +99,7 @@ COPY --from=build /app/dist /usr/share/nginx/html
 EXPOSE 8080
 ```
 
-In order to build the Dockerfile above, you'll also need to create a configuration file for NGINX. Create a folder called `nginx` in your project's root directory and create a file called `nginx.conf` inside.
+Để build Dockerfile trên, bạn cũng cần tạo một file cấu hình cho NGINX. Tạo một thư mục tên là `nginx` trong thư mục gốc dự án và tạo file `nginx.conf` bên trong.
 
 ```nginx title="nginx.conf"
 worker_processes  1;
@@ -135,16 +135,16 @@ http {
 }
 ```
 
-### Multi-stage build (using SSR)
+### Multi-stage build (dùng SSR)
 
-Here's an example of a more advanced Dockerfile that, thanks to Docker's [multi-stage builds](https://docs.docker.com/build/building/multi-stage/), optimizes the build process for your site by not reinstalling the npm dependencies when only the source code changes. This can reduce the build time even by minutes, depending on the size of your dependencies.
+Dưới đây là ví dụ về một Dockerfile nâng cao hơn, nhờ vào [multi-stage builds của Docker](https://docs.docker.com/build/building/multi-stage/), tối ưu hóa quá trình build cho trang web của bạn bằng cách không cài lại các dependencies của npm khi chỉ có mã nguồn thay đổi. Điều này có thể giúp giảm thời gian build xuống vài phút, tuỳ thuộc vào số lượng dependencies.
 
 ```docker title="Dockerfile"
 FROM node:lts AS base
 WORKDIR /app
 
-# By copying only the package.json and package-lock.json here, we ensure that the following `-deps` steps are independent of the source code.
-# Therefore, the `-deps` steps will be skipped if only the source code changes.
+# Bằng cách chỉ copy package.json và package-lock.json ở đây, chúng ta đảm bảo các bước `-deps` sau sẽ độc lập với mã nguồn.
+# Do đó, các bước `-deps` sẽ được bỏ qua nếu chỉ có mã nguồn thay đổi.
 COPY package.json package-lock.json ./
 
 FROM base AS prod-deps
@@ -167,26 +167,26 @@ EXPOSE 4321
 CMD node ./dist/server/entry.mjs
 ```
 
-## Recipe
+## Công thức
 
 <Steps>
-1. Build your container by running the following command in your project's root directory. Use any name for `<your-astro-image-name>`:
+1. Xây dựng container của bạn bằng cách chạy lệnh sau trong thư mục gốc của dự án. Sử dụng bất kỳ tên nào cho `<your-astro-image-name>`:
 
     ```bash
     docker build -t <your-astro-image-name> .
     ```
 
-    This will output an image, which you can run locally or deploy to a platform of your choice.
+    Lệnh này sẽ tạo ra một image, bạn có thể chạy image này trên máy hoặc triển khai lên bất kỳ nền tảng nào.
 
-2. To run your image as a local container, use the following command. 
+2. Để chạy image của bạn dưới dạng một container cục bộ, dùng lệnh sau.
 
-    Replace `<local-port>` with an open port on your machine. Replace `<container-port>` with the port exposed by your Docker container (`4321`, `80`, or `8080` in the above examples.)
+    Thay `<local-port>` bằng một port còn trống trên máy của bạn. Thay `<container-port>` bằng port mà container Docker của bạn mở ra (`4321`, `80` hoặc `8080` như các ví dụ trên.)
 
     ```bash
     docker run -p <local-port>:<container-port> <your-astro-image-name>
     ```
 
-    You should be able to access your site at `http://localhost:<local-port>`.
+    Bạn có thể truy cập trang web của mình tại `http://localhost:<local-port>`.
 
-3. Now that your website is successfully built and packaged in a container, you can deploy it to a cloud provider. See the [Google Cloud](/vi/guides/deploy/google-cloud/#cloud-run-ssr-and-static) deployment guide for one example, and the [Deploy your app](https://docs.docker.com/language/nodejs/deploy/) page in the Docker docs.
+3. Bây giờ website của bạn đã được xây dựng và đóng gói trong container, bạn có thể triển khai nó lên các nhà cung cấp đám mây. Xem [hướng dẫn triển khai trên Google Cloud](/vi/guides/deploy/google-cloud/#cloud-run-ssr-and-static) để tham khảo một ví dụ, và trang [Deploy your app](https://docs.docker.com/language/nodejs/deploy/) trong tài liệu Docker.
 </Steps>

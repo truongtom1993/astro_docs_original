@@ -1,6 +1,6 @@
 ---
-title: Share state between Astro components
-description: Learn how to share state across Astro components with Nano Stores.
+title: Chia sẻ trạng thái giữa các thành phần Astro
+description: Tìm hiểu cách chia sẻ trạng thái giữa các thành phần Astro với Nano Stores.
 i18nReady: true
 type: recipe
 ---
@@ -8,15 +8,15 @@ import { Steps } from '@astrojs/starlight/components';
 import PackageManagerTabs from '~/components/tabs/PackageManagerTabs.astro';
 
 :::tip
-Using framework components? See [how to share state between Islands](/vi/recipes/sharing-state-islands/)!
+Sử dụng các thành phần framework? Xem [cách chia sẻ trạng thái giữa các Islands](/vi/recipes/sharing-state-islands/)!
 :::
 
-When building an Astro website, you may need to share state across components. Astro recommends the use of [Nano Stores](https://github.com/nanostores/nanostores) for shared client storage.
+Khi xây dựng một trang web Astro, bạn có thể cần chia sẻ trạng thái giữa các thành phần. Astro khuyến nghị sử dụng [Nano Stores](https://github.com/nanostores/nanostores) để lưu trữ trạng thái dùng chung trên client.
 
-## Recipe
+## Công thức
 
 <Steps>
-1. Install Nano Stores:
+1. Cài đặt Nano Stores:
 
     <PackageManagerTabs>
       <Fragment slot="npm">
@@ -36,7 +36,7 @@ When building an Astro website, you may need to share state across components. A
       </Fragment>
     </PackageManagerTabs>
 
-2. Create a store. In this example, the store tracks whether a dialog is open or not:
+2. Tạo một store. Trong ví dụ này, store sẽ theo dõi xem một hộp thoại có đang mở hay không:
 
     ```ts title="src/store.js"
     import { atom } from 'nanostores';
@@ -44,33 +44,33 @@ When building an Astro website, you may need to share state across components. A
     export const isOpen = atom(false);
     ```
 
-3. Import and use the store in a `<script>` tag in the components that will share state.
+3. Import và sử dụng store trong thẻ `<script>` của các thành phần sẽ chia sẻ trạng thái.
 
-    The following `Button` and `Dialog` components each use the shared `isOpen` state to control whether a particular `<div>` is hidden or displayed:
+    Các thành phần `Button` và `Dialog` sau đây đều sử dụng trạng thái dùng chung `isOpen` để kiểm soát việc hiển thị của một `<div>` cụ thể:
 
     ```astro title="src/components/Button.astro"
-    <button id="openDialog">Open</button>
+    <button id="openDialog">Mở</button>
 
     <script>
       import { isOpen } from '../store.js';
       
-      // Set the store to true when the button is clicked
+      // Đặt giá trị của store thành true khi nút được nhấn
       function openDialog() {
         isOpen.set(true);
       }
 
-      // Add an event listener to the button
+      // Thêm sự kiện click cho nút
       document.getElementById('openDialog').addEventListener('click', openDialog);
     </script>
     ```
 
     ```astro title="src/components/Dialog.astro"
-    <div id="dialog" style="display: none">Hello world!</div>
+    <div id="dialog" style="display: none">Xin chào thế giới!</div>
 
     <script>
       import { isOpen } from '../store.js';
 
-      // Listen to changes in the store, and show/hide the dialog accordingly    
+      // Lắng nghe sự thay đổi của store và ẩn/hiện hộp thoại tương ứng    
       isOpen.subscribe(open => {
         if (open) {
           document.getElementById('dialog').style.display = 'block';
@@ -82,7 +82,7 @@ When building an Astro website, you may need to share state across components. A
     ```
 </Steps>
 
-## Resources
+## Tài nguyên
 
-- [Nano Stores on NPM](https://www.npmjs.com/package/nanostores)
-- [Nano Stores documentation for Vanilla JS](https://github.com/nanostores/nanostores#vanilla-js)
+- [Nano Stores trên NPM](https://www.npmjs.com/package/nanostores)
+- [Tài liệu Nano Stores cho Vanilla JS](https://github.com/nanostores/nanostores#vanilla-js)

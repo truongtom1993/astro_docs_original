@@ -1,26 +1,26 @@
 ---
-title: Style rendered Markdown with Tailwind Typography
-description: Learn how to use @tailwind/typography to style your rendered Markdown.
+title: "Tạo kiểu cho Markdown đã render với Tailwind Typography"
+description: "Tìm hiểu cách sử dụng @tailwind/typography để tạo kiểu cho Markdown đã render."
 i18nReady: true
 type: recipe
 ---
 import { Steps } from '@astrojs/starlight/components';
 import PackageManagerTabs from '~/components/tabs/PackageManagerTabs.astro';
 
-You can use [Tailwind](https://tailwindcss.com)'s Typography plugin to style rendered Markdown from sources such as Astro's [**content collections**](/vi/guides/content-collections/).
+Bạn có thể sử dụng plugin Typography của [Tailwind](https://tailwindcss.com) để tạo kiểu cho Markdown đã render từ các nguồn như [**bộ sưu tập nội dung**](/vi/guides/content-collections/) của Astro.
 
-This recipe will teach you how to create a reusable Astro component to style your Markdown content using Tailwind's utility classes.
+Công thức này sẽ hướng dẫn bạn cách tạo một component Astro có thể tái sử dụng để tạo kiểu cho nội dung Markdown của bạn bằng các class tiện ích của Tailwind.
 
-## Prerequisites
+## Yêu cầu trước
 
-An Astro project that:
+Một dự án Astro mà:
 
-	- has [Tailwind's Vite plugin](/vi/guides/styling/#tailwind) installed.
-	- uses Astro's [content collections](/vi/guides/content-collections/).
+	- đã cài đặt [plugin Vite của Tailwind](/vi/guides/styling/#tailwind).
+	- sử dụng [bộ sưu tập nội dung](/vi/guides/content-collections/) của Astro.
 
-## Setting Up `@tailwindcss/typography`
+## Thiết lập `@tailwindcss/typography`
 
-First, install `@tailwindcss/typography` using your preferred package manager.
+Đầu tiên, cài đặt `@tailwindcss/typography` bằng trình quản lý gói bạn yêu thích.
 
 <PackageManagerTabs>
  	<Fragment slot="npm">
@@ -40,17 +40,17 @@ First, install `@tailwindcss/typography` using your preferred package manager.
 	</Fragment>
 </PackageManagerTabs>
 
-Then, add the package as a plugin in your Tailwind configuration file.
+Sau đó, thêm package này như một plugin trong file cấu hình Tailwind của bạn.
 
 ```css title="src/styles/global.css" ins={2}
 @import 'tailwindcss';
 @plugin '@tailwindcss/typography';
 ```
 
-## Recipe
+## Công thức
 
 <Steps>
-1. Create a `<Prose />` component to provide a wrapping `<div>` with a `<slot />` for your rendered Markdown. Add the style class `prose` alongside any desired [Tailwind element modifiers](https://tailwindcss.com/docs/typography-plugin#element-modifiers) in the parent element.
+1. Tạo component `<Prose />` để cung cấp một thẻ `<div>` bao quanh có chứa `<slot />` cho Markdown đã render của bạn. Thêm class style `prose` cùng với bất kỳ [modifier phần tử của Tailwind](https://tailwindcss.com/docs/typography-plugin#element-modifiers) mong muốn nào vào phần tử cha.
 
     ```astro title="src/components/Prose.astro"
     ---
@@ -64,18 +64,18 @@ Then, add the package as a plugin in your Tailwind configuration file.
     </div>
     ```
     :::tip
-    The `@tailwindcss/typography` plugin uses [**element modifiers**](https://tailwindcss.com/docs/typography-plugin#element-modifiers) to style child components of a container with the `prose` class. 
+    Plugin `@tailwindcss/typography` sử dụng [**modifier phần tử**](https://tailwindcss.com/docs/typography-plugin#element-modifiers) để tạo kiểu cho các thành phần con của một container có class `prose`.
 
-    These modifiers follow the following general syntax: 
+    Các modifier này tuân theo cú pháp chung sau: 
 
       ```
       prose-[element]:class-to-apply
       ``` 
 
-    For example, `prose-h1:font-bold` gives all `<h1>` tags the `font-bold` Tailwind class.
+    Ví dụ, `prose-h1:font-bold` sẽ áp dụng class Tailwind `font-bold` cho tất cả thẻ `<h1>`.
     :::
 
-2. Query your collection entry on the page you want to render your Markdown. Pass the `<Content />` component from `await render(entry)` to `<Prose />` as a child to wrap your Markdown content in Tailwind styles.
+2. Truy vấn entry trong bộ sưu tập nội dung tại trang bạn muốn render Markdown. Chuyển component `<Content />` từ `await render(entry)` vào `<Prose />` như một phần tử con để bọc nội dung Markdown của bạn với các kiểu Tailwind.
 
     ```astro title="src/pages/index.astro"
     ---
@@ -94,6 +94,6 @@ Then, add the package as a plugin in your Tailwind configuration file.
     ```
 </Steps>
 
-## Resources
+## Tài nguyên
 
-- [Tailwind Typography Documentation](https://tailwindcss.com/docs/typography-plugin)
+- [Tài liệu Tailwind Typography](https://tailwindcss.com/docs/typography-plugin)

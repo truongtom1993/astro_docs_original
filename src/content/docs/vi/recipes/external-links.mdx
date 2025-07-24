@@ -1,22 +1,22 @@
 ---
-title: Add icons to external links
-description: Learn how to install a rehype plugin to add icons to external links in your Markdown files.
+title: Thêm biểu tượng vào liên kết ngoài
+description: Tìm hiểu cách cài đặt plugin rehype để thêm biểu tượng vào liên kết ngoài trong các tệp Markdown của bạn.
 i18nReady: true
 type: recipe
 ---
 import { Steps } from '@astrojs/starlight/components';
 import PackageManagerTabs from '~/components/tabs/PackageManagerTabs.astro';
 
-Using a rehype plugin, you can identify and modify links in your Markdown files that point to external sites. This example adds icons to the end of each external link, so that visitors will know they are leaving your site.
+Bằng cách sử dụng một plugin rehype, bạn có thể nhận diện và chỉnh sửa các liên kết trong các tệp Markdown trỏ tới các trang web bên ngoài. Ví dụ này sẽ thêm biểu tượng vào cuối mỗi liên kết ngoài, giúp khách truy cập nhận biết rằng họ sẽ rời khỏi trang web của bạn.
 
-## Prerequisites
+## Điều kiện tiên quyết
 
-- An Astro project using Markdown for content pages.
+- Một dự án Astro sử dụng Markdown cho các trang nội dung.
 
-## Recipe
+## Công thức
 
 <Steps>
-1. Install the `rehype-external-links` plugin.
+1. Cài đặt plugin `rehype-external-links`.
 
     <PackageManagerTabs>
         <Fragment slot="npm">
@@ -36,9 +36,9 @@ Using a rehype plugin, you can identify and modify links in your Markdown files 
         </Fragment>
       </PackageManagerTabs>
 
-2. Import the plugin into your `astro.config.mjs` file.
+2. Import plugin vào tệp `astro.config.mjs` của bạn.
 
-	Pass `rehypeExternalLinks` to the `rehypePlugins` array, along with an options object that includes a content property. Set this property's `type` to `text` if you want to add plain text to the end of the link. To add HTML to the end of the link instead, set the property `type` to	`raw`.
+	Truyền `rehypeExternalLinks` vào mảng `rehypePlugins` cùng với một đối tượng tùy chọn bao gồm thuộc tính content. Đặt thuộc tính `type` là `text` nếu bạn muốn thêm văn bản thuần vào cuối liên kết. Nếu muốn thêm HTML vào cuối liên kết, hãy đặt thuộc tính `type` là `raw`.
 
     ```ts
     // ...
@@ -60,10 +60,10 @@ Using a rehype plugin, you can identify and modify links in your Markdown files 
     ```
   
     :::note
-      The value of the `content` property is [not represented in the accessibility tree](https://developer.mozilla.org/en-US/docs/Web/CSS/content#accessibility_concerns). As such, it's best to make clear that the link is external in the surrounding content, rather than relying on the icon alone.
+      Giá trị của thuộc tính `content` [không được thể hiện trong cây truy cập hỗ trợ](https://developer.mozilla.org/en-US/docs/Web/CSS/content#accessibility_concerns). Do đó, tốt nhất bạn nên làm rõ rằng liên kết là liên kết ngoài trong nội dung xung quanh, thay vì chỉ dựa vào biểu tượng.
     :::
 </Steps>
 
 
-## Resources
+## Tài nguyên
 - [rehype-external-links](https://www.npmjs.com/package/rehype-external-links)

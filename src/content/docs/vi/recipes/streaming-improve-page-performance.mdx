@@ -1,15 +1,15 @@
 ---
-title: "Using streaming to improve page performance"
-description: "Learn how to use streaming to improve page performance."
+title: "Sử dụng streaming để cải thiện hiệu suất trang"
+description: "Tìm hiểu cách sử dụng streaming để cải thiện hiệu suất trang."
 type: recipe
 i18nReady: true
 ---
 
-Astro's SSR uses HTML streaming to send each component to the browser when available for faster page loading. To improve your page's performance even further, you can build your components strategically to optimize their loading by avoiding blocking data fetches.
+SSR của Astro sử dụng HTML streaming để gửi từng thành phần đến trình duyệt ngay khi sẵn sàng, giúp tải trang nhanh hơn. Để cải thiện hiệu suất trang của bạn hơn nữa, bạn có thể xây dựng các thành phần một cách chiến lược để tối ưu hóa quá trình tải bằng cách tránh các thao tác lấy dữ liệu gây chặn.
 
-The following refactoring example demonstrates how to improve page performance by moving fetch calls to other components, moving them out of a component where they block page rendering.
+Ví dụ refactor dưới đây minh họa cách cải thiện hiệu suất trang bằng việc di chuyển các lệnh gọi fetch sang các thành phần khác, loại bỏ chúng khỏi một thành phần nơi chúng đang gây chặn việc render trang.
 
-The following page `await`s some data in its frontmatter. Astro will wait for all of the `fetch` calls to resolve before sending any HTML to the browser.
+Trang sau đây sử dụng `await` để lấy một số dữ liệu trong frontmatter. Astro sẽ chờ tất cả các lệnh gọi `fetch` hoàn thành trước khi gửi bất kỳ HTML nào đến trình duyệt.
 
 ```astro title="src/pages/index.astro"
 ---
@@ -21,18 +21,18 @@ const factData = await factResponse.json();
 ---
 <html>
   <head>
-    <title>A name and a fact</title>
+    <title>Một tên và một sự thật</title>
   </head>
   <body>
-    <h2>A name</h2>
+    <h2>Một tên</h2>
     <p>{randomPerson.name.first}</p>
-    <h2>A fact</h2>
+    <h2>Một sự thật</h2>
     <p>{factData.fact}</p>
   </body>
 </html>
 ```
 
-Moving the `await` calls into smaller components allows you to take advantage of Astro's streaming. Using the following components to perform the data fetches, Astro can render some HTML first, such as the title, and then the paragraphs when the data is ready.
+Di chuyển các lệnh `await` vào các thành phần nhỏ hơn cho phép bạn tận dụng tính năng streaming của Astro. Sử dụng các thành phần sau để thực hiện việc lấy dữ liệu, Astro có thể render một số HTML trước, như tiêu đề, sau đó mới hiển thị các đoạn văn khi dữ liệu đã sẵn sàng.
 
 ```astro title="src/components/RandomName.astro"
 ---
@@ -51,8 +51,7 @@ const factData = await factResponse.json();
 <p>{factData.fact}</p>
 ```
 
-
-The Astro page below using these components can render parts of the page sooner. The `<head>`, `<body>`, and `<h2>` tags are no longer blocked by data fetches. The server will then fetch data for `RandomName` and `RandomFact` in parallel and stream the resulting HTML to the browser.
+Trang Astro bên dưới sử dụng các thành phần này có thể render các phần của trang sớm hơn. Các thẻ `<head>`, `<body>`, và `<h2>` sẽ không còn bị chặn bởi các thao tác lấy dữ liệu nữa. Máy chủ sau đó sẽ lấy dữ liệu cho `RandomName` và `RandomFact` song song và stream HTML kết quả đến trình duyệt.
 
 ```astro title="src/pages/index.astro"
 ---
@@ -61,20 +60,20 @@ import RandomFact from '../components/RandomFact.astro';
 ---
 <html>
   <head>
-    <title>A name and a fact</title>
+    <title>Một tên và một sự thật</title>
   </head>
   <body>
-    <h2>A name</h2>
+    <h2>Một tên</h2>
     <RandomName />
-    <h2>A fact</h2>
+    <h2>Một sự thật</h2>
     <RandomFact />
   </body>
 </html>
 ```
 
-#### Including Promises directly
+#### Bao gồm trực tiếp các Promise
 
-You can also include promises directly in the template. Instead of blocking the entire component, it will resolve the promise in parallel and only block the markup that comes after it.
+Bạn cũng có thể bao gồm trực tiếp các promise trong template. Thay vì chặn toàn bộ thành phần, nó sẽ xử lý promise song song và chỉ chặn phần markup phía sau nó.
 
 ```astro title="src/pages/index.astro"
 ---
@@ -87,16 +86,16 @@ const factPromise = fetch('https://catfact.ninja/fact')
 ---
 <html>
   <head>
-    <title>A name and a fact</title>
+    <title>Một tên và một sự thật</title>
   </head>
   <body>
-    <h2>A name</h2>
+    <h2>Một tên</h2>
     <p>{personPromise}</p>
-    <h2>A fact</h2>
+    <h2>Một sự thật</h2>
     <p>{factPromise}</p>
   </body>
 </html>
 ```
 
-In this example, `A name` will render while `personPromise` and `factPromise` are loading.
-Once `personPromise` has resolved, `A fact` will appear and `factPromise` will render when it's finished loading.
+Trong ví dụ này, `Một tên` sẽ được render trong khi `personPromise` và `factPromise` đang tải.
+Khi `personPromise` hoàn thành, `Một sự thật` sẽ xuất hiện và `factPromise` sẽ được hiển thị khi nó tải xong.

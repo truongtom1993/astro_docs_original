@@ -1,6 +1,6 @@
 ---
-title: Create a dev toolbar app
-description: Learn how to create a dev toolbar app for your site.
+title: Tạo một ứng dụng thanh công cụ dev
+description: Tìm hiểu cách tạo một ứng dụng thanh công cụ dev cho trang web của bạn.
 type: recipe
 i18nReady: true
 ---
@@ -10,14 +10,14 @@ import { FileTree } from '@astrojs/starlight/components';
 import { Steps } from '@astrojs/starlight/components';
 import ReadMore from '~/components/ReadMore.astro';
 
-Astro includes a [development toolbar](/vi/guides/dev-toolbar/) that you can use to inspect your site, check for accessibility and performance issues, and more. This toolbar can be extended with custom apps.
+Astro bao gồm một [thanh công cụ phát triển](/vi/guides/dev-toolbar/) mà bạn có thể sử dụng để kiểm tra trang web, kiểm tra các vấn đề về khả năng truy cập và hiệu suất, và nhiều hơn nữa. Thanh công cụ này còn có thể mở rộng với các ứng dụng tùy chỉnh.
 
-## Build a motivational dev toolbar app
+## Xây dựng một ứng dụng thanh công cụ dev truyền cảm hứng
 
-In this recipe, you'll learn how to create a dev toolbar app that helps you stay motivated while working on your site. This app will display a motivational message every time you toggle it on.
+Trong công thức này, bạn sẽ học cách tạo một ứng dụng thanh công cụ dev giúp bạn giữ động lực khi làm việc trên trang web của mình. Ứng dụng này sẽ hiển thị một thông điệp truyền cảm hứng mỗi khi bạn bật nó lên.
 
 :::tip 
-Just want to get started quickly? Jump start your app by creating a new Astro project with the `toolbar-app` template.
+Muốn bắt đầu nhanh? Khởi động ứng dụng của bạn bằng cách tạo một dự án Astro mới với mẫu `toolbar-app`.
 
 <PackageManagerTabs>
   <Fragment slot="npm">
@@ -37,16 +37,16 @@ Just want to get started quickly? Jump start your app by creating a new Astro pr
   </Fragment>
 </PackageManagerTabs>
 
-Or, keep reading to learn how to build an app from scratch.
+Hoặc, tiếp tục đọc để học cách xây dựng một ứng dụng từ đầu.
 :::
 
-### Creating the Astro integration
+### Tạo Astro integration
 
-Dev toolbar apps can only be added by [Astro Integrations](/vi/guides/integrations-guide/) using [the `astro:config:setup` hook](/vi/reference/integrations-reference/#astroconfigsetup). You will need to create both a toolbar app and the integration that will add it to the toolbar of your existing Astro project.
+Các ứng dụng thanh công cụ dev chỉ có thể được thêm vào thông qua [Astro Integrations](/vi/guides/integrations-guide/) sử dụng [hook `astro:config:setup`](/vi/reference/integrations-reference/#astroconfigsetup). Bạn cần tạo cả ứng dụng thanh công cụ và integration để thêm nó vào thanh công cụ của dự án Astro hiện tại.
 
 <Steps>
 
-1. In the root of your existing Astro project, create a new folder named `my-toolbar-app/` for your app and integration files. Create two new files in this folder: `app.ts` and `my-integration.ts`.
+1. Ở thư mục gốc của dự án Astro hiện tại, tạo một thư mục mới tên là `my-toolbar-app/` để chứa các file ứng dụng và integration. Tạo hai file mới trong thư mục này: `app.ts` và `my-integration.ts`.
 
     <FileTree>
     - **my-toolbar-app/**
@@ -60,7 +60,7 @@ Dev toolbar apps can only be added by [Astro Integrations](/vi/guides/integratio
     - tsconfig.json
     </FileTree>
 
-2. In `my-integration.ts`, add the following code to provide both the name of your integration and the [`addDevToolbarApp()` function](/vi/reference/dev-toolbar-app-reference/#toolbar-app-integration-setup) needed to add your dev toolbar app with the `astro:config:setup` hook:
+2. Trong `my-integration.ts`, thêm đoạn mã sau để cung cấp tên của integration cũng như [hàm `addDevToolbarApp()`](/vi/reference/dev-toolbar-app-reference/#toolbar-app-integration-setup) cần thiết để thêm ứng dụng dev toolbar thông qua hook `astro:config:setup`:
 
     ```ts title="my-toolbar-app/my-integration.ts" "'astro:config:setup'" "hooks" "addDevToolbarApp"
     import { fileURLToPath } from 'node:url';
@@ -82,13 +82,13 @@ Dev toolbar apps can only be added by [Astro Integrations](/vi/guides/integratio
     ```
 
 
-    :::note[Using relative paths to the entrypoint]
-    The `entrypoint` is the path to your dev toolbar app file **relative to the root of your existing Astro project**, not to the integration folder (`my-toolbar-app`) itself.
+    :::note[Sử dụng đường dẫn tương đối đến entrypoint]
+    `entrypoint` là đường dẫn đến file ứng dụng thanh công cụ dev **tính từ thư mục gốc của dự án Astro hiện tại**, không phải tính từ thư mục integration (`my-toolbar-app`).
 
-    To use relative paths for entrypoints, get the path to the current file using `import.meta.url` and resolve the path to the entrypoint from there.
+    Để sử dụng đường dẫn tương đối cho entrypoint, hãy lấy đường dẫn đến file hiện tại bằng `import.meta.url` và nối đường dẫn đến entrypoint từ đó.
     :::
 
-3. To use this integration in your project, add it to the `integrations` array in your `astro.config.mjs` file.
+3. Để sử dụng integration này trong dự án, thêm nó vào mảng `integrations` trong file `astro.config.mjs`.
 
     ```js title="astro.config.mjs" ins={2,5}
     import { defineConfig } from 'astro/config';
@@ -99,19 +99,19 @@ Dev toolbar apps can only be added by [Astro Integrations](/vi/guides/integratio
     })
     ```
 
-4. If not already running, start the dev server. If your integration has been successfully added to your project, you should see a new "undefined" app in the dev toolbar.
+4. Nếu chưa chạy, hãy khởi động máy chủ dev. Nếu integration đã được thêm thành công vào dự án, bạn sẽ thấy một ứng dụng mới "undefined" xuất hiện trong thanh công cụ dev.
 
-    But, you will also see an error message that your dev toolbar app has failed to load. This is because you have not yet built the app itself. You will do that in the next section.
+    Tuy nhiên, bạn cũng sẽ thấy thông báo lỗi rằng ứng dụng thanh công cụ dev chưa tải được. Đó là vì bạn chưa xây dựng ứng dụng. Bạn sẽ làm điều này ở phần tiếp theo.
 
 </Steps>
 
-<ReadMore> See the [Astro Integration API documentation](/vi/reference/integrations-reference/) for more about building Astro integrations.</ReadMore>
+<ReadMore> Tham khảo thêm [tài liệu API Astro Integration](/vi/reference/integrations-reference/) để tìm hiểu thêm về cách xây dựng Astro integration.</ReadMore>
 
-### Creating the app
+### Tạo ứng dụng
 
-Dev toolbar apps are defined using the `defineToolbarApp()` function from the `astro/toolbar` module. This function takes an object with an `init()` function that will be called when the dev toolbar app is loaded.
+Các ứng dụng thanh công cụ dev được định nghĩa bằng hàm `defineToolbarApp()` từ module `astro/toolbar`. Hàm này nhận một object với hàm `init()` sẽ được gọi khi ứng dụng thanh công cụ dev được tải.
 
-This `init()` function contains your app logic to render elements to the screen, send and receive client-side events from the dev toolbar, and communicate with the server.
+Hàm `init()` này chứa logic của ứng dụng để hiển thị các phần tử lên màn hình, gửi và nhận sự kiện phía client từ thanh công cụ dev, và giao tiếp với server.
 
 ```ts title="app.ts"
 import { defineToolbarApp } from "astro/toolbar";
@@ -123,20 +123,20 @@ export default defineToolbarApp({
 });
 ```
 
-To display motivational messages on the screen, you will use the `canvas` property to access a standard [ShadowRoot](https://developer.mozilla.org/en-US/docs/Web/API/ShadowRoot). Elements can be created and added to the ShadowRoot using the standard DOM APIs.  
+Để hiển thị thông điệp truyền cảm hứng lên màn hình, bạn sẽ sử dụng thuộc tính `canvas` để truy cập một [ShadowRoot](https://developer.mozilla.org/en-US/docs/Web/API/ShadowRoot) tiêu chuẩn. Các phần tử có thể được tạo và thêm vào ShadowRoot bằng các API DOM tiêu chuẩn.  
 
 <Steps>
 
-1. Copy the following code into `my-toolbar-app/app.ts`. This provides a list of motivational messages, and the logic to create a new `<h1>` element with a random message:
+1. Sao chép đoạn mã sau vào `my-toolbar-app/app.ts`. Đoạn mã này cung cấp danh sách các thông điệp truyền cảm hứng và logic để tạo một phần tử `<h1>` với nội dung ngẫu nhiên:
 
     ```ts title="my-toolbar-app/app.ts" {3-8, 12-15}
     import { defineToolbarApp } from "astro/toolbar";
 
     const motivationalMessages = [
-      "You're doing great!",
-      "Keep up the good work!",
-      "You're awesome!",
-      "You're a star!",
+      "Bạn đang làm rất tốt!",
+      "Tiếp tục phát huy nhé!",
+      "Bạn thật tuyệt vời!",
+      "Bạn là ngôi sao!",
     ];
 
     export default defineToolbarApp({
@@ -149,20 +149,20 @@ To display motivational messages on the screen, you will use the `canvas` proper
     });
     ```
 
-2. Start the dev server if it is not already running and toggle the app on in the dev toolbar. If your app is working successfully, you will see a motivational message displayed in the top-left corner of the screen. (And, it's true!) 
+2. Khởi động máy chủ dev nếu chưa chạy và bật ứng dụng trong thanh công cụ dev. Nếu ứng dụng hoạt động thành công, bạn sẽ thấy một thông điệp truyền cảm hứng xuất hiện ở góc trên bên trái màn hình. (Và đó là sự thật!)
 
-    However, this message will not change when the app is toggled on and off, as the `init()` function is only called once when the app is loaded.
+    Tuy nhiên, thông điệp này sẽ không thay đổi khi bạn bật/tắt ứng dụng, vì hàm `init()` chỉ được gọi một lần khi ứng dụng được tải.
 
-3. To add client-side interactivity to your app, add the `app` argument and use `onAppToggled()` to select a new random message each time your toolbar app is toggled on:
+3. Để thêm tính tương tác phía client cho ứng dụng, thêm đối số `app` và sử dụng `onAppToggled()` để chọn một thông điệp ngẫu nhiên mỗi lần bạn bật app trên thanh công cụ:
 
     ```ts title="app.ts" ins=", app" ins={17-21}
     import { defineToolbarApp } from "astro/toolbar";
 
     const motivationalMessages = [
-      "You're doing great!",
-      "Keep up the good work!",
-      "You're awesome!",
-      "You're a star!",
+      "Bạn đang làm rất tốt!",
+      "Tiếp tục phát huy nhé!",
+      "Bạn thật tuyệt vời!",
+      "Bạn là ngôi sao!",
     ];
 
     export default defineToolbarApp({
@@ -172,7 +172,7 @@ To display motivational messages on the screen, you will use the `canvas` proper
           
           canvas.append(h1);
 
-          // Display a random message when the app is toggled
+          // Hiển thị thông điệp ngẫu nhiên mỗi khi bật app
           app.onToggled(({ state }) => {
             const newMessage = motivationalMessages[Math.floor(Math.random() * motivationalMessages.length)];
             h1.textContent = newMessage;
@@ -181,35 +181,35 @@ To display motivational messages on the screen, you will use the `canvas` proper
     });
     ```
 
-4. In your browser preview, toggle your app on and off several times. With this change, a new random message will be selected every time you toggle the app on, providing you with an infinite source of motivation!
+4. Trong trình duyệt, thử bật/tắt app vài lần. Với thay đổi này, một thông điệp ngẫu nhiên mới sẽ được chọn mỗi khi bạn bật app, mang lại nguồn động lực vô tận cho bạn!
 
 </Steps>
 
-<ReadMore>See the [Astro Dev Toolbar API documentation](/vi/reference/dev-toolbar-app-reference/) for more about building dev toolbar apps.</ReadMore>
+<ReadMore>Xem thêm [tài liệu API Dev Toolbar của Astro](/vi/reference/dev-toolbar-app-reference/) để tìm hiểu thêm về cách xây dựng ứng dụng dev toolbar.</ReadMore>
 
-## Building apps with a UI framework
+## Xây dựng ứng dụng với UI framework
 
-UI frameworks like React, Vue, or Svelte can also be used to create dev toolbar apps. These frameworks provide a more declarative way to create UIs and can make your code more maintainable and easier to read.
+Các framework UI như React, Vue, hoặc Svelte cũng có thể được sử dụng để tạo ứng dụng thanh công cụ dev. Những framework này giúp việc xây dựng giao diện trở nên khai báo hơn, dễ bảo trì và dễ đọc hơn.
 
-The same motivational dev toolbar app built into your existing Astro project earlier on this page with JavaScript can be built using a UI framework (e.g. Preact) instead. Depending on your chosen framework, you may or may not require a build step.
+Ứng dụng thanh công cụ dev truyền cảm hứng vừa xây dựng bằng JavaScript ở trên cũng có thể được tạo bằng một UI framework (ví dụ: Preact). Tùy vào framework bạn chọn, bạn có thể sẽ cần hoặc không cần bước build.
 
 :::note 
-However you choose to build your dev toolbar app, using JavaScript or a UI framework, you will still need to [create the integration](#creating-the-astro-integration) that adds your app to the dev toolbar.
+Dù bạn xây dựng ứng dụng thanh công cụ dev bằng JavaScript hay UI framework, bạn vẫn cần [tạo integration](#creating-the-astro-integration) để thêm ứng dụng vào thanh công cụ dev.
 :::
 
-### Without a build step
+### Không cần bước build
 
-If your framework supports it, you can create a dev toolbar app without a build step. For example, you can use Preact's `h` function to create elements and render them directly to the ShadowRoot:
+Nếu framework của bạn hỗ trợ, bạn có thể tạo ứng dụng thanh công cụ dev mà không cần bước build. Ví dụ, bạn có thể dùng hàm `h` của Preact để tạo các phần tử và render trực tiếp lên ShadowRoot:
 
 ```ts title="app.ts"
 import { defineToolbarApp } from "astro/toolbar";
 import { render, h } from "preact";
 
 const motivationalMessages = [
-  "You're doing great!",
-  "Keep up the good work!",
-  "You're awesome!",
-  "You're a star!",
+  "Bạn đang làm rất tốt!",
+  "Tiếp tục phát huy nhé!",
+  "Bạn thật tuyệt vời!",
+  "Bạn là ngôi sao!",
 ];
 
 export default defineToolbarApp({
@@ -220,7 +220,7 @@ export default defineToolbarApp({
 });
 ```
 
-Alternatively, the [`htm` package](https://github.com/developit/htm) is a good choice for creating dev toolbar apps without a build step, offering native integration for React and Preact and support for other frameworks:
+Hoặc, gói [`htm`](https://github.com/developit/htm) cũng là lựa chọn tốt để tạo ứng dụng thanh công cụ dev mà không cần build, hỗ trợ tích hợp gốc cho React, Preact và các framework khác:
 
 ```ts title="app.ts" ins={3, 15}
 import { defineToolbarApp } from "astro/toolbar";
@@ -228,10 +228,10 @@ import { render } from "preact";
 import { html } from 'htm/preact';
 
 const motivationalMessages = [
-  "You're doing great!",
-  "Keep up the good work!",
-  "You're awesome!",
-  "You're a star!",
+  "Bạn đang làm rất tốt!",
+  "Tiếp tục phát huy nhé!",
+  "Bạn thật tuyệt vời!",
+  "Bạn là ngôi sao!",
 ];
 
 export default defineToolbarApp({
@@ -242,16 +242,16 @@ export default defineToolbarApp({
 });
 ```
 
-In both cases, you can now start your project and see the motivational message displayed in the top-left corner of the screen when you toggle the app on.
+Dù theo cách nào, bạn cũng có thể khởi động dự án và thấy thông điệp truyền cảm hứng hiển thị ở góc trên bên trái màn hình khi bật app.
 
-### With a build step
+### Có bước build
 
-Astro does not preprocess JSX code in dev toolbar apps, so a build step is required in order to use JSX components in your dev toolbar app.
+Astro không xử lý trước mã JSX trong các ứng dụng thanh công cụ dev, vì vậy bạn cần bước build để sử dụng JSX.
 
-The following steps will use TypeScript to do this, but any other tools that compile JSX code will also work (e.g. Babel, Rollup, ESBuild).
+Các bước dưới đây sử dụng TypeScript, nhưng các công cụ khác như Babel, Rollup, ESBuild cũng đều phù hợp.
 
 <Steps>
-1. Install TypeScript inside your project:
+1. Cài đặt TypeScript vào dự án:
 
     <PackageManagerTabs>
       <Fragment slot="npm">
@@ -271,7 +271,7 @@ The following steps will use TypeScript to do this, but any other tools that com
       </Fragment>
     </PackageManagerTabs>
 
-2. Create a `tsconfig.json` file in the root of your toolbar app's folder with the appropriate settings to build and for the framework you're using ([React](https://react-typescript-cheatsheet.netlify.app/docs/basic/setup), [Preact](https://preactjs.com/guide/v10/typescript), [Solid](https://www.solidjs.com/guides/typescript)). For example, for Preact:
+2. Tạo file `tsconfig.json` ở thư mục gốc của thư mục ứng dụng toolbar với các thiết lập phù hợp với framework bạn sử dụng ([React](https://react-typescript-cheatsheet.netlify.app/docs/basic/setup), [Preact](https://preactjs.com/guide/v10/typescript), [Solid](https://www.solidjs.com/guides/typescript)). Ví dụ cho Preact:
 
     ```json title="my-toolbar-app/tsconfig.json"
     {
@@ -284,7 +284,7 @@ The following steps will use TypeScript to do this, but any other tools that com
     }
     ```
 
-3. Adjust the `entrypoint` in your integration to point to the compiled file, remembering that this file is relative to the root of your Astro project:
+3. Điều chỉnh trường `entrypoint` trong integration để trỏ đến file đã biên dịch, lưu ý rằng đường dẫn này là tính từ gốc dự án Astro:
 
     ```ts title="my-integration.ts" ins="app.js"
     addDevToolbarApp({
@@ -295,19 +295,19 @@ The following steps will use TypeScript to do this, but any other tools that com
     });
     ```
 
-4. Run `tsc` to build your toolbar app, or `tsc --watch` to automatically rebuild your app when you make changes.
+4. Chạy `tsc` để build ứng dụng thanh công cụ dev, hoặc `tsc --watch` để tự động build lại khi có thay đổi.
 
-      With these changes, you can now rename your `app.ts` file to `app.tsx` (or `.jsx`) and use JSX syntax to create your dev toolbar app:
+      Bây giờ, bạn có thể đổi tên file `app.ts` thành `app.tsx` (hoặc `.jsx`) và sử dụng cú pháp JSX để xây dựng ứng dụng:
 
       ```tsx title="app.tsx"
       import { defineToolbarApp } from "astro/toolbar";
       import { render } from "preact";
 
       const motivationalMessages = [
-        "You're doing great!",
-        "Keep up the good work!",
-        "You're awesome!",
-        "You're a star!",
+        "Bạn đang làm rất tốt!",
+        "Tiếp tục phát huy nhé!",
+        "Bạn thật tuyệt vời!",
+        "Bạn là ngôi sao!",
       ];
 
       export default defineToolbarApp({
@@ -319,4 +319,4 @@ The following steps will use TypeScript to do this, but any other tools that com
       ```
 </Steps>
 
-You should now have all the tools you need to create a dev toolbar app using a UI framework of your choice!
+Bây giờ bạn đã có đầy đủ công cụ để tạo ứng dụng thanh công cụ dev với bất kỳ UI framework nào bạn muốn!

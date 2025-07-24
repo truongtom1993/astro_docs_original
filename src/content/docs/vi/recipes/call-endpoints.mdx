@@ -1,21 +1,21 @@
 ---
-title: Call endpoints from the server
-description: Learn how to call endpoints from the server in Astro.
+title: Gọi endpoint từ phía máy chủ
+description: Tìm hiểu cách gọi endpoint từ phía máy chủ trong Astro.
 i18nReady: true
 type: recipe
 ---
 import { Steps } from '@astrojs/starlight/components';
 
-Endpoints can be used to serve many kinds of data. This recipe calls a server endpoint from a page's component script to display a greeting, without requiring an additional fetch request.
+Endpoints có thể được sử dụng để phục vụ nhiều loại dữ liệu khác nhau. Công thức này sẽ gọi một endpoint phía máy chủ từ script của component trên một trang để hiển thị lời chào, mà không cần một yêu cầu fetch bổ sung.
 
-## Prerequisites
+## Yêu cầu trước
 
-- A project with [SSR](/vi/guides/on-demand-rendering/) (output: 'server') enabled
+- Một dự án đã bật [SSR](/vi/guides/on-demand-rendering/) (output: 'server')
 
-## Recipe
+## Công thức
 
 <Steps>
-1. Create an endpoint in a new file `src/pages/api/hello.ts` that returns some data:
+1. Tạo một endpoint trong file mới `src/pages/api/hello.ts` trả về một số dữ liệu:
 
     ```ts title="src/pages/api/hello.ts"
     import type { APIRoute } from 'astro'
@@ -29,7 +29,7 @@ Endpoints can be used to serve many kinds of data. This recipe calls a server en
     }
     ```
 
-2. On any Astro page, import the `GET()` method from the endpoint. Call it with the [`Astro` global](/vi/reference/api-reference/) to provide the request context, and use the response on the page:
+2. Trên bất kỳ trang Astro nào, import phương thức `GET()` từ endpoint. Gọi nó với [`Astro` global](/vi/reference/api-reference/) để cung cấp ngữ cảnh request, và sử dụng response trên trang:
 
     ```astro title="src/pages/index.astro"
     ---

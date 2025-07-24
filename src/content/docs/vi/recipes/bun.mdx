@@ -1,138 +1,138 @@
 ---
-title: Use Bun with Astro
-description: Learn how to use Bun with your Astro site.
+title: Sử dụng Bun với Astro
+description: Tìm hiểu cách sử dụng Bun với trang Astro của bạn.
 type: recipe
 i18nReady: true
 ---
 
-[Bun](https://bun.sh/) is an all-in-one JavaScript runtime & toolkit. See [Bun's documentation](https://bun.sh/docs) for more information.
+[Bun](https://bun.sh/) là một môi trường chạy JavaScript & bộ công cụ tất cả trong một. Xem [tài liệu của Bun](https://bun.sh/docs) để biết thêm thông tin.
 
 :::caution
-Using Bun with Astro may reveal rough edges. Some integrations may not work as expected. Consult [Bun's official documentation for working with Astro](https://bun.sh/guides/ecosystem/astro) for details.
+Sử dụng Bun với Astro có thể gặp một số vấn đề chưa hoàn thiện. Một số tích hợp có thể không hoạt động như mong đợi. Tham khảo [tài liệu chính thức của Bun về làm việc với Astro](https://bun.sh/guides/ecosystem/astro) để biết chi tiết.
 
-If you have any problems using Bun, please [open an Issue on GitHub with Bun directly](https://github.com/oven-sh/bun/issues/new/choose).
+Nếu bạn gặp bất kỳ vấn đề nào khi sử dụng Bun, vui lòng [mở Issue trên GitHub với Bun trực tiếp](https://github.com/oven-sh/bun/issues/new/choose).
 :::
 
-## Prerequisites
+## Yêu cầu trước
 
-- Bun installed locally on your machine. See the [installation instructions](https://bun.sh/docs/installation) in Bun's official documentation.
+- Bun được cài đặt cục bộ trên máy bạn. Xem [hướng dẫn cài đặt](https://bun.sh/docs/installation) trong tài liệu chính thức của Bun.
 
-## Create a new Astro project with Bun
+## Tạo một dự án Astro mới với Bun
 
-Create a new Astro project with Bun using the following `create-astro` command:
+Tạo một dự án Astro mới với Bun bằng lệnh `create-astro` sau:
 
 ```bash
 bunx create-astro@latest my-astro-project-using-bun
 ```
 
 :::tip
-You may also [create a new Astro project from any existing Astro GitHub repository](/vi/install-and-setup/#install-from-the-cli-wizard) using the `--template` flag:
+Bạn cũng có thể [tạo một dự án Astro mới từ bất kỳ kho GitHub Astro hiện có nào](/vi/install-and-setup/#install-from-the-cli-wizard) bằng cờ `--template`:
 ```bash
 bunx create-astro@latest my-astro-project-using-bun --template eliancodes/brutal
 ```
 :::
 
-## Install dependencies
+## Cài đặt các phụ thuộc
 
-If you're starting a new project using `bunx create-astro`, the CLI will automatically use Bun to install dependencies and you can skip this step.
+Nếu bạn bắt đầu một dự án mới bằng `bunx create-astro`, CLI sẽ tự động sử dụng Bun để cài đặt các phụ thuộc và bạn có thể bỏ qua bước này.
 
-Otherwise, you'll need to install your dependencies with Bun:
+Nếu không, bạn sẽ cần cài đặt các phụ thuộc của mình với Bun:
 
 ```bash
 bun install
 ```
 
-## Add Types
+## Thêm Types
 
-Bun publishes the [`@types/bun`](https://www.npmjs.com/package/@types/bun) package, containing the runtime types for Bun.
+Bun phát hành gói [`@types/bun`](https://www.npmjs.com/package/@types/bun), chứa các kiểu runtime cho Bun.
 
-Install `@types/bun` using the following command:
+Cài đặt `@types/bun` với lệnh sau:
 
 ```sh
 bun add -d @types/bun
 ```
 
-## Using Astro integrations
+## Sử dụng các tích hợp Astro
 
-You can also use any of the official Astro integrations with the `astro add` command:
+Bạn cũng có thể sử dụng bất kỳ tích hợp chính thức nào của Astro với lệnh `astro add`:
 
 ```bash
 bunx astro add react
 ```
 
-## Run Astro with Bun
+## Chạy Astro với Bun
 
 :::note
-Use the [`--bun` CLI flag](https://bun.sh/docs/cli/bunx#shebangs) before every `astro` command to use Bun's own runtime in place of Node.
+Sử dụng [cờ CLI `--bun`](https://bun.sh/docs/cli/bunx#shebangs) trước mỗi lệnh `astro` để sử dụng runtime của Bun thay cho Node.
 :::
 
-### Run the development server
+### Chạy máy chủ phát triển
 
-To run the development server using Bun as the runtime, use the following command:
+Để chạy máy chủ phát triển sử dụng Bun làm runtime, dùng lệnh sau:
 
 ```bash
 bunx --bun astro dev
 ```
 
-### Building your site with Bun
+### Build trang web của bạn với Bun
 
-To build your site using Bun as the runtime, use the following command:
+Để build trang web của bạn với Bun làm runtime, dùng lệnh sau:
 
 ```bash
 bunx --bun astro build
 ```
 
-Astro will output your site to the `dist/` directory. Then, you can serve your site using the `preview` command:
+Astro sẽ xuất trang web của bạn vào thư mục `dist/`. Sau đó, bạn có thể phục vụ trang web bằng lệnh `preview`:
 
 ```bash
 bunx --bun astro preview
 ```
 
-## Add SSR with Bun
+## Thêm SSR với Bun
 
-Since Bun features [Node.js API compatibility](https://bun.sh/docs/runtime/nodejs-apis), you can use any Astro adapter for [on-demand rendering](/vi/guides/on-demand-rendering/) with your Astro project:
+Vì Bun hỗ trợ [tương thích với API Node.js](https://bun.sh/docs/runtime/nodejs-apis), bạn có thể sử dụng bất kỳ adapter Astro nào cho [kết xuất theo yêu cầu](/vi/guides/on-demand-rendering/) với dự án Astro của mình:
 
 ```bash
 bunx astro add vercel
 ```
 
-## Testing in Bun
+## Kiểm thử trong Bun
 
-Bun ships with a fast, built-in, Jest-compatible test runner through the `bun test` command. If you like to use that read [`bun test` documentation](https://bun.sh/docs/cli/test).
+Bun tích hợp sẵn một trình chạy kiểm thử nhanh, tương thích Jest qua lệnh `bun test`. Nếu bạn muốn sử dụng, hãy đọc [tài liệu `bun test`](https://bun.sh/docs/cli/test).
 
-However, it is also possible to use Cypress or Playwright for a modern approach to testing web apps.
+Tuy nhiên, bạn cũng có thể sử dụng Cypress hoặc Playwright để kiểm thử ứng dụng web hiện đại.
 
 ### Cypress
 
-Cypress is a front-end testing tool and is on a mission to "make the testing experience enjoyable and generate developer happiness". This enables you to write end-to-end tests for your Astro site.
+Cypress là công cụ kiểm thử giao diện người dùng và hướng tới mục tiêu "làm cho trải nghiệm kiểm thử trở nên thú vị và tạo ra niềm vui cho lập trình viên". Điều này cho phép bạn viết kiểm thử end-to-end cho trang Astro của mình.
 
-Install Cypress with the following command:
+Cài đặt Cypress với lệnh sau:
 
 ```bash
 bun add cypress --dev
 ```
 
-For the rest of the configuration and to start your first test, follow the rest of Cypress process in the [Astro Testing Guide](/vi/guides/testing/#configuration).
+Để cấu hình và bắt đầu bài kiểm thử đầu tiên, hãy làm theo quy trình Cypress trong [Hướng dẫn kiểm thử Astro](/vi/guides/testing/#configuration).
 
 ### Playwright
 
-Playwright is an end-to-end testing framework that allows you to test your Astro code on all modern rendering engines including Chromium, WebKit, and Firefox.
+Playwright là một framework kiểm thử end-to-end cho phép bạn kiểm thử mã Astro của mình trên tất cả các engine trình duyệt hiện đại như Chromium, WebKit, và Firefox.
 
-Install Playwright using the following command:
+Cài đặt Playwright bằng lệnh sau:
 
 ```bash
 bun create playwright
 ```
 
-To create your first Playwright test, follow the instructions for the rest of the Playwright process in the [Astro Testing Guide](/vi/guides/testing/#create-your-first-playwright-test).
+Để tạo bài kiểm thử Playwright đầu tiên, hãy làm theo hướng dẫn trong [Hướng dẫn kiểm thử Astro](/vi/guides/testing/#create-your-first-playwright-test).
 
-## Official Resources
+## Tài nguyên chính thức
 
-- [Build an app with Astro and Bun](https://bun.sh/guides/ecosystem/astro)
+- [Xây dựng ứng dụng với Astro và Bun](https://bun.sh/guides/ecosystem/astro)
 
-## Community Resources
+## Tài nguyên cộng đồng
 
-Using Bun with Astro? Add your blog post or video to this page!
+Đang sử dụng Bun với Astro? Thêm bài blog hoặc video của bạn vào trang này!
 
-- [Building a Cloudflare Pages site with Bun](https://blog.otterlord.dev/posts/hello-from-bun/) - blog post
-- [Using Bun with Astro and Cloudflare Pages](https://handerson.hashnode.dev/using-bun-with-astro-and-cloudflare-pages) - blog post
+- [Xây dựng trang Cloudflare Pages với Bun](https://blog.otterlord.dev/posts/hello-from-bun/) - bài blog
+- [Sử dụng Bun với Astro và Cloudflare Pages](https://handerson.hashnode.dev/using-bun-with-astro-and-cloudflare-pages) - bài blog

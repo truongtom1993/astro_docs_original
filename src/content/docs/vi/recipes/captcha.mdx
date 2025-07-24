@@ -1,23 +1,23 @@
 ---
-title: Verify a Captcha
-description: Learn how to create an API route and fetch it from the client.
+title: Xác minh Captcha
+description: Tìm hiểu cách tạo một route API và gọi nó từ phía client.
 i18nReady: true
 type: recipe
 ---
 import { Steps } from '@astrojs/starlight/components';
 
-[Server endpoints](/vi/guides/endpoints/#server-endpoints-api-routes) can be used as REST API endpoints to run functions such as authentications, database access, and verifications without exposing sensitive data to the client.
+[Endpoint phía máy chủ](/vi/guides/endpoints/#server-endpoints-api-routes) có thể được sử dụng như các endpoint REST API để thực thi các chức năng như xác thực, truy cập cơ sở dữ liệu và xác minh mà không tiết lộ dữ liệu nhạy cảm cho phía client.
 
-In this recipe, an API route is used to verify Google reCAPTCHA v3 without exposing the secret to clients.
+Trong công thức này, một route API được sử dụng để xác minh Google reCAPTCHA v3 mà không làm lộ secret cho phía client.
 
-## Prerequisites
+## Yêu cầu trước
 
-- A project with [SSR](/vi/guides/on-demand-rendering/) (`output: 'server'`) enabled
+- Một dự án đã bật [SSR](/vi/guides/on-demand-rendering/) (`output: 'server'`)
 
-## Recipe
+## Công thức
 
 <Steps>
-1. Create a `POST` endpoint that accepts recaptcha data, then verifies it with reCAPTCHA's API. Here, you can safely define secret values or read environment variables.
+1. Tạo một endpoint `POST` nhận dữ liệu recaptcha, sau đó xác minh nó với API của reCAPTCHA. Ở đây, bạn có thể định nghĩa giá trị bí mật an toàn hoặc đọc từ biến môi trường.
 
     ```js title="src/pages/recaptcha.js"
     export async function POST({ request }) {
@@ -28,8 +28,8 @@ In this recipe, an API route is used to verify Google reCAPTCHA v3 without expos
         'Content-Type': 'application/x-www-form-urlencoded'
       };
       const requestBody = new URLSearchParams({
-        secret: "YOUR_SITE_SECRET_KEY",   // This can be an environment variable
-        response: data.recaptcha          // The token passed in from the client
+        secret: "YOUR_SITE_SECRET_KEY",   // Giá trị này có thể lấy từ biến môi trường
+        response: data.recaptcha          // Token được gửi từ phía client
       });
 
       const response = await fetch(recaptchaURL, {
@@ -44,7 +44,7 @@ In this recipe, an API route is used to verify Google reCAPTCHA v3 without expos
     }
     ```
 
-2. Access your endpoint using `fetch` from a client script:
+2. Gọi endpoint này bằng `fetch` từ script phía client:
 
     ```astro title="src/pages/index.astro"
     <html>
@@ -56,7 +56,7 @@ In this recipe, an API route is used to verify Google reCAPTCHA v3 without expos
         <button class="g-recaptcha" 
           data-sitekey="PUBLIC_SITE_KEY" 
           data-callback="onSubmit" 
-          data-action="submit"> Click me to verify the captcha challenge! </button>
+          data-action="submit"> Nhấn vào đây để xác minh captcha! </button>
 
         <script is:inline>
           function onSubmit(token) {
@@ -67,9 +67,9 @@ In this recipe, an API route is used to verify Google reCAPTCHA v3 without expos
             .then((response) => response.json())
             .then((gResponse) => {
               if (gResponse.success) {
-                // Captcha verification was a success
+                // Xác minh captcha thành công
               } else {
-                // Captcha verification failed
+                // Xác minh captcha thất bại
               }
             })
           }

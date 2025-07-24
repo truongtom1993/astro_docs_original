@@ -1,24 +1,24 @@
 ---
-title: Add last modified time
-description: Build a remark plugin to add the last modified time to your Markdown and MDX.
+title: Thêm thời gian chỉnh sửa cuối cùng
+description: Xây dựng một plugin remark để thêm thời gian chỉnh sửa cuối cùng vào Markdown và MDX của bạn.
 i18nReady: true
 type: recipe
 ---
 import { Steps } from '@astrojs/starlight/components';
 import PackageManagerTabs from '~/components/tabs/PackageManagerTabs.astro';
 
-Learn how to build a [remark plugin](https://github.com/remarkjs/remark) that adds the last modified time to the frontmatter of your Markdown and MDX files. Use this property to  display the modified time in your pages.
+Tìm hiểu cách xây dựng một [plugin remark](https://github.com/remarkjs/remark) để thêm thời gian chỉnh sửa cuối cùng vào frontmatter của các file Markdown và MDX của bạn. Sử dụng thuộc tính này để hiển thị thời gian chỉnh sửa trên các trang của bạn.
 
 :::note[Uses Git history]
-This recipe calculates time based on your repository’s Git history and may not be accurate on some deployment platforms. Your host may be performing **shallow clones** which do not retrieve the full git history.
+Công thức này tính toán thời gian dựa trên lịch sử Git của kho lưu trữ của bạn và có thể không chính xác trên một số nền tảng triển khai. Nhà cung cấp của bạn có thể đang thực hiện **shallow clone** nên không lấy được toàn bộ lịch sử git.
 :::
 
-## Recipe
+## Công thức
 
 <Steps>
-1. Install Helper Packages
+1. Cài đặt các gói hỗ trợ
 
-   Install [`Day.js`](https://www.npmjs.com/package/dayjs) to modify and format times:
+   Cài đặt [`Day.js`](https://www.npmjs.com/package/dayjs) để xử lý và định dạng thời gian:
 
    <PackageManagerTabs>
      <Fragment slot="npm">
@@ -38,9 +38,9 @@ This recipe calculates time based on your repository’s Git history and may not
      </Fragment>
    </PackageManagerTabs>
 
-2. Create a Remark Plugin
+2. Tạo một Plugin Remark
 
-    This plugin uses `execSync` to run a Git command that returns the timestamp of the latest commit in ISO 8601 format. The timestamp is then added to the frontmatter of the file.
+    Plugin này sử dụng `execSync` để chạy lệnh Git trả về dấu thời gian của commit mới nhất theo định dạng ISO 8601. Dấu thời gian này sau đó được thêm vào frontmatter của file.
 
      ```js title="remark-modified-time.mjs"
      import { execSync } from "child_process";
@@ -54,10 +54,10 @@ This recipe calculates time based on your repository’s Git history and may not
      }
      ```
 		<details>
-		<summary>Using the file system instead of Git</summary>
+		<summary>Sử dụng hệ thống file thay vì Git</summary>
 
-		 Although using Git is the recommended way to get the last modified timestamp from a file, it is possible to use the file system modified time.
-     This plugin uses `statSync` to get the `mtime` (modified time) of the file in ISO 8601 format. The timestamp is then added to the frontmatter of the file.
+		 Mặc dù sử dụng Git là cách được khuyến nghị để lấy dấu thời gian chỉnh sửa cuối cùng của file, bạn cũng có thể dùng thời gian chỉnh sửa của hệ thống file.
+     Plugin này sử dụng `statSync` để lấy `mtime` (thời gian chỉnh sửa) của file theo định dạng ISO 8601. Dấu thời gian này sau đó được thêm vào frontmatter của file.
      
      ```js title="remark-modified-time.mjs"
      import { statSync } from "fs";
@@ -72,7 +72,7 @@ This recipe calculates time based on your repository’s Git history and may not
      ```
 		</details>
 
-3. Add the plugin to your config
+3. Thêm plugin vào cấu hình của bạn
 
    ```js title="astro.config.mjs"
    import { defineConfig } from 'astro/config';
@@ -85,11 +85,11 @@ This recipe calculates time based on your repository’s Git history and may not
    });
    ```
 
-   Now all Markdown documents will have a `lastModified` property in their frontmatter.
+   Bây giờ tất cả các tài liệu Markdown sẽ có thuộc tính `lastModified` trong frontmatter.
 
-4. Display Last Modified Time
+4. Hiển thị Thời gian Chỉnh sửa Cuối cùng
 
-   If your content is stored in a [content collection](/vi/guides/content-collections/), access the `remarkPluginFrontmatter` from the `render(entry)` function. Then render `lastModified` in your template wherever you would like it to appear.
+   Nếu nội dung của bạn được lưu trữ trong một [bộ sưu tập nội dung](/vi/guides/content-collections/), hãy truy cập `remarkPluginFrontmatter` từ hàm `render(entry)`. Sau đó, hiển thị `lastModified` trong mẫu của bạn ở vị trí mong muốn.
 
    ```astro title="src/pages/posts/[slug].astro" {3-4,6,17,19-21,28}
    ---
@@ -119,13 +119,13 @@ This recipe calculates time based on your repository’s Git history and may not
      <head>...</head>
      <body>
        ...
-       <p>Last Modified: {lastModified}</p>
+       <p>Chỉnh sửa lần cuối: {lastModified}</p>
        ...
      </body>
    </html>
    ```
 
-   If you're using a [Markdown layout](/vi/basics/layouts/#markdown-layouts), use the `lastModified` frontmatter property from `Astro.props` in your layout template.
+   Nếu bạn sử dụng một [layout Markdown](/vi/basics/layouts/#markdown-layouts), hãy sử dụng thuộc tính frontmatter `lastModified` từ `Astro.props` trong template layout của bạn.
 
    ```astro title="src/layouts/BlogLayout.astro" {2-3,5,7-9,15}
    ---
